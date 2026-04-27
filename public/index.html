@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>통합과학 성취기준 분석</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <header class="hero-header">
+    <div class="hero-text">
+      <h1>통합과학, 예술이 되다</h1>
+      <p>성취기준으로 탐색하는 지식의 파노라마</p>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tab-nav">
+      <button class="tab-button active" data-target="#standards">성취기준 및 성취수준</button>
+      <button class="tab-button" data-target="#inquiry">필수탐구활동</button>
+      <button class="tab-button" data-target="#analysis">문항분석</button>
+    </nav>
+
+    <section id="standards" class="tab-content active">
+      <h2>성취기준 및 성취수준</h2>
+      <div id="standards-container" class="content-container"></div>
+    </section>
+
+    <section id="inquiry" class="tab-content">
+      <h2>필수탐구활동</h2>
+      <div id="inquiry-container" class="content-container"></div>
+    </section>
+
+    <section id="analysis" class="tab-content">
+      <h2>AI 문항분석 (Powered by gemini-3-flash-preview)</h2>
+      <div class="content-container">
+        <textarea id="question-text" rows="6" placeholder="분석할 문항 내용을 여기에 입력하세요..." style="width: 100%; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
+        <button id="analyze-btn" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 1rem; transition: 0.3s;">AI 문항 분석 시작</button>
+        <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+      <button id="modal-close" class="modal-close-btn">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

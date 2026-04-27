@@ -1,0 +1,5 @@
+.firebase/
+.idx/
+.vscode/
+node_modules/
+.DS_Store
