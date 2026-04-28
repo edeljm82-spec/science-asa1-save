@@ -865,6 +865,39 @@ export const questionTemplates = {
         options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
         answer: 2, // ㄱ, ㄴ 정답
         levelReason: "이온 결합과 공유 결합 물질의 특징을 구분하고, 고체 상태에서 이온은 존재하지만 강하게 결합되어 이동할 수 없다는 오답(ㄷ)을 논리적으로 피해야 하는 A수준 문항입니다."
+      },
+      {
+        question: "그림은 물질 A와 B를 가열하여 온도를 높일 때, 상태 변화에 따른 전기 전도성의 변화를 나타낸 그래프이다. A와 B는 각각 염화 나트륨(NaCl)과 구리(Cu) 중 하나이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
+        image: `
+          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="250" fill="#ffffff" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="80" y1="200" x2="520" y2="200" stroke="#333" stroke-width="3"/>
+            <line x1="80" y1="40" x2="80" y2="200" stroke="#333" stroke-width="3"/>
+            <text x="40" y="50" font-weight="bold" font-size="14">전기</text>
+            <text x="40" y="70" font-weight="bold" font-size="14">전도성</text>
+            <text x="530" y="215" font-weight="bold">온도</text>
+            
+            <path d="M 80 195 L 250 195 L 250 100 L 500 100" fill="none" stroke="#ef4444" stroke-width="4"/>
+            <text x="480" y="90" font-weight="bold" fill="#ef4444">물질 A</text>
+            
+            <path d="M 80 60 L 250 60 L 250 60 L 500 60" fill="none" stroke="#3b82f6" stroke-width="4"/>
+            <text x="480" y="50" font-weight="bold" fill="#3b82f6">물질 B</text>
+            
+            <line x1="250" y1="40" x2="250" y2="200" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4"/>
+            <text x="250" y="220" text-anchor="middle" font-weight="bold" fill="#64748b">녹는점(Tm)</text>
+            
+            <text x="160" y="235" text-anchor="middle" fill="#333">고체 상태</text>
+            <text x="375" y="235" text-anchor="middle" fill="#333">액체 상태</text>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. 물질 A는 고체 상태에서 양이온과 음이온이 강한 정전기적 인력으로 결합되어 있다.",
+          "ㄴ. 물질 B는 자유 전자가 존재하여 고체와 액체 상태에서 모두 전기 전도성이 있다.",
+          "ㄷ. 물질 A를 물에 녹인 수용액은 전기 전도성이 없다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2,
+        levelReason: "물질의 상태(온도)에 따른 전기 전도성 그래프를 해석하여 이온 결합 물질과 금속 결합 물질을 구분하고, 이온 결합 물질이 수용액 상태에서는 전기가 통함(ㄷ 오답)을 찾아내는 수능형 A수준 문항입니다."
       }
     ],
     B: [
@@ -1268,6 +1301,51 @@ export const questionTemplates = {
         options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
         answer: 2, 
         levelReason: "판 이동의 원동력(지구 내부 에너지)과 발산형 경계의 특징을 이해하고, 화산 폭발이 기권과 생물권에 미치는 영향(기온 하강)을 논리적으로 추론할 수 있어야 하는 A수준 문항입니다."
+      },
+      {
+        question: "그림은 어느 해양 지각의 판의 경계와 암석에 기록된 고지자기(지구 자기장) 줄무늬 분포를 나타낸 것이다. A, B, C는 해저면의 지점이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은? (단, 이동 속도는 일정하다.)",
+        image: `
+          <svg width="100%" height="260" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="260" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            <rect x="50" y="40" width="60" height="80" fill="#94a3b8" opacity="0.3"/>
+            <rect x="110" y="40" width="40" height="80" fill="#94a3b8" opacity="0.7"/>
+            <rect x="150" y="40" width="50" height="80" fill="#94a3b8" opacity="0.3"/>
+            <rect x="200" y="40" width="80" height="80" fill="#94a3b8" opacity="0.7"/>
+            
+            <rect x="300" y="140" width="80" height="80" fill="#94a3b8" opacity="0.7"/>
+            <rect x="380" y="140" width="50" height="80" fill="#94a3b8" opacity="0.3"/>
+            <rect x="430" y="140" width="40" height="80" fill="#94a3b8" opacity="0.7"/>
+            <rect x="470" y="140" width="60" height="80" fill="#94a3b8" opacity="0.3"/>
+            
+            <line x1="200" y1="20" x2="200" y2="120" stroke="#ef4444" stroke-width="6"/>
+            <text x="200" y="15" text-anchor="middle" font-weight="bold" fill="#ef4444">해령</text>
+            <line x1="380" y1="140" x2="380" y2="240" stroke="#ef4444" stroke-width="6"/>
+            <text x="380" y="255" text-anchor="middle" font-weight="bold" fill="#ef4444">해령</text>
+            
+            <line x1="200" y1="130" x2="380" y2="130" stroke="#333" stroke-width="4" stroke-dasharray="8,4"/>
+            <text x="290" y="120" text-anchor="middle" font-weight="bold" fill="#333">단층 X-Y</text>
+            
+            <circle cx="130" cy="80" r="5" fill="#1e3a8a"/> <text x="130" y="70" text-anchor="middle" font-weight="bold">A</text>
+            <circle cx="290" cy="80" r="5" fill="#1e3a8a"/> <text x="290" y="70" text-anchor="middle" font-weight="bold">B</text>
+            <circle cx="450" cy="180" r="5" fill="#1e3a8a"/> <text x="450" y="170" text-anchor="middle" font-weight="bold">C</text>
+            
+            <path d="M 170 100 L 120 100" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M 230 100 L 280 100" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M 350 180 L 300 180" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M 410 180 L 460 180" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+            
+            <rect x="450" y="20" width="20" height="20" fill="#94a3b8" opacity="0.7"/> <text x="480" y="35" font-size="12">정상기</text>
+            <rect x="450" y="50" width="20" height="20" fill="#94a3b8" opacity="0.3"/> <text x="480" y="65" font-size="12">역전기</text>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. 해양 지각의 나이는 A 지점이 B 지점보다 많다.",
+          "ㄴ. 단층 X-Y 구간에서는 두 판이 어긋나게 이동하므로 천발 지진이 활발하게 발생한다.",
+          "ㄷ. 현재로부터 암석이 생성될 때까지 걸린 시간은 B 지점과 C 지점이 같다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2, 
+        levelReason: "해령을 중심으로 한 해양 지각의 확장과 고지자기 대칭성을 이해하고, 변환 단층 구간(X-Y)의 상대적 이동 방향을 파악하여 지진 발생 여부를 추론하는 전형적인 수능형 A수준 문항입니다."
       }
     ],
     B: [
@@ -1589,6 +1667,7 @@ export const questionTemplates = {
         levelReason: "세포막의 선택적 투과성을 단순 확산과 막 단백질을 통한 촉진 확산으로 구분하고, 에너지 소모 유무와 농도 기울기 개념을 완벽하게 이해해야 풀 수 있는 A수준 문항입니다."
       }
     ],
+
     B: [
       {
         question: "그림은 우리 주변에서 볼 수 있는 여러 가지 화학 반응과 물질 출입 현상이다. 생명 시스템 내에서 효소가 관여하여 일어나는 반응(물질대사)만을 <보기>에서 있는 대로 고른 것은?",
@@ -1602,84 +1681,187 @@ export const questionTemplates = {
         answer: 3, 
         levelReason: "세포 내에서 효소가 관여하여 생명을 유지하는 필수적인 물질대사(소화, 광합성)를 단순 자연계 화학 반응(사과 갈변)과 명확히 구분하고 예를 들어 설명할 수 있어야 하므로 B수준 문항입니다."
       }
-    ]
-  },
-
-  "10통과1-03-06": {
-    A: [
-      {
-        question: "그림은 진핵세포에서 유전 정보가 발현되는 과정의 일부를 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="260" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="260" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            <path d="M 40 20 L 40 240 L 260 240 L 260 20 Z" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="2" stroke-dasharray="5,5"/>
-            <text x="150" y="45" text-anchor="middle" font-weight="bold" fill="#3730a3" font-size="16">핵 (Nucleus)</text>
-            <text x="430" y="45" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="16">세포질 (Cytoplasm)</text>
-            <path d="M 80 80 Q 150 40 220 80 T 80 140 Q 150 180 220 140" fill="none" stroke="#3b82f6" stroke-width="4"/>
-            <text x="150" y="115" text-anchor="middle" font-weight="bold" fill="#1d4ed8">DNA</text>
-            <path d="M 150 125 L 150 170" fill="none" stroke="#475569" stroke-width="2"/>
-            <polygon points="145,170 155,170 150,180" fill="#475569"/>
-            <rect x="160" y="140" width="40" height="20" rx="4" fill="#f1f5f9"/>
-            <text x="180" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">(가)</text>
-            <path d="M 90 190 Q 150 220 210 190" fill="none" stroke="#ef4444" stroke-width="3"/>
-            <text x="150" y="215" text-anchor="middle" font-weight="bold" fill="#b91c1c">mRNA</text>
-            <path d="M 220 195 Q 300 195 340 165" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="4,4"/>
-            <polygon points="335,165 345,170 340,160" fill="#475569" transform="rotate(30 340 165)"/>
-            <circle cx="430" cy="130" r="35" fill="#d1fae5"/>
-            <circle cx="430" cy="180" r="25" fill="#a7f3d0"/>
-            <path d="M 340 160 Q 430 140 520 160" fill="none" stroke="#ef4444" stroke-width="3"/>
-            <circle cx="430" cy="80" r="10" fill="#f59e0b"/>
-            <circle cx="455" cy="65" r="10" fill="#f59e0b"/>
-            <circle cx="480" cy="80" r="10" fill="#f59e0b"/>
-            <circle cx="505" cy="65" r="10" fill="#f59e0b"/>
-            <path d="M 430 80 L 455 65 L 480 80 L 505 65" fill="none" stroke="#333" stroke-width="2"/>
-            <text x="465" y="45" text-anchor="middle" font-weight="bold" fill="#b45309">단백질</text>
-            <rect x="410" y="215" width="40" height="20" rx="4" fill="#f1f5f9"/>
-            <text x="430" y="229" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">(나)</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. DNA의 유전 정보가 mRNA로 복사되는 (가) 과정은 '전사'이다.",
-          "ㄴ. (가) 과정은 세포질에서, (나) 과정은 핵 속에서 일어난다.",
-          "ㄷ. mRNA의 3개의 염기 조합인 코돈이 하나의 아미노산을 지정한다."
-        ],
-        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 3, 
-        levelReason: "DNA -> RNA -> 단백질로 이어지는 생명 중심 원리(Central Dogma)에서 각 과정의 명칭, 일어나는 장소, 코돈의 역할을 정확히 꿰뚫고 있어야 풀 수 있는 A수준 문항입니다."
-      }
     ],
-    B: [
-      {
-        question: "표는 어떤 DNA 이중 나선 중 주형 가닥의 염기 서열 일부와 이를 바탕으로 합성된 mRNA의 염기 서열을 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        image: `
-          <svg width="100%" height="200" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="200" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            
-            <rect x="100" y="60" width="400" height="40" fill="#dbeafe" stroke="#3b82f6"/>
-            <text x="150" y="85" font-weight="bold" fill="#1e3a8a">DNA 주형 가닥 :</text>
-            <text x="300" y="85" font-weight="bold" letter-spacing="8" fill="#1e3a8a">T A C G G A T T C</text>
-            
-            <rect x="100" y="110" width="400" height="40" fill="#fee2e2" stroke="#ef4444"/>
-            <text x="150" y="135" font-weight="bold" fill="#b91c1c">합성된 mRNA :</text>
-            <text x="300" y="135" font-weight="bold" letter-spacing="8" fill="#b91c1c">( 가 )</text>
-            
-            <path d="M 280 100 L 280 110" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-            <path d="M 330 100 L 330 110" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-            <path d="M 380 100 L 380 110" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-            <text x="450" y="105" font-size="12" fill="#475569" font-weight="bold">전사</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. (가)에 들어갈 mRNA의 염기 서열은 A U G C C U A A G 이다.",
-          "ㄴ. DNA의 티민(T)은 RNA의 아데닌(A)과 상보적으로 결합한다.",
-          "ㄷ. 위 염기 서열이 리보솜에서 모두 번역된다면 총 9개의 아미노산이 결합된 단백질이 만들어진다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, // ㄱ, ㄴ 정답
-        levelReason: "염기의 상보적 결합 규칙(A-U, T-A, G-C, C-G)을 적용하여 전사된 mRNA의 서열을 직접 유추(ㄱ, ㄴ)할 수 있어야 하며, 3개의 염기(1코돈)가 1개의 아미노산을 지정하므로 총 3개의 아미노산이 지정됨(ㄷ 오답)을 계산할 수 있는 B수준의 수능형 문항입니다."
-      }
-    ]
-  
-  },
+
+  C: [
+    {
+      "question": "다음 중 생명 시스템을 유지하기 위해 세포 내에서 일어나는 화학 반응(물질대사)에 대한 설명으로 옳은 것은?",
+      "image": null,
+      "conditions": [],
+      "options": [
+        "높은 온도와 높은 압력 상태에서만 일어난다.",
+        "생체 촉매인 효소가 관여하여 체온 정도의 낮은 온도에서도 반응이 잘 일어난다.",
+        "반응이 일어날 때 에너지의 출입은 전혀 발생하지 않는다.",
+        "세포 밖으로 물질이 빠져나갈 때만 화학 반응이 일어난다.",
+        "단백질이 합성될 때는 에너지를 방출하고, 분해될 때는 에너지를 흡수한다."
+      ],
+      "answer": 1,
+      "levelReason": "효소의 역할을 통해 생명체 내 화학 반응의 특징(낮은 온도, 에너지 출입)을 이해하고 있는지를 묻는 C수준 문항입니다."
+    }
+  ],
+
+   D: [
+    {
+      "question": "생명체를 구성하며, 그 안에서 생명 유지에 필요한 다양한 화학 반응과 물질 출입이 일어나는 생명 시스템의 가장 기본 단위는 무엇인가?",
+      "image": null,
+      "conditions": [],
+      "options": [
+        "기관",
+        "조직",
+        "세포",
+        "원자",
+        "분자"
+      ],
+      "answer": 2,
+      "levelReason": "생명체 내 화학 반응이 일어나는 공간적 바탕이자 생명체의 기본 단위가 '세포'임을 인식하고 있는지 확인하는 D수준 문항입니다."
+    }
+  ],
+
+   E: [
+    {
+      "question": "우리가 밥을 먹고 소화를 시키거나 식물이 빛을 받아 양분을 만드는 것처럼, 생명체 안에서 끊임없이 일어나는 다양한 화학 반응을 통틀어 무엇이라고 부르는가?",
+      "image": null,
+      "conditions": [],
+      "options": [
+        "물리 변화",
+        "상태 변화",
+        "물질대사",
+        "광합성",
+        "세포 분열"
+      ],
+      "answer": 2,
+      "levelReason": "생명체 내에서 일어나는 화학 반응 전체를 의미하는 기초 용어인 '물질대사'를 알고 있는지 묻는 E수준 문항입니다."
+    }
+  ]
+},
+
+ 
+
+
+"10통과1-03-06": {
+  A: [
+    {
+      question: "그림은 진핵세포에서 유전 정보가 발현되는 과정의 일부를 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+      image: `
+        <svg width="100%" height="260" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="260" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+          <path d="M 40 20 L 40 240 L 260 240 L 260 20 Z" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="2" stroke-dasharray="5,5"/>
+          <text x="150" y="45" text-anchor="middle" font-weight="bold" fill="#3730a3" font-size="16">핵 (Nucleus)</text>
+          <text x="430" y="45" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="16">세포질 (Cytoplasm)</text>
+          <path d="M 80 80 Q 150 40 220 80 T 80 140 Q 150 180 220 140" fill="none" stroke="#3b82f6" stroke-width="4"/>
+          <text x="150" y="115" text-anchor="middle" font-weight="bold" fill="#1d4ed8">DNA</text>
+          <path d="M 150 125 L 150 170" fill="none" stroke="#475569" stroke-width="2"/>
+          <polygon points="145,170 155,170 150,180" fill="#475569"/>
+          <rect x="160" y="140" width="40" height="20" rx="4" fill="#f1f5f9"/>
+          <text x="180" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">(가)</text>
+          <path d="M 90 190 Q 150 220 210 190" fill="none" stroke="#ef4444" stroke-width="3"/>
+          <text x="150" y="215" text-anchor="middle" font-weight="bold" fill="#b91c1c">mRNA</text>
+          <path d="M 220 195 Q 300 195 340 165" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="4,4"/>
+          <polygon points="335,165 345,170 340,160" fill="#475569" transform="rotate(30 340 165)"/>
+          <circle cx="430" cy="130" r="35" fill="#d1fae5"/>
+          <circle cx="430" cy="180" r="25" fill="#a7f3d0"/>
+          <path d="M 340 160 Q 430 140 520 160" fill="none" stroke="#ef4444" stroke-width="3"/>
+          <circle cx="430" cy="80" r="10" fill="#f59e0b"/>
+          <circle cx="455" cy="65" r="10" fill="#f59e0b"/>
+          <circle cx="480" cy="80" r="10" fill="#f59e0b"/>
+          <circle cx="505" cy="65" r="10" fill="#f59e0b"/>
+          <path d="M 430 80 L 455 65 L 480 80 L 505 65" fill="none" stroke="#333" stroke-width="2"/>
+          <text x="465" y="45" text-anchor="middle" font-weight="bold" fill="#b45309">단백질</text>
+          <rect x="410" y="215" width="40" height="20" rx="4" fill="#f1f5f9"/>
+          <text x="430" y="229" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">(나)</text>
+        </svg>
+      `,
+      conditions: [
+        "ㄱ. DNA의 유전 정보가 mRNA로 복사되는 (가) 과정은 '전사'이다.",
+        "ㄴ. (가) 과정은 세포질에서, (나) 과정은 핵 속에서 일어난다.",
+        "ㄷ. mRNA의 3개의 염기 조합인 코돈이 하나의 아미노산을 지정한다."
+      ],
+      options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+      answer: 3, 
+      levelReason: "DNA -> RNA -> 단백질로 이어지는 생명 중심 원리(Central Dogma)에서 각 과정의 명칭, 일어나는 장소, 코돈의 역할을 정확히 꿰뚫고 있어야 풀 수 있는 A수준 문항입니다."
+    }
+  ],
+  B: [
+    {
+      question: "표는 어떤 DNA 이중 나선 중 주형 가닥의 염기 서열 일부와 이를 바탕으로 합성된 mRNA의 염기 서열을 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
+      image: `
+        <svg width="100%" height="200" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="200" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+          
+          <rect x="100" y="60" width="400" height="40" fill="#dbeafe" stroke="#3b82f6"/>
+          <text x="150" y="85" font-weight="bold" fill="#1e3a8a">DNA 주형 가닥 :</text>
+          <text x="300" y="85" font-weight="bold" letter-spacing="8" fill="#1e3a8a">T A C G G A T T C</text>
+          
+          <rect x="100" y="110" width="400" height="40" fill="#fee2e2" stroke="#ef4444"/>
+          <text x="150" y="135" font-weight="bold" fill="#b91c1c">합성된 mRNA :</text>
+          <text x="300" y="135" font-weight="bold" letter-spacing="8" fill="#b91c1c">( 가 )</text>
+          
+          <path d="M 280 100 L 280 110" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+          <path d="M 330 100 L 330 110" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+          <path d="M 380 100 L 380 110" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+          <text x="450" y="105" font-size="12" fill="#475569" font-weight="bold">전사</text>
+        </svg>
+      `,
+      conditions: [
+        "ㄱ. (가)에 들어갈 mRNA의 염기 서열은 A U G C C U A A G 이다.",
+        "ㄴ. DNA의 티민(T)은 RNA의 아데닌(A)과 상보적으로 결합한다.",
+        "ㄷ. 위 염기 서열이 리보솜에서 모두 번역된다면 총 9개의 아미노산이 결합된 단백질이 만들어진다."
+      ],
+      options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+      answer: 2, // ㄱ, ㄴ 정답
+      levelReason: "염기의 상보적 결합 규칙(A-U, T-A, G-C, C-G)을 적용하여 전사된 mRNA의 서열을 직접 유추(ㄱ, ㄴ)할 수 있어야 하며, 3개의 염기(1코돈)가 1개의 아미노산을 지정하므로 총 3개의 아미노산이 지정됨(ㄷ 오답)을 계산할 수 있는 B수준의 수능형 문항입니다."
+    }
+  ],
+
+C: [
+  {
+    "question": "세포 내에서 생명 활동을 결정짓는 유전 정보는 '이 물질'에 저장되어 있으며, RNA를 거쳐 최종적으로 단백질로 정보가 전달된다. 유전 정보의 원본이 저장된 '이 물질'은 무엇인가?",
+    "image": null,
+    "conditions": [],
+    "options": [
+      "단백질",
+      "포도당",
+      "지방",
+      "DNA",
+      "아미노산"
+    ],
+    "answer": 3,
+    "levelReason": "유전 정보의 흐름에서 정보가 최초로 저장된 물질이 DNA임을 파악하고 있는지 묻는 C수준 문항입니다."
+  }
+],
+D: [
+  {
+    "question": "유전자에 저장된 정보를 바탕으로 세포 내에서 합성되며, 생명체의 다양한 구조를 형성하고 생리 작용을 조절하는 핵심 물질은 무엇인가?",
+    "image": null,
+    "conditions": [],
+    "options": [
+      "탄수화물",
+      "지질",
+      "단백질",
+      "핵산",
+      "비타민"
+    ],
+    "answer": 2,
+    "levelReason": "유전 정보 발현의 최종 결과물이 단백질임을 인지하고 있는지 묻는 D수준 문항입니다."
+  }
+],
+E: [
+  {
+    "question": "모든 생명체의 세포 속에는 부모로부터 물려받아 생물의 고유한 특징을 결정짓는 정보가 들어 있다. 이 정보를 무엇이라고 하는가?",
+    "image": null,
+    "conditions": [],
+    "options": [
+      "환경 정보",
+      "유전 정보",
+      "화학 정보",
+      "물리 정보",
+      "디지털 정보"
+    ],
+    "answer": 1,
+    "levelReason": "세포 내에 생물의 특징을 결정하는 '유전 정보'가 존재한다는 가장 기초적인 사실을 확인하는 E수준 문항입니다."
+  }
+]
+
+},
 
 };
