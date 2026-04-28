@@ -286,91 +286,96 @@ export const questionTemplates = {
       }
     ]
   },
-  "10통과1-02-04": {
+
+  "10통과1-01-02": {
     A: [
       {
-        question: "다음은 고체 상태와 수용액 상태에서 물질 (가)와 (나)의 전기 전도성을 나타낸 것이다. (가)와 (나)는 각각 염화 나트륨(소금)과 포도당 중 하나이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        image: "https://placehold.co/500x250/f8fafc/64748b?text=전기전도성+비교+표",
+        question: "표는 물리량 (가), (나), (다)의 국제 표준 단위(SI)를 나타낸 것이다. (가)~(다)는 각각 질량, 부피, 밀도 중 하나이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+        image: null,
         conditions: [
-          "ㄱ. (가)가 수용액 상태에서 전류가 흐른다면, (가)는 이온 결합 화합물이다.",
-          "ㄴ. (나)가 공유 결합 화합물이라면, (나)는 고체와 수용액 상태에서 모두 전류가 흐르지 않는다.",
-          "ㄷ. 염화 나트륨(소금)이 고체 상태일 때 전류가 흐르지 않는 이유는 이온이 존재하지 않기 때문이다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, // ㄱ, ㄴ 정답
-        levelReason: "이온 결합과 공유 결합 물질의 특징을 구분하고, 고체 상태에서 이온은 존재하지만 강하게 결합되어 이동할 수 없다는 오답(ㄷ)을 논리적으로 피해야 하는 A수준 문항입니다."
-      }
-    ]
-  },
-  "10통과1-03-05": {
-    A: [
-      {
-        question: "그림은 세포막을 통한 물질 이동 방식 (가)와 (나)를 나타낸 것이다. (가)는 산소의 이동, (나)는 포도당의 이동 방식이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: "https://placehold.co/600x300/f8fafc/8b5cf6?text=세포막+물질이동+모식도",
-        conditions: [
-          "ㄱ. (가)는 인지질 이중층을 직접 통과하는 단순 확산이다.",
-          "ㄴ. (나)는 막 단백질을 통해 농도가 낮은 곳에서 높은 곳으로 물질이 이동한다.",
-          "ㄷ. (가)와 (나) 모두 물질이 이동할 때 세포의 에너지(ATP)를 소모하지 않는다."
+          "ㄱ. (가)가 'kg'을 단위로 쓴다면, (가)는 기본량에 해당한다.",
+          "ㄴ. (나)가 'm³'을 단위로 쓴다면, (나)는 기본량인 '길이'로부터 도출된 과학 개념이다.",
+          "ㄷ. (다)가 밀도라면, (다)의 단위는 (가)와 (나)의 단위를 조합하여 'kg/m³'으로 나타낼 수 있다."
         ],
         options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, // ㄱ, ㄷ 정답
-        levelReason: "세포막의 선택적 투과성을 단순 확산과 막 단백질을 통한 촉진 확산으로 구분하고, 에너지 소모 유무와 농도 기울기 개념을 완벽하게 이해해야 풀 수 있는 A수준 문항입니다."
+        answer: 4, 
+        levelReason: "길이, 질량과 같은 기본량으로부터 부피, 밀도 등 새로운 과학 개념(유도량)이 도출되는 원리를 명확히 이해하고 단위를 조합할 수 있는지 평가하므로 A수준에 부합합니다."
       }
-    ]
-  },
-  "10통과1-03-06": {
-    A: [
+    ],
+    B: [
       {
-        question: "그림은 진핵세포에서 일어나는 생명 중심 원리(유전 정보 발현)의 일부를 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+        question: "그림은 과학 탐구에서 사용하는 여러 가지 물리량을 '기본량'과 '유도량'으로 분류하는 과정을 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
         image: `
-          <svg width="100%" height="260" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="260" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            
-            <path d="M 40 20 L 40 240 L 260 240 L 260 20 Z" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="2" stroke-dasharray="5,5"/>
-            <text x="150" y="45" text-anchor="middle" font-weight="bold" fill="#3730a3" font-size="16">핵 (Nucleus)</text>
-            
-            <text x="430" y="45" text-anchor="middle" font-weight="bold" fill="#065f46" font-size="16">세포질 (Cytoplasm)</text>
-            
-            <path d="M 80 80 Q 150 40 220 80 T 80 140 Q 150 180 220 140" fill="none" stroke="#3b82f6" stroke-width="4"/>
-            <text x="150" y="115" text-anchor="middle" font-weight="bold" fill="#1d4ed8">DNA</text>
-            
-            <path d="M 150 125 L 150 170" fill="none" stroke="#475569" stroke-width="2"/>
-            <polygon points="145,170 155,170 150,180" fill="#475569"/>
-            <rect x="160" y="140" width="40" height="20" rx="4" fill="#f1f5f9"/>
-            <text x="180" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">(가)</text>
-            
-            <path d="M 90 190 Q 150 220 210 190" fill="none" stroke="#ef4444" stroke-width="3"/>
-            <text x="150" y="215" text-anchor="middle" font-weight="bold" fill="#b91c1c">mRNA</text>
-            
-            <path d="M 220 195 Q 300 195 340 165" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="4,4"/>
-            <polygon points="335,165 345,170 340,160" fill="#475569" transform="rotate(30 340 165)"/>
-            
-            <circle cx="430" cy="130" r="35" fill="#d1fae5"/>
-            <circle cx="430" cy="180" r="25" fill="#a7f3d0"/>
-            <path d="M 340 160 Q 430 140 520 160" fill="none" stroke="#ef4444" stroke-width="3"/>
-            
-            <circle cx="430" cy="80" r="10" fill="#f59e0b"/>
-            <circle cx="455" cy="65" r="10" fill="#f59e0b"/>
-            <circle cx="480" cy="80" r="10" fill="#f59e0b"/>
-            <circle cx="505" cy="65" r="10" fill="#f59e0b"/>
-            <path d="M 430 80 L 455 65 L 480 80 L 505 65" fill="none" stroke="#333" stroke-width="2"/>
-            <text x="465" y="45" text-anchor="middle" font-weight="bold" fill="#b45309">단백질</text>
-            
-            <rect x="410" y="215" width="40" height="20" rx="4" fill="#f1f5f9"/>
-            <text x="430" y="229" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">(나)</text>
+          <svg width="100%" height="220" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="220" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            <rect x="50" y="40" width="160" height="140" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="130" y="70" text-anchor="middle" font-weight="bold" fill="#1e3a8a" font-size="16">기본량 (Base)</text>
+            <text x="130" y="100" text-anchor="middle" fill="#333">길이 (m)</text>
+            <text x="130" y="130" text-anchor="middle" fill="#333">질량 (kg)</text>
+            <text x="130" y="160" text-anchor="middle" fill="#333">시간 (s)</text>
+            <rect x="390" y="40" width="160" height="140" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+            <text x="470" y="70" text-anchor="middle" font-weight="bold" fill="#831843" font-size="16">유도량 (Derived)</text>
+            <text x="470" y="100" text-anchor="middle" fill="#333">부피 (m³)</text>
+            <text x="470" y="130" text-anchor="middle" fill="#333">속력 (m/s)</text>
+            <text x="470" y="160" text-anchor="middle" fill="#333">( 가 )</text>
+            <path d="M 220 110 Q 305 110 375 110" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="6,4"/>
+            <polygon points="370,105 385,110 370,115" fill="#64748b"/>
+            <rect x="265" y="95" width="70" height="30" rx="15" fill="#fff" stroke="#94a3b8"/>
+            <text x="300" y="115" text-anchor="middle" font-size="13" font-weight="bold" fill="#475569">조합/도출</text>
           </svg>
         `,
         conditions: [
-          "ㄱ. DNA의 유전 정보가 RNA로 전달되는 과정은 '전사'이다.",
-          "ㄴ. 전사 과정은 세포질에서, 번역 과정은 핵 속에서 일어난다.",
-          "ㄷ. RNA의 3개의 염기 조합(코돈)이 하나의 아미노산을 지정하여 단백질이 합성된다."
+          "ㄱ. 시간, 길이, 질량은 다른 물리량의 조합 없이 독립적으로 정의되는 기본량이다.",
+          "ㄴ. '속력'은 기본량인 '길이'와 '질량'을 조합하여 도출된 유도량이다.",
+          "ㄷ. (가)에 '밀도(kg/m³)'가 들어간다면, 이는 질량과 부피(길이의 조합)를 이용하여 나타낸 것이다."
         ],
-        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 3, // ㄱ, ㄷ 정답
-        levelReason: "DNA -> RNA -> 단백질로 이어지는 정보 흐름의 각 단계 명칭을 알고, 그 과정이 일어나는 장소(핵 vs 세포질)의 함정을 피할 수 있어야 하는 A수준 문항입니다."
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2, 
+        levelReason: "기본량의 정의를 이해하고(ㄱ), 속력이 길이와 '시간'의 조합임을 파악하여 함정(ㄴ)을 피하며, 밀도의 단위를 통해 유도 과정을 논리적으로 추론(ㄷ)할 수 있어야 하므로 B수준에 해당합니다."
+      }
+    ],
+    C: [
+      {
+        question: "다음은 과학 탐구에서 사용하는 물리량과 그 국제 표준 단위(SI)를 짝지은 것이다. 옳지 **않은** 것은?",
+        image: null,
+        conditions: [],
+        options: [
+          "길이 - 미터(m)",
+          "질량 - 킬로그램(kg)",
+          "시간 - 초(s)",
+          "온도 - 켈빈(K)",
+          "부피 - 센티미터(cm)"
+        ],
+        answer: 4,
+        levelReason: "기본량의 대표적인 단위들을 정확히 알고 있으며, 부피의 단위(m³ 등)와 길이의 단위(cm)를 헷갈리지 않고 구분할 수 있는지 묻는 C수준 5지선다형 문항입니다."
+      }
+    ],
+    D: [
+      {
+        question: "자연 현상을 관찰하고 기술하는 데 필요한 '기본량'에 속하는 것만을 <보기>에서 있는 대로 고른 것은?",
+        image: null,
+        conditions: [
+          "ㄱ. 시간",
+          "ㄴ. 속력",
+          "ㄷ. 온도"
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2, 
+        levelReason: "속력(유도량)과 시간, 온도(기본량)를 단순히 구분할 수 있는지 묻는 문항으로, 기본량의 종류를 숙지하고 있는지 확인하는 D수준 문항입니다."
+      }
+    ],
+    E: [
+      {
+        question: "자연의 크기나 양을 수치로 정확하게 나타내기 위해 과학자들이 세계 공통으로 정한 기준(미터, 킬로그램, 초 등)을 무엇이라고 부르는가?",
+        image: null,
+        conditions: [],
+        options: ["부피", "질량", "단위", "도구", "오차"],
+        answer: 2,
+        levelReason: "자연 현상을 기술하는 데 필수적인 '단위'의 의미와 필요성을 가장 기초적인 수준에서 알고 있는지 묻는 E수준 문항입니다."
       }
     ]
   },
+
   "10통과1-01-03": {
     A: [
       {
@@ -423,75 +428,6 @@ export const questionTemplates = {
       }
     ]
   },
-
-  "10통과1-02-05": {
-    A: [
-      {
-        question: "지각과 생명체를 구성하는 물질은 기본 단위체의 결합을 통해 형성된다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        image: null,
-        conditions: [
-          "ㄱ. 지각의 대부분을 구성하는 규산염 광물의 기본 단위체는 규소(Si)와 산소(O)로 이루어진 규산염 사면체이다.",
-          "ㄴ. 생명체를 구성하는 단백질은 수많은 아미노산이 펩타이드 결합을 하여 만들어진다.",
-          "ㄷ. DNA와 RNA 같은 핵산을 구성하는 기본 단위체는 뉴클레오타이드이다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 4, // ㄱ, ㄴ, ㄷ 모두 정답
-        levelReason: "규산염 광물, 단백질, 핵산이 각각 어떤 기본 단위체로 구성되어 있는지 그 구조적 특징을 모두 완벽하게 이해하고 있어야 하는 A수준 문항입니다."
-      }
-    ]
-  },
-
-  "10통과1-03-01": {
-    B: [
-      {
-        question: "다음은 지구시스템을 구성하는 권역 간의 상호작용 사례이다. 상호작용하는 두 권역이 바르게 짝지어진 것은?",
-        image: null,
-        conditions: [
-          "[사례] 해저 지진으로 인해 거대한 쓰나미(지진 해일)가 발생하여 해안가에 큰 피해를 주었다."
-        ],
-        options: [
-          "지권과 기권",
-          "지권과 수권",
-          "수권과 생물권",
-          "기권과 생물권",
-          "기권과 외권"
-        ],
-        answer: 1, // 지권과 수권 정답
-        levelReason: "해저 지진(지권의 변화)이 바닷물(수권)에 에너지를 전달하여 해일이 발생하는 현상을 통해 권역 간의 상호작용을 정확히 연결할 수 있는지를 평가하는 B수준 5지선다형 문항입니다."
-      }
-    ]
-  },
-  "10통과1-01-02": {
-    A: [
-      {
-        question: "표는 물리량 (가), (나), (다)의 국제 표준 단위(SI)를 나타낸 것이다. (가)~(다)는 각각 질량, 부피, 밀도 중 하나이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: "https://placehold.co/400x200/f8fafc/10b981?text=Physical+Quantities+Table",
-        conditions: [
-          "ㄱ. (가)가 'kg'을 단위로 쓴다면, (가)는 기본량에 해당한다.",
-          "ㄴ. (나)가 'm³'을 단위로 쓴다면, (나)는 기본량인 '길이'로부터 도출된 과학 개념이다.",
-          "ㄷ. (다)가 밀도라면, (다)의 단위는 (가)와 (나)의 단위를 조합하여 'kg/m³'으로 나타낼 수 있다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 4, 
-        levelReason: "길이, 질량과 같은 기본량으로부터 부피, 밀도 등 새로운 과학 개념(유도량)이 도출되는 원리를 명확히 이해하고 단위를 조합할 수 있는지 평가하므로 A수준에 부합합니다."
-      }
-    ],
-    D: [
-      {
-        question: "자연 현상을 관찰하고 기술하는 데 필요한 '기본량'에 속하는 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: null,
-        conditions: [
-          "ㄱ. 시간",
-          "ㄴ. 속력",
-          "ㄷ. 온도"
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, 
-        levelReason: "속력(유도량)과 시간, 온도(기본량)를 단순히 구분할 수 있는지 묻는 문항으로, 기본량의 종류를 숙지하고 있는지 확인하는 D수준 문항입니다."
-      }
-    ]
-  },
-  // --- [여기서부터 복사해서 기존 데이터 사이에 끼워넣으세요] ---
 
   "10통과1-01-04": {
     A: [
@@ -574,6 +510,7 @@ export const questionTemplates = {
     ]
   },
 
+  // [2단원] --------------------------------------------------
   "10통과1-02-01": {
     A: [
       {
@@ -679,99 +616,7 @@ export const questionTemplates = {
     ]
   },
 
-  "10통과1-03-05": {
-    B: [
-      {
-        question: "그림은 우리 주변에서 볼 수 있는 여러 가지 화학 반응과 물질 출입 현상이다. 생명 시스템 내에서 효소가 관여하여 일어나는 반응(물질대사)만을 <보기>에서 있는 대로 고른 것은?",
-        image: "https://placehold.co/600x300/f8fafc/ef4444?text=Chemical+Reactions+in+Life",
-        conditions: [
-          "ㄱ. 공기 중에 방치된 깎은 사과가 산소와 반응하여 갈색으로 변한다. (갈변 현상)",
-          "ㄴ. 사람의 위에서 펩신이라는 효소에 의해 음식물 속 단백질이 분해된다. (소화)",
-          "ㄷ. 식물의 잎에서 빛 에너지를 흡수하여 이산화 탄소와 물로 포도당을 합성한다. (광합성)"
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 3, // ㄴ, ㄷ 정답
-        levelReason: "세포 내에서 효소가 관여하여 생명을 유지하는 필수적인 물질대사(소화, 광합성)를 단순 자연계 화학 반응(사과 갈변)과 명확히 구분하고 예를 들어 설명할 수 있어야 하므로 B수준 문항입니다."
-      }
-    ]
-  },
-
-  // --- [여기까지 복사하세요] ---
-  "10통과1-01-04": {
-    A: [
-       {
-        question: "그림은 소리가 마이크를 통해 디지털 신호로 변환되어 저장되는 과정을 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="250" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            <text x="20" y="30" font-weight="bold" fill="#334155">아날로그 신호와 표본화(Sampling)</text>
-            
-            <path d="M 50 150 Q 150 50 250 150 T 450 150" fill="none" stroke="#ef4444" stroke-width="3"/>
-            
-            <rect x="100" y="90" width="10" height="110" fill="#3b82f6" opacity="0.8"/>
-            <rect x="150" y="50" width="10" height="150" fill="#3b82f6" opacity="0.8"/>
-            <rect x="200" y="90" width="10" height="110" fill="#3b82f6" opacity="0.8"/>
-            <rect x="250" y="150" width="10" height="50" fill="#3b82f6" opacity="0.8"/>
-            <rect x="300" y="210" width="10" height="-10" fill="#3b82f6" opacity="0.8"/>
-            <rect x="350" y="250" width="10" height="-50" fill="#3b82f6" opacity="0.8"/>
-            
-            <line x1="40" y1="200" x2="500" y2="200" stroke="#0f172a" stroke-width="2"/>
-            <text x="510" y="205" fill="#0f172a" font-size="14">시간</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. (가) 과정에서 소리는 마이크의 센서를 통해 연속적인 전압 변화를 갖는 아날로그 전기 신호로 변환된다.",
-          "ㄴ. 표본화(Sampling) 주기가 짧을수록 디지털 신호는 원래의 아날로그 신호에 가깝다.",
-          "ㄷ. 디지털 신호는 0과 1의 불연속적인 값으로 저장되므로 복사 과정에서 신호의 손실이 아날로그보다 크게 일어난다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2,
-        levelReason: "자연계의 신호가 센서를 통해 전기 신호로 바뀌고, 이를 샘플링하여 디지털로 변환하는 기술적 원리와 디지털 신호의 장점(복사 시 손실 없음)을 정확히 분석해야 하므로 A수준입니다."
-      }
-    ]
-  },
-
-  // [2단원] --------------------------------------------------
-  "10통과1-02-01": {
-    A: [
-      {
-        question: "다음은 미지의 천체 A에서 관측된 흡수 스펙트럼과 실험실의 수소 방출 스펙트럼이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        // 👇 코드로 직접 그린 스펙트럼 이미지 (외부 파일 필요 없음!)
-        image: `
-          <svg width="100%" height="200" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="200" fill="#1e293b" rx="10"/>
-            <text x="20" y="40" fill="white" font-weight="bold">천체 A (흡수 스펙트럼)</text>
-            <defs>
-              <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#ff0000" />
-                <stop offset="25%" stop-color="#ffff00" />
-                <stop offset="50%" stop-color="#00ff00" />
-                <stop offset="75%" stop-color="#0000ff" />
-                <stop offset="100%" stop-color="#8b5cf6" />
-              </linearGradient>
-            </defs>
-            <rect x="20" y="60" width="560" height="30" fill="url(#rainbow)"/>
-            <line x1="150" y1="60" x2="150" y2="90" stroke="black" stroke-width="4"/>
-            <line x1="400" y1="60" x2="400" y2="90" stroke="black" stroke-width="4"/>
-            
-            <text x="20" y="140" fill="white" font-weight="bold">실험실 수소(H) 방출 스펙트럼</text>
-            <rect x="20" y="150" width="560" height="30" fill="black"/>
-            <line x1="150" y1="150" x2="150" y2="180" stroke="#ff0000" stroke-width="4"/>
-            <line x1="400" y1="150" x2="400" y2="180" stroke="#00ffff" stroke-width="4"/>
-            <line x1="480" y1="150" x2="480" y2="180" stroke="#8b5cf6" stroke-width="4"/>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. 천체 A의 대기에는 수소(H)가 포함되어 있다.",
-          "ㄴ. 천체 A의 흡수선 위치는 실험실의 방출선 위치와 정확히 일치한다.",
-          "ㄷ. 이 스펙트럼 분석 결과만으로 우주 전역의 수소와 헬륨 질량비가 3:1임을 직접 계산할 수 있다."
-        ],
-        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, 
-        levelReason: "스펙트럼의 선 위치를 직접 대조하여 천체의 구성 성분을 분석해내고, 관측 자료의 한계(ㄷ은 계산 불가)를 논리적으로 판단하는 A수준 문항입니다."
-      }
-    ],
-
+  
   "10통과1-02-02": {
     A: [
       {
@@ -827,6 +672,7 @@ export const questionTemplates = {
       }
     ]
   },
+  
   "10통과1-02-03": {
     A: [
       {
@@ -1007,6 +853,18 @@ export const questionTemplates = {
         options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
         answer: 2, // ㄱ, ㄷ 정답
         levelReason: "이온 결합 물질과 공유 결합 물질이 물에 녹았을 때의 차이(이온화 여부)를 시각적으로 분석하고, 이온 결합 물질이라도 '고체 상태'에서는 전류가 흐르지 않음을 정확히 인지해야 하는 A수준 문항입니다."
+      },
+      {
+        question: "다음은 고체 상태와 수용액 상태에서 물질 (가)와 (나)의 전기 전도성을 나타낸 것이다. (가)와 (나)는 각각 염화 나트륨(소금)과 포도당 중 하나이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
+        image: "https://placehold.co/500x250/f8fafc/64748b?text=전기전도성+비교+표",
+        conditions: [
+          "ㄱ. (가)가 수용액 상태에서 전류가 흐른다면, (가)는 이온 결합 화합물이다.",
+          "ㄴ. (나)가 공유 결합 화합물이라면, (나)는 고체와 수용액 상태에서 모두 전류가 흐르지 않는다.",
+          "ㄷ. 염화 나트륨(소금)이 고체 상태일 때 전류가 흐르지 않는 이유는 이온이 존재하지 않기 때문이다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2, // ㄱ, ㄴ 정답
+        levelReason: "이온 결합과 공유 결합 물질의 특징을 구분하고, 고체 상태에서 이온은 존재하지만 강하게 결합되어 이동할 수 없다는 오답(ㄷ)을 논리적으로 피해야 하는 A수준 문항입니다."
       }
     ],
     B: [
@@ -1082,7 +940,311 @@ export const questionTemplates = {
     ]
   },
 
+ "10통과1-02-05": {
+    A: [
+      {
+        question: "지각과 생명체를 구성하는 물질은 기본 단위체의 결합을 통해 형성된다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
+        image: null,
+        conditions: [
+          "ㄱ. 지각의 대부분을 구성하는 규산염 광물의 기본 단위체는 규소(Si)와 산소(O)로 이루어진 규산염 사면체이다.",
+          "ㄴ. 생명체를 구성하는 단백질은 수많은 아미노산이 펩타이드 결합을 하여 만들어진다.",
+          "ㄷ. DNA와 RNA 같은 핵산을 구성하는 기본 단위체는 뉴클레오타이드이다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 4, 
+        levelReason: "규산염 광물, 단백질, 핵산이 각각 어떤 기본 단위체로 구성되어 있는지 그 구조적 특징을 모두 완벽하게 이해하고 있어야 하는 A수준 문항입니다."
+      }
+    ],
+    B: [
+      {
+        question: "그림 (가)는 규산염 광물의 기본 단위체를, (나)는 단백질을 구성하는 기본 단위체가 결합하는 과정을 모식도로 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
+        image: `
+          <svg width="100%" height="240" viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="240" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            
+            <text x="150" y="35" text-anchor="middle" font-weight="bold" fill="#333">(가) 지각 구성 물질</text>
+            <polygon points="150,70 90,170 210,170" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" opacity="0.5"/>
+            <circle cx="150" cy="130" r="15" fill="#3b82f6"/> <text x="150" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Si</text>
+            <circle cx="150" cy="70" r="18" fill="#ef4444"/> <text x="150" y="75" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
+            <circle cx="90" cy="170" r="18" fill="#ef4444"/> <text x="90" y="175" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
+            <circle cx="210" cy="170" r="18" fill="#ef4444"/> <text x="210" y="175" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
+            <circle cx="150" cy="140" r="18" fill="#ef4444" opacity="0.8"/> <text x="150" y="145" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
+            
+            <text x="450" y="35" text-anchor="middle" font-weight="bold" fill="#333">(나) 생명체 구성 물질</text>
+            <rect x="330" y="110" width="60" height="40" rx="8" fill="#10b981"/> <text x="360" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">단위체 A</text>
+            <rect x="420" y="110" width="60" height="40" rx="8" fill="#10b981"/> <text x="450" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">단위체 A</text>
+            <rect x="510" y="110" width="60" height="40" rx="8" fill="#10b981"/> <text x="540" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">단위체 A</text>
+            
+            <line x1="390" y1="130" x2="420" y2="130" stroke="#0f172a" stroke-width="4"/>
+            <line x1="480" y1="130" x2="510" y2="130" stroke="#0f172a" stroke-width="4"/>
+            <path d="M 405 130 L 405 170" fill="none" stroke="#64748b" stroke-width="2"/>
+            <text x="405" y="185" text-anchor="middle" font-size="12" fill="#333">펩타이드 결합</text>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. (가)의 중심에 있는 규소(Si) 원자는 4개의 산소(O) 원자와 이온 결합을 하고 있다.",
+          "ㄴ. (나)에서 '단위체 A'는 아미노산이다.",
+          "ㄷ. 지각과 생명체를 구성하는 복잡한 물질들은 이처럼 적은 종류의 기본 단위체가 다양한 방식으로 결합하여 만들어진다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 3, 
+        levelReason: "규산염 사면체와 단백질의 기본 단위체를 정확히 인지하고(ㄴ, ㄷ), 규소와 산소 사이의 결합이 이온 결합이 아닌 '공유 결합'임(ㄱ 오답)을 화학 결합의 원리와 연관 지어 구분할 수 있어야 하는 B수준 문항입니다."
+      }
+    ],
+    C: [
+      {
+        question: "다음 중 지각과 생명체를 구성하는 복잡한 거대 분자(고분자 화합물)가 만들어지는 가장 핵심적인 원리는 무엇인가?",
+        image: null,
+        conditions: [],
+        options: [
+          "무수히 많은 종류의 원소들이 무작위로 결합하여 만들어진다.",
+          "단 몇 종류의 기본 단위체들이 규칙적으로 반복 결합하여 만들어진다.",
+          "우주선(Cosmic ray)의 에너지를 받아 순식간에 합성된다.",
+          "강한 자석의 힘에 의해 금속 원소들이 뭉쳐서 만들어진다.",
+          "세포가 분열할 때 온도와 압력이 극도로 높아져 생성된다."
+        ],
+        answer: 1,
+        levelReason: "복잡한 물질(규산염 광물, 단백질, 핵산 등)이 형성되는 원리가 '기본 단위체의 반복적인 결합'이라는 사실을 명확히 이해하고 있는지를 묻는 C수준 문항입니다."
+      }
+    ],
+    D: [
+      {
+        question: "생명체를 구성하는 주요 물질 중에서, '아미노산'이라는 기본 단위체가 수없이 결합하여 만들어지는 물질은 무엇인가?",
+        image: null,
+        conditions: [],
+        options: ["탄수화물", "지방", "단백질", "핵산", "무기 염류"],
+        answer: 2,
+        levelReason: "아미노산과 단백질의 관계를 정확히 알고 있는지 확인하는 D수준의 기초 개념 문항입니다."
+      }
+    ],
+    E: [
+      {
+        question: "집을 지을 때 벽돌이라는 작은 단위를 쌓아 거대한 건물을 만들 듯이, 생명체나 지각을 구성하는 복잡한 물질을 형성할 때 반복적으로 결합하는 가장 기본적인 작은 단위를 무엇이라고 하는가?",
+        image: null,
+        conditions: [],
+        options: ["혼합물", "화합물", "단위체", "다각형", "방사성 동위 원소"],
+        answer: 2,
+        levelReason: "'단위체'라는 핵심 용어의 의미를 알고 있는지 직관적으로 묻는 E수준 문항입니다."
+      }
+    ]
+  },
+  "10통과1-02-06": {
+    A: [
+      {
+        question: "그림은 고체 물질의 전기적 성질을 알아보기 위해 전기 회로에 도체, 부도체, 반도체를 각각 연결한 실험이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
+        image: `
+          <svg width="100%" height="220" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="220" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            <rect x="250" y="160" width="100" height="40" rx="5" fill="#334155"/>
+            <text x="300" y="185" text-anchor="middle" fill="white" font-weight="bold">전원 장치</text>
+            <path d="M 250 180 L 150 180 L 150 100 L 250 100" fill="none" stroke="#0f172a" stroke-width="4"/>
+            <path d="M 350 180 L 450 180 L 450 100 L 350 100" fill="none" stroke="#0f172a" stroke-width="4"/>
+            <circle cx="150" cy="140" r="15" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
+            <line x1="140" y1="140" x2="160" y2="140" stroke="#ca8a04" stroke-width="2"/>
+            <rect x="250" y="80" width="100" height="40" fill="#e2e8f0" stroke="#64748b" stroke-width="2" stroke-dasharray="4,4"/>
+            <text x="300" y="105" text-anchor="middle" fill="#475569" font-weight="bold">물질 (가)</text>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. (가)에 구리, 철 등의 금속을 연결하면 전구에 불이 켜진다.",
+          "ㄴ. (가)에 규소(Si)로 만든 순수 반도체를 연결하고 온도를 매우 높여주면 전기 전도성이 증가한다.",
+          "ㄷ. 부도체는 자유 전자가 많아 전류가 잘 흐르지 않는 물질이다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2,
+        levelReason: "자유 전자의 유무에 따른 도체와 부도체의 차이를 알고, 반도체의 특징(온도나 불순물에 의한 전기 전도성 변화)을 정확히 이해하고 있는지를 평가하는 A수준 문항입니다."
+      }
+    ],
+    B: [
+      {
+        question: "그림은 규소(Si)로 이루어진 순수 반도체에 미량의 불순물(X)을 첨가하여 전기적 성질을 변화시키는 과정(도핑)을 모식도로 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+        image: `
+          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="250" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            
+            <text x="150" y="30" text-anchor="middle" font-weight="bold" fill="#333">순수 반도체</text>
+            <circle cx="100" cy="90" r="20" fill="#94a3b8"/> <text x="100" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            <circle cx="200" cy="90" r="20" fill="#94a3b8"/> <text x="200" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            <circle cx="100" cy="190" r="20" fill="#94a3b8"/> <text x="100" y="195" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            <circle cx="200" cy="190" r="20" fill="#94a3b8"/> <text x="200" y="195" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            
+            <line x1="120" y1="90" x2="180" y2="90" stroke="#3b82f6" stroke-width="6"/> <line x1="120" y1="190" x2="180" y2="190" stroke="#3b82f6" stroke-width="6"/>
+            <line x1="100" y1="110" x2="100" y2="170" stroke="#3b82f6" stroke-width="6"/>
+            <line x1="200" y1="110" x2="200" y2="170" stroke="#3b82f6" stroke-width="6"/>
+            
+            <path d="M 260 140 L 340 140" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrow)"/>
+            <text x="300" y="130" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">불순물(X) 첨가</text>
+
+            <text x="450" y="30" text-anchor="middle" font-weight="bold" fill="#333">불순물 반도체</text>
+            <circle cx="400" cy="90" r="20" fill="#94a3b8"/> <text x="400" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            <circle cx="500" cy="90" r="20" fill="#94a3b8"/> <text x="500" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            <circle cx="400" cy="190" r="20" fill="#94a3b8"/> <text x="400" y="195" text-anchor="middle" fill="white" font-weight="bold">Si</text>
+            
+            <circle cx="500" cy="190" r="20" fill="#10b981"/> <text x="500" y="195" text-anchor="middle" fill="white" font-weight="bold">X</text> <circle cx="530" cy="160" r="8" fill="#ef4444"/> <text x="530" y="150" text-anchor="middle" font-size="10" font-weight="bold" fill="#ef4444">자유 전자</text>
+            
+            <line x1="420" y1="90" x2="480" y2="90" stroke="#3b82f6" stroke-width="6"/>
+            <line x1="420" y1="190" x2="480" y2="190" stroke="#3b82f6" stroke-width="6"/>
+            <line x1="400" y1="110" x2="400" y2="170" stroke="#3b82f6" stroke-width="6"/>
+            <line x1="500" y1="110" x2="500" y2="170" stroke="#3b82f6" stroke-width="6"/>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. 불순물이 전혀 없는 순수 반도체는 상온에서 전기가 매우 잘 통하는 도체이다.",
+          "ㄴ. 순수 반도체에 특정 불순물(X)을 첨가하면 그림과 같이 잉여 전자가 생겨 전기 전도성이 높아진다.",
+          "ㄷ. 이러한 성질을 제어하여 만든 반도체 소자는 컴퓨터의 CPU, 스마트폰, 태양 전지 등의 핵심 소재로 널리 활용된다."
+        ],
+        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 3, // ㄴ, ㄷ 정답
+        levelReason: "순수 반도체가 도체가 아님을 알고(ㄱ 오답), 불순물을 첨가하여 전기적 성질을 제어하는 원리(도핑)를 이해하며, 이것이 현대 첨단 기술에 활용되는 다양한 사례를 설명할 수 있는 B수준의 수능형 문항입니다."
+      }
+    ],
+    C: [
+      {
+        question: "다음 중 물질을 전기적 성질에 따라 도체, 부도체, 반도체로 구분할 때, 성질이 **다른** 하나는 무엇인가?",
+        image: null,
+        conditions: [],
+        options: ["철", "구리", "알루미늄", "유리", "금"],
+        answer: 3,
+        levelReason: "일상생활에서 흔히 볼 수 있는 물질들을 도체(금속류)와 부도체(유리 등)로 단순 분류할 수 있는지를 확인하는 C수준 문항입니다."
+      }
+    ],
+    D: [
+      {
+        question: "도체, 부도체, 반도체의 일반적인 전기적 성질에 대한 설명으로 옳은 것은?",
+        image: null,
+        conditions: [],
+        options: [
+          "도체는 자유 전자가 거의 없어 전류가 잘 흐르지 않는다.",
+          "부도체는 온도가 낮아지면 저항이 완전히 없어져 초전도체가 된다.",
+          "반도체는 조건(온도, 불순물 등)에 따라 도체와 부도체의 성질을 모두 가질 수 있다.",
+          "유리와 고무는 대표적인 반도체 물질이다.",
+          "구리, 철, 금은 대표적인 부도체 물질이다."
+        ],
+        answer: 2,
+        levelReason: "도체, 부도체, 반도체의 기본적인 전기적 성질과 특징을 비교하여 올바르게 설명할 수 있는지 확인하는 D수준 5지선다형 문항입니다."
+      }
+    ],
+    E: [
+      {
+        question: "물질을 전기적 성질(전기가 통하는 정도)에 따라 크게 세 가지로 분류할 때, 이에 해당하지 **않는** 것은?",
+        image: null,
+        conditions: [],
+        options: ["도체", "부도체(절연체)", "반도체", "액체"],
+        answer: 3,
+        levelReason: "지구를 구성하는 물질을 전기적 성질에 따라 구분하는 기본 명칭(도체, 부도체, 반도체)을 알고 있는지 직관적으로 묻는 E수준 문항입니다."
+      }
+    ]
+  },
+
   // [3단원] --------------------------------------------------
+  "10통과1-03-01": {
+    A: [
+      {
+        question: "그림은 지구시스템의 권역 간에 일어나는 탄소(C)의 순환 과정을 모식도로 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+        image: `
+          <svg width="100%" height="280" viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="280" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            <rect x="50" y="20" width="500" height="60" rx="10" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+            <text x="300" y="55" text-anchor="middle" font-weight="bold" fill="#0284c7" font-size="16">기권 (이산화 탄소 등)</text>
+            <rect x="50" y="120" width="140" height="60" rx="10" fill="#dcfce3" stroke="#4ade80" stroke-width="2"/>
+            <text x="120" y="155" text-anchor="middle" font-weight="bold" fill="#166534" font-size="16">생물권</text>
+            <rect x="410" y="120" width="140" height="60" rx="10" fill="#c7d2fe" stroke="#818cf8" stroke-width="2"/>
+            <text x="480" y="155" text-anchor="middle" font-weight="bold" fill="#3730a3" font-size="16">수권 (해수)</text>
+            <rect x="50" y="210" width="500" height="50" rx="10" fill="#ffedd5" stroke="#fdba74" stroke-width="2"/>
+            <text x="300" y="240" text-anchor="middle" font-weight="bold" fill="#9a3412" font-size="16">지권 (화석 연료, 석회암)</text>
+            <path d="M 100 80 L 100 110" fill="none" stroke="#22c55e" stroke-width="3"/>
+            <polygon points="95,110 105,110 100,118" fill="#22c55e"/>
+            <text x="80" y="100" font-size="12" font-weight="bold">(가)</text>
+            <path d="M 280 210 L 280 90" fill="none" stroke="#ef4444" stroke-width="3"/>
+            <polygon points="275,90 285,90 280,82" fill="#ef4444"/>
+            <text x="290" y="160" font-size="12" font-weight="bold">(나)</text>
+            <path d="M 460 80 L 460 110" fill="none" stroke="#3b82f6" stroke-width="3"/>
+            <polygon points="455,110 465,110 460,118" fill="#3b82f6"/>
+            <path d="M 500 120 L 500 90" fill="none" stroke="#3b82f6" stroke-width="3"/>
+            <polygon points="495,90 505,90 500,82" fill="#3b82f6"/>
+            <text x="440" y="100" font-size="12" font-weight="bold">(다)</text>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. (가)는 식물의 광합성에 의해 기권의 탄소가 생물권으로 이동하는 과정이다.",
+          "ㄴ. 화석 연료의 사용량이 증가하면 (나) 과정이 활발해져 기권의 온실 효과가 강화된다.",
+          "ㄷ. 수온이 높아지면 해수에 녹아 있던 이산화 탄소가 방출되므로, (다)에서 기권으로 이동하는 탄소의 양이 증가한다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 4, 
+        levelReason: "지구시스템 권역 간의 상호작용을 빅데이터(탄소 순환)와 연결하여 파악하고, 수온 상승 등 시스템의 균형이 깨질 때 나타나는 복합적인 연쇄 작용(지구 온난화 가속)을 완벽하게 추론할 수 있어야 하는 A수준 문항입니다."
+      }
+    ],
+    B: [
+      {
+        question: "다음은 지구시스템을 구성하는 권역 간의 상호작용 사례이다. 상호작용하는 두 권역이 바르게 짝지어진 것은?",
+        image: null,
+        conditions: [
+          "[사례] 해저 지진으로 인해 거대한 쓰나미(지진 해일)가 발생하여 해안가에 큰 피해를 주었다."
+        ],
+        options: [
+          "지권과 기권",
+          "지권과 수권",
+          "수권과 생물권",
+          "기권과 생물권",
+          "기권과 외권"
+        ],
+        answer: 1, 
+        levelReason: "해저 지진(지권의 변화)이 바닷물(수권)에 에너지를 전달하여 해일이 발생하는 현상을 통해 권역 간의 상호작용을 정확히 연결할 수 있는지를 평가하는 B수준 5지선다형 문항입니다."
+      }
+    ],
+    C: [
+      {
+        question: "그림은 지구시스템을 구성하는 주요 권역들을 모식도로 나타낸 것이다. 각 권역 사이의 상호작용에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+        image: `
+          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="250" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            
+            <circle cx="300" cy="125" r="80" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>
+            <text x="300" y="130" text-anchor="middle" font-weight="bold" fill="#333">지구시스템</text>
+            
+            <rect x="250" y="20" width="100" height="40" rx="20" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
+            <text x="300" y="45" text-anchor="middle" font-weight="bold" fill="#0284c7">기권</text>
+            
+            <rect x="100" y="105" width="100" height="40" rx="20" fill="#fef08a" stroke="#eab308" stroke-width="2"/>
+            <text x="150" y="130" text-anchor="middle" font-weight="bold" fill="#a16207">지권</text>
+            
+            <rect x="400" y="105" width="100" height="40" rx="20" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="450" y="130" text-anchor="middle" font-weight="bold" fill="#1d4ed8">수권</text>
+            
+            <rect x="250" y="190" width="100" height="40" rx="20" fill="#bbf7d0" stroke="#22c55e" stroke-width="2"/>
+            <text x="300" y="215" text-anchor="middle" font-weight="bold" fill="#15803d">생물권</text>
+            
+            <path d="M 280 60 L 170 105" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M 320 60 L 430 105" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M 170 145 L 280 190" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M 430 145 L 320 190" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M 300 60 L 300 190" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M 200 125 L 400 125" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+        `,
+        conditions: [
+          "ㄱ. 태풍이 발생하여 강력한 해일이 육지를 덮치는 현상은 수권, 기권, 지권의 복합적인 상호작용이다.",
+          "ㄴ. 식물의 광합성은 생물권이 수권에만 일방적으로 영향을 미치는 현상이다.",
+          "ㄷ. 대규모 화산 폭발로 발생한 화산재가 햇빛을 가려 지구의 평균 기온이 낮아지는 것은 지권이 기권에 영향을 주는 대표적인 사례이다."
+        ],
+        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 3, // ㄱ, ㄷ 정답
+        levelReason: "지구시스템 권역들의 상호작용으로 나타나는 자연 현상(태풍, 화산재)의 구체적인 사례를 올바르게 연결하고 설명할 수 있는지를 묻는 C수준 합답형 문항입니다. (광합성은 생물권과 기권의 상호작용이므로 ㄴ은 틀림)"
+      }
+    ],
+    E: [
+      {
+        question: "지구시스템은 크게 5가지 권역으로 이루어져 상호작용하고 있다. 다음 중 지구시스템을 구성하는 권역의 이름으로 옳지 **않은** 것은?",
+        image: null,
+        conditions: [],
+        options: ["지권", "수권", "기권", "우주권", "생물권"],
+        answer: 3,
+        levelReason: "지구시스템을 구성하는 기본적인 5가지 권역(지권, 수권, 기권, 생물권, 외권)의 명칭을 정확히 알고 있는지 확인하는 기초 E수준 문항입니다."
+      }
+    ]
+  },
+
   "10통과1-03-02": {
     A: [
       {
@@ -1179,6 +1341,7 @@ export const questionTemplates = {
       }
     ]
   },
+
 
   "10통과1-03-03": {
     A: [
@@ -1412,6 +1575,18 @@ export const questionTemplates = {
         options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
         answer: 0, // ㄱ 만 정답
         levelReason: "효소의 주된 기능이 '활성화 에너지(Ea)를 낮추는 것'이며, 반응열(반응물과 생성물의 에너지 차이, ΔE)은 효소의 유무와 관계없이 일정하다는 핵심 개념(ㄷ 오답)을 정확히 찌르는 A수준 모의고사형 문항입니다."
+      },
+  {
+        question: "그림은 세포막을 통한 물질 이동 방식 (가)와 (나)를 나타낸 것이다. (가)는 산소의 이동, (나)는 포도당의 이동 방식이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+        image: "https://placehold.co/600x300/f8fafc/8b5cf6?text=세포막+물질이동+모식도",
+        conditions: [
+          "ㄱ. (가)는 인지질 이중층을 직접 통과하는 단순 확산이다.",
+          "ㄴ. (나)는 막 단백질을 통해 농도가 낮은 곳에서 높은 곳으로 물질이 이동한다.",
+          "ㄷ. (가)와 (나) 모두 물질이 이동할 때 세포의 에너지(ATP)를 소모하지 않는다."
+        ],
+        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        answer: 2, // ㄱ, ㄷ 정답
+        levelReason: "세포막의 선택적 투과성을 단순 확산과 막 단백질을 통한 촉진 확산으로 구분하고, 에너지 소모 유무와 농도 기울기 개념을 완벽하게 이해해야 풀 수 있는 A수준 문항입니다."
       }
     ],
     B: [
@@ -1429,7 +1604,7 @@ export const questionTemplates = {
       }
     ]
   },
-  
+
   "10통과1-03-06": {
     A: [
       {
@@ -1504,506 +1679,7 @@ export const questionTemplates = {
         levelReason: "염기의 상보적 결합 규칙(A-U, T-A, G-C, C-G)을 적용하여 전사된 mRNA의 서열을 직접 유추(ㄱ, ㄴ)할 수 있어야 하며, 3개의 염기(1코돈)가 1개의 아미노산을 지정하므로 총 3개의 아미노산이 지정됨(ㄷ 오답)을 계산할 수 있는 B수준의 수능형 문항입니다."
       }
     ]
-  }
-}
+  
+  },
+
 };
-
-export const inquiryActivities = [
-  {
-    standardId: "10통과1-01-01 / 10통과1-01-03",
-    title: "에듀테크를 활용한 미시·거시 세계 스케일 점프 및 측정",
-    description: "스마트 기기와 최신 소프트웨어를 활용하여 직접 측정할 수 없는 극한의 시공간 규모를 시각화하고 측정 표준의 중요성을 탐구합니다.",
-    publishers: [
-      {
-        name: "데이터 시각화 탐구 (공통)",
-        content: "구글 어스(Google Earth)의 측정 도구를 활용해 학교 건물의 길이부터 대륙의 크기까지 스케일업하며 측정합니다. 이후 파이썬(Python)이나 스프레드시트를 이용해 10의 거듭제곱(로그 스케일)으로 원자부터 우주까지의 크기를 수직선에 시각화하는 인포그래픽을 제작합니다.",
-        materials: "태블릿 PC, 인터넷(Google Earth), 스프레드시트 또는 코딩 프로그램"
-      },
-      {
-        name: "정밀 측정과 오차 탐구",
-        content: "마이크로미터와 버니어 캘리퍼스를 이용해 머리카락 굵기와 샤프심 두께를 정밀 측정하고, 일상생활의 일반 자로 측정했을 때의 한계와 오차를 비교하여 국제 표준 단위(SI)의 유용성을 논증하는 보고서를 작성합니다.",
-        materials: "마이크로미터, 버니어 캘리퍼스, 머리카락, 다양한 굵기의 샤프심"
-      }
-    ]
-  },
-  {
-    standardId: "10통과1-02-01 / 10통과1-02-06",
-    title: "스마트폰 분광기 제작 및 신소재 전기 회로 설계",
-    description: "스마트 기기와 아두이노를 활용하여 물질의 광학적, 전기적 성질을 실험적으로 탐구합니다.",
-    publishers: [
-      {
-        name: "빛의 스펙트럼 분석 실험",
-        content: "홀로그램 회절 격자 필름과 스마트폰 카메라를 결합하여 간이 분광기를 제작합니다. 스마트폰 앱(SpectraSnapp 등)을 활용해 태양광, 형광등, 수소/네온 기체 방전관의 선 스펙트럼 파장을 정밀하게 캡처하고, 우주의 원소 구성을 추론합니다.",
-        materials: "회절 격자 필름, 스마트폰, 검은 도화지, 기체 방전관 세트"
-      },
-      {
-        name: "반도체와 신소재 전기 제어",
-        content: "전도성 펜을 활용해 종이 위에 자유자재로 회로를 그리고, 도체(구리 테이프), 부도체(플라스틱), 반도체(LED, 광센서)의 전기 전도성을 비교합니다. 아두이노 1보드를 활용해 빛의 밝기에 따라 전기적 성질이 변하는 스마트 조명 시스템을 설계합니다.",
-        materials: "전도성 펜, 구리 테이프, LED 코인 배터리, 아두이노 우노 세트"
-      }
-    ]
-  },
-  {
-    standardId: "10통과1-03-03 / 10통과1-03-04",
-    title: "영상 분석(Tracker) 및 센서(phyphox) 기반 역학 탐구",
-    description: "첨단 물리 분석 프로그램과 스마트폰 내장 센서를 활용해 중력과 충격량을 수치화하고 안전장치를 고안합니다.",
-    publishers: [
-      {
-        name: "Tracker 프로그램을 이용한 중력장 운동 분석",
-        content: "동전 발사기로 동전을 자유 낙하 및 수평 투사하는 장면을 스마트폰 슬로우 모션으로 촬영합니다. 촬영한 영상을 물리 분석 오픈소스인 Tracker 프로그램에 넣고 궤적을 추적하여 시간-속도 그래프를 도출하고 가속도를 비교합니다.",
-        materials: "동전 발사기, 삼각대, 스마트폰, PC(Tracker 프로그램)"
-      },
-      {
-        name: "스마트폰 센서를 활용한 에어백 설계 (충격량)",
-        content: "스마트폰의 물리 실험 앱인 'phyphox'의 가속도 센서 기능을 켭니다. 뽁뽁이, 스펀지, 고무줄 등을 이용해 스마트폰 충격 흡수 범퍼를 직접 설계한 뒤, 일정 높이에서 떨어뜨렸을 때 화면에 기록되는 '시간-충격력(가속도) 그래프'의 최댓값을 비교하여 충격량 공식을 증명합니다.",
-        materials: "스마트폰(phyphox 앱 설치), 뽁뽁이, 스펀지, 테이프, 푹신한 매트"
-      }
-    ]
-  },
-  {
-    standardId: "10통과1-03-05",
-    title: "MBL 센서 기반 세포막 물질 이동 및 효소 반응 속도 측정",
-    description: "생명 시스템 유지에 필수적인 물질 대사를 정량적으로 측정하고 실생활 활용 사례를 탐구합니다.",
-    publishers: [
-      {
-        name: "효소 반응의 정량적 분석 (카탈레이스)",
-        content: "MBL(컴퓨터 기반 실험) 기체의 압력 센서 또는 산소 센서를 플라스크에 연결합니다. 감자 즙(카탈레이스)과 과산화 수소수를 섞은 후, 온도와 pH 조건을 다르게 하였을 때 발생하는 산소 기체의 발생 속도를 실시간 그래프로 그려 최적의 효소 활성 조건을 찾습니다.",
-        materials: "MBL 인터페이스 및 산소/압력 센서, 감자 즙, 과산화 수소수, 항온수조"
-      },
-      {
-        name: "삼투 현상과 실생활 융합 실험",
-        content: "달걀의 겉껍질을 식초로 녹여 반투과성 막을 노출시킨 후, 증류수와 고농도 소금물에 각각 넣고 질량 변화와 부피 변화를 스마트 저울로 측정하여 삼투압을 계산합니다. 이를 바탕으로 식물의 시듦 방지나 역삼투압 정수기의 원리를 발표합니다.",
-        materials: "날달걀, 식초, 비커, 증류수, 소금, 전자저울"
-      }
-    ]
-    // --- [여기서부터 복사해서 맨 마지막 괄호 전에 붙여넣으세요] ---
-
-  ,
-   "10통과1-02-06": {
-    A: [
-      {
-        question: "그림은 고체 물질의 전기적 성질을 알아보기 위해 전기 회로에 도체, 부도체, 반도체를 각각 연결한 실험이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        image: `
-          <svg width="100%" height="220" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="220" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            <rect x="250" y="160" width="100" height="40" rx="5" fill="#334155"/>
-            <text x="300" y="185" text-anchor="middle" fill="white" font-weight="bold">전원 장치</text>
-            <path d="M 250 180 L 150 180 L 150 100 L 250 100" fill="none" stroke="#0f172a" stroke-width="4"/>
-            <path d="M 350 180 L 450 180 L 450 100 L 350 100" fill="none" stroke="#0f172a" stroke-width="4"/>
-            <circle cx="150" cy="140" r="15" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
-            <line x1="140" y1="140" x2="160" y2="140" stroke="#ca8a04" stroke-width="2"/>
-            <rect x="250" y="80" width="100" height="40" fill="#e2e8f0" stroke="#64748b" stroke-width="2" stroke-dasharray="4,4"/>
-            <text x="300" y="105" text-anchor="middle" fill="#475569" font-weight="bold">물질 (가)</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. (가)에 구리, 철 등의 금속을 연결하면 전구에 불이 켜진다.",
-          "ㄴ. (가)에 규소(Si)로 만든 순수 반도체를 연결하고 온도를 매우 높여주면 전기 전도성이 증가한다.",
-          "ㄷ. 부도체는 자유 전자가 많아 전류가 잘 흐르지 않는 물질이다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2,
-        levelReason: "자유 전자의 유무에 따른 도체와 부도체의 차이를 알고, 반도체의 특징(온도나 불순물에 의한 전기 전도성 변화)을 정확히 이해하고 있는지를 평가하는 A수준 문항입니다."
-      }
-    ],
-    B: [
-      {
-        question: "그림은 규소(Si)로 이루어진 순수 반도체에 미량의 불순물(X)을 첨가하여 전기적 성질을 변화시키는 과정(도핑)을 모식도로 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="250" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            
-            <text x="150" y="30" text-anchor="middle" font-weight="bold" fill="#333">순수 반도체</text>
-            <circle cx="100" cy="90" r="20" fill="#94a3b8"/> <text x="100" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            <circle cx="200" cy="90" r="20" fill="#94a3b8"/> <text x="200" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            <circle cx="100" cy="190" r="20" fill="#94a3b8"/> <text x="100" y="195" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            <circle cx="200" cy="190" r="20" fill="#94a3b8"/> <text x="200" y="195" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            
-            <line x1="120" y1="90" x2="180" y2="90" stroke="#3b82f6" stroke-width="6"/> <line x1="120" y1="190" x2="180" y2="190" stroke="#3b82f6" stroke-width="6"/>
-            <line x1="100" y1="110" x2="100" y2="170" stroke="#3b82f6" stroke-width="6"/>
-            <line x1="200" y1="110" x2="200" y2="170" stroke="#3b82f6" stroke-width="6"/>
-            
-            <path d="M 260 140 L 340 140" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrow)"/>
-            <text x="300" y="130" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">불순물(X) 첨가</text>
-
-            <text x="450" y="30" text-anchor="middle" font-weight="bold" fill="#333">불순물 반도체</text>
-            <circle cx="400" cy="90" r="20" fill="#94a3b8"/> <text x="400" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            <circle cx="500" cy="90" r="20" fill="#94a3b8"/> <text x="500" y="95" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            <circle cx="400" cy="190" r="20" fill="#94a3b8"/> <text x="400" y="195" text-anchor="middle" fill="white" font-weight="bold">Si</text>
-            
-            <circle cx="500" cy="190" r="20" fill="#10b981"/> <text x="500" y="195" text-anchor="middle" fill="white" font-weight="bold">X</text> <circle cx="530" cy="160" r="8" fill="#ef4444"/> <text x="530" y="150" text-anchor="middle" font-size="10" font-weight="bold" fill="#ef4444">자유 전자</text>
-            
-            <line x1="420" y1="90" x2="480" y2="90" stroke="#3b82f6" stroke-width="6"/>
-            <line x1="420" y1="190" x2="480" y2="190" stroke="#3b82f6" stroke-width="6"/>
-            <line x1="400" y1="110" x2="400" y2="170" stroke="#3b82f6" stroke-width="6"/>
-            <line x1="500" y1="110" x2="500" y2="170" stroke="#3b82f6" stroke-width="6"/>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. 불순물이 전혀 없는 순수 반도체는 상온에서 전기가 매우 잘 통하는 도체이다.",
-          "ㄴ. 순수 반도체에 특정 불순물(X)을 첨가하면 그림과 같이 잉여 전자가 생겨 전기 전도성이 높아진다.",
-          "ㄷ. 이러한 성질을 제어하여 만든 반도체 소자는 컴퓨터의 CPU, 스마트폰, 태양 전지 등의 핵심 소재로 널리 활용된다."
-        ],
-        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 3, // ㄴ, ㄷ 정답
-        levelReason: "순수 반도체가 도체가 아님을 알고(ㄱ 오답), 불순물을 첨가하여 전기적 성질을 제어하는 원리(도핑)를 이해하며, 이것이 현대 첨단 기술에 활용되는 다양한 사례를 설명할 수 있는 B수준의 수능형 문항입니다."
-      }
-    ],
-    C: [
-      {
-        question: "다음 중 물질을 전기적 성질에 따라 도체, 부도체, 반도체로 구분할 때, 성질이 **다른** 하나는 무엇인가?",
-        image: null,
-        conditions: [],
-        options: ["철", "구리", "알루미늄", "유리", "금"],
-        answer: 3,
-        levelReason: "일상생활에서 흔히 볼 수 있는 물질들을 도체(금속류)와 부도체(유리 등)로 단순 분류할 수 있는지를 확인하는 C수준 문항입니다."
-      }
-    ],
-    D: [
-      {
-        question: "도체, 부도체, 반도체의 일반적인 전기적 성질에 대한 설명으로 옳은 것은?",
-        image: null,
-        conditions: [],
-        options: [
-          "도체는 자유 전자가 거의 없어 전류가 잘 흐르지 않는다.",
-          "부도체는 온도가 낮아지면 저항이 완전히 없어져 초전도체가 된다.",
-          "반도체는 조건(온도, 불순물 등)에 따라 도체와 부도체의 성질을 모두 가질 수 있다.",
-          "유리와 고무는 대표적인 반도체 물질이다.",
-          "구리, 철, 금은 대표적인 부도체 물질이다."
-        ],
-        answer: 2,
-        levelReason: "도체, 부도체, 반도체의 기본적인 전기적 성질과 특징을 비교하여 올바르게 설명할 수 있는지 확인하는 D수준 5지선다형 문항입니다."
-      }
-    ],
-    E: [
-      {
-        question: "물질을 전기적 성질(전기가 통하는 정도)에 따라 크게 세 가지로 분류할 때, 이에 해당하지 **않는** 것은?",
-        image: null,
-        conditions: [],
-        options: ["도체", "부도체(절연체)", "반도체", "액체"],
-        answer: 3,
-        levelReason: "지구를 구성하는 물질을 전기적 성질에 따라 구분하는 기본 명칭(도체, 부도체, 반도체)을 알고 있는지 직관적으로 묻는 E수준 문항입니다."
-      }
-    ]
-  },
-
-  "10통과1-03-02": {
-    A: [
-      {
-        question: "그림은 지구 표면을 덮고 있는 주요 판의 경계와 이동 방향을 나타낸 것이다. 에너지 흐름으로 발생하는 지권의 변화에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="250" fill="#e0f2fe" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            <path d="M 100 50 Q 150 80 120 150 Q 80 200 50 180 Z" fill="#dcfce3" stroke="#86efac" stroke-width="2"/>
-            <path d="M 400 60 Q 480 40 520 120 Q 450 180 380 140 Z" fill="#dcfce3" stroke="#86efac" stroke-width="2"/>
-            <path d="M 250 20 L 280 100 L 240 180 L 290 240" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="8,4"/>
-            <text x="260" y="140" fill="#ef4444" font-weight="bold">판의 경계</text>
-            <path d="M 230 100 L 180 100" fill="none" stroke="#333" stroke-width="3" marker-end="url(#arrow)"/>
-            <path d="M 300 100 L 350 100" fill="none" stroke="#333" stroke-width="3" marker-end="url(#arrow)"/>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. 판을 이동시키는 근원적인 에너지는 지구 내부 에너지이다.",
-          "ㄴ. 그림과 같이 두 판이 멀어지는 경계에서는 맨틀 물질이 상승하며 새로운 지각이 생성된다.",
-          "ㄷ. 지진과 화산 폭발로 인해 기권에 대량의 화산재가 방출되면, 지구의 평균 기온이 일시적으로 상승한다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, // ㄱ, ㄴ 정답 (화산재는 햇빛을 차단해 기온을 하강시키므로 ㄷ은 틀림)
-        levelReason: "판 이동의 원동력(지구 내부 에너지)과 발산형 경계의 특징을 이해하고, 화산 폭발이 기권과 생물권에 미치는 영향(기온 하강)을 논리적으로 추론할 수 있어야 하는 A수준 문항입니다."
-      }
-    ]
-  }
-
-  // --- [여기까지 복사하세요] ---
-  // --- [여기서부터 복사해서 맨 마지막 괄호 전에 붙여넣으세요] ---
-
-  , 
-  "10통과1-01-02": {
-    A: [
-      {
-        question: "표는 물리량 (가), (나), (다)의 국제 표준 단위(SI)를 나타낸 것이다. (가)~(다)는 각각 질량, 부피, 밀도 중 하나이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: null,
-        conditions: [
-          "ㄱ. (가)가 'kg'을 단위로 쓴다면, (가)는 기본량에 해당한다.",
-          "ㄴ. (나)가 'm³'을 단위로 쓴다면, (나)는 기본량인 '길이'로부터 도출된 과학 개념이다.",
-          "ㄷ. (다)가 밀도라면, (다)의 단위는 (가)와 (나)의 단위를 조합하여 'kg/m³'으로 나타낼 수 있다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 4, 
-        levelReason: "길이, 질량과 같은 기본량으로부터 부피, 밀도 등 새로운 과학 개념(유도량)이 도출되는 원리를 명확히 이해하고 단위를 조합할 수 있는지 평가하므로 A수준에 부합합니다."
-      }
-    ],
-    B: [
-      {
-        question: "그림은 과학 탐구에서 사용하는 여러 가지 물리량을 '기본량'과 '유도량'으로 분류하는 과정을 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="220" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="220" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            <rect x="50" y="40" width="160" height="140" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-            <text x="130" y="70" text-anchor="middle" font-weight="bold" fill="#1e3a8a" font-size="16">기본량 (Base)</text>
-            <text x="130" y="100" text-anchor="middle" fill="#333">길이 (m)</text>
-            <text x="130" y="130" text-anchor="middle" fill="#333">질량 (kg)</text>
-            <text x="130" y="160" text-anchor="middle" fill="#333">시간 (s)</text>
-            <rect x="390" y="40" width="160" height="140" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
-            <text x="470" y="70" text-anchor="middle" font-weight="bold" fill="#831843" font-size="16">유도량 (Derived)</text>
-            <text x="470" y="100" text-anchor="middle" fill="#333">부피 (m³)</text>
-            <text x="470" y="130" text-anchor="middle" fill="#333">속력 (m/s)</text>
-            <text x="470" y="160" text-anchor="middle" fill="#333">( 가 )</text>
-            <path d="M 220 110 Q 305 110 375 110" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="6,4"/>
-            <polygon points="370,105 385,110 370,115" fill="#64748b"/>
-            <rect x="265" y="95" width="70" height="30" rx="15" fill="#fff" stroke="#94a3b8"/>
-            <text x="300" y="115" text-anchor="middle" font-size="13" font-weight="bold" fill="#475569">조합/도출</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. 시간, 길이, 질량은 다른 물리량의 조합 없이 독립적으로 정의되는 기본량이다.",
-          "ㄴ. '속력'은 기본량인 '길이'와 '질량'을 조합하여 도출된 유도량이다.",
-          "ㄷ. (가)에 '밀도(kg/m³)'가 들어간다면, 이는 질량과 부피(길이의 조합)를 이용하여 나타낸 것이다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, 
-        levelReason: "기본량의 정의를 이해하고(ㄱ), 속력이 길이와 '시간'의 조합임을 파악하여 함정(ㄴ)을 피하며, 밀도의 단위를 통해 유도 과정을 논리적으로 추론(ㄷ)할 수 있어야 하므로 B수준에 해당합니다."
-      }
-    ],
-    C: [
-      {
-        question: "다음은 과학 탐구에서 사용하는 물리량과 그 국제 표준 단위(SI)를 짝지은 것이다. 옳지 **않은** 것은?",
-        image: null,
-        conditions: [],
-        options: [
-          "길이 - 미터(m)",
-          "질량 - 킬로그램(kg)",
-          "시간 - 초(s)",
-          "온도 - 켈빈(K)",
-          "부피 - 센티미터(cm)"
-        ],
-        answer: 4,
-        levelReason: "기본량의 대표적인 단위들을 정확히 알고 있으며, 부피의 단위(m³ 등)와 길이의 단위(cm)를 헷갈리지 않고 구분할 수 있는지 묻는 C수준 5지선다형 문항입니다."
-      }
-    ],
-    D: [
-      {
-        question: "자연 현상을 관찰하고 기술하는 데 필요한 '기본량'에 속하는 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: null,
-        conditions: [
-          "ㄱ. 시간",
-          "ㄴ. 속력",
-          "ㄷ. 온도"
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 2, 
-        levelReason: "속력(유도량)과 시간, 온도(기본량)를 단순히 구분할 수 있는지 묻는 문항으로, 기본량의 종류를 숙지하고 있는지 확인하는 D수준 문항입니다."
-      }
-    ],
-    E: [
-      {
-        question: "자연의 크기나 양을 수치로 정확하게 나타내기 위해 과학자들이 세계 공통으로 정한 기준(미터, 킬로그램, 초 등)을 무엇이라고 부르는가?",
-        image: null,
-        conditions: [],
-        options: ["부피", "질량", "단위", "도구", "오차"],
-        answer: 2,
-        levelReason: "자연 현상을 기술하는 데 필수적인 '단위'의 의미와 필요성을 가장 기초적인 수준에서 알고 있는지 묻는 E수준 문항입니다."
-      }
-    ]
-  },
-
-  "10통과1-02-05": {
-    A: [
-      {
-        question: "지각과 생명체를 구성하는 물질은 기본 단위체의 결합을 통해 형성된다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        image: null,
-        conditions: [
-          "ㄱ. 지각의 대부분을 구성하는 규산염 광물의 기본 단위체는 규소(Si)와 산소(O)로 이루어진 규산염 사면체이다.",
-          "ㄴ. 생명체를 구성하는 단백질은 수많은 아미노산이 펩타이드 결합을 하여 만들어진다.",
-          "ㄷ. DNA와 RNA 같은 핵산을 구성하는 기본 단위체는 뉴클레오타이드이다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 4, 
-        levelReason: "규산염 광물, 단백질, 핵산이 각각 어떤 기본 단위체로 구성되어 있는지 그 구조적 특징을 모두 완벽하게 이해하고 있어야 하는 A수준 문항입니다."
-      }
-    ],
-    B: [
-      {
-        question: "그림 (가)는 규산염 광물의 기본 단위체를, (나)는 단백질을 구성하는 기본 단위체가 결합하는 과정을 모식도로 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?",
-        image: `
-          <svg width="100%" height="240" viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="240" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            
-            <text x="150" y="35" text-anchor="middle" font-weight="bold" fill="#333">(가) 지각 구성 물질</text>
-            <polygon points="150,70 90,170 210,170" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" opacity="0.5"/>
-            <circle cx="150" cy="130" r="15" fill="#3b82f6"/> <text x="150" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Si</text>
-            <circle cx="150" cy="70" r="18" fill="#ef4444"/> <text x="150" y="75" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
-            <circle cx="90" cy="170" r="18" fill="#ef4444"/> <text x="90" y="175" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
-            <circle cx="210" cy="170" r="18" fill="#ef4444"/> <text x="210" y="175" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
-            <circle cx="150" cy="140" r="18" fill="#ef4444" opacity="0.8"/> <text x="150" y="145" text-anchor="middle" fill="white" font-size="12" font-weight="bold">O</text>
-            
-            <text x="450" y="35" text-anchor="middle" font-weight="bold" fill="#333">(나) 생명체 구성 물질</text>
-            <rect x="330" y="110" width="60" height="40" rx="8" fill="#10b981"/> <text x="360" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">단위체 A</text>
-            <rect x="420" y="110" width="60" height="40" rx="8" fill="#10b981"/> <text x="450" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">단위체 A</text>
-            <rect x="510" y="110" width="60" height="40" rx="8" fill="#10b981"/> <text x="540" y="135" text-anchor="middle" fill="white" font-size="12" font-weight="bold">단위체 A</text>
-            
-            <line x1="390" y1="130" x2="420" y2="130" stroke="#0f172a" stroke-width="4"/>
-            <line x1="480" y1="130" x2="510" y2="130" stroke="#0f172a" stroke-width="4"/>
-            <path d="M 405 130 L 405 170" fill="none" stroke="#64748b" stroke-width="2"/>
-            <text x="405" y="185" text-anchor="middle" font-size="12" fill="#333">펩타이드 결합</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. (가)의 중심에 있는 규소(Si) 원자는 4개의 산소(O) 원자와 이온 결합을 하고 있다.",
-          "ㄴ. (나)에서 '단위체 A'는 아미노산이다.",
-          "ㄷ. 지각과 생명체를 구성하는 복잡한 물질들은 이처럼 적은 종류의 기본 단위체가 다양한 방식으로 결합하여 만들어진다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 3, 
-        levelReason: "규산염 사면체와 단백질의 기본 단위체를 정확히 인지하고(ㄴ, ㄷ), 규소와 산소 사이의 결합이 이온 결합이 아닌 '공유 결합'임(ㄱ 오답)을 화학 결합의 원리와 연관 지어 구분할 수 있어야 하는 B수준 문항입니다."
-      }
-    ],
-    C: [
-      {
-        question: "다음 중 지각과 생명체를 구성하는 복잡한 거대 분자(고분자 화합물)가 만들어지는 가장 핵심적인 원리는 무엇인가?",
-        image: null,
-        conditions: [],
-        options: [
-          "무수히 많은 종류의 원소들이 무작위로 결합하여 만들어진다.",
-          "단 몇 종류의 기본 단위체들이 규칙적으로 반복 결합하여 만들어진다.",
-          "우주선(Cosmic ray)의 에너지를 받아 순식간에 합성된다.",
-          "강한 자석의 힘에 의해 금속 원소들이 뭉쳐서 만들어진다.",
-          "세포가 분열할 때 온도와 압력이 극도로 높아져 생성된다."
-        ],
-        answer: 1,
-        levelReason: "복잡한 물질(규산염 광물, 단백질, 핵산 등)이 형성되는 원리가 '기본 단위체의 반복적인 결합'이라는 사실을 명확히 이해하고 있는지를 묻는 C수준 문항입니다."
-      }
-    ],
-    D: [
-      {
-        question: "생명체를 구성하는 주요 물질 중에서, '아미노산'이라는 기본 단위체가 수없이 결합하여 만들어지는 물질은 무엇인가?",
-        image: null,
-        conditions: [],
-        options: ["탄수화물", "지방", "단백질", "핵산", "무기 염류"],
-        answer: 2,
-        levelReason: "아미노산과 단백질의 관계를 정확히 알고 있는지 확인하는 D수준의 기초 개념 문항입니다."
-      }
-    ],
-    E: [
-      {
-        question: "집을 지을 때 벽돌이라는 작은 단위를 쌓아 거대한 건물을 만들 듯이, 생명체나 지각을 구성하는 복잡한 물질을 형성할 때 반복적으로 결합하는 가장 기본적인 작은 단위를 무엇이라고 하는가?",
-        image: null,
-        conditions: [],
-        options: ["혼합물", "화합물", "단위체", "다각형", "방사성 동위 원소"],
-        answer: 2,
-        levelReason: "'단위체'라는 핵심 용어의 의미를 알고 있는지 직관적으로 묻는 E수준 문항입니다."
-      }
-    ]
-  },
-
-  "10통과1-03-01": {
-    A: [
-      {
-        question: "그림은 지구시스템의 권역 간에 일어나는 탄소(C)의 순환 과정을 모식도로 나타낸 것이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="280" viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="280" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            <rect x="50" y="20" width="500" height="60" rx="10" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
-            <text x="300" y="55" text-anchor="middle" font-weight="bold" fill="#0284c7" font-size="16">기권 (이산화 탄소 등)</text>
-            <rect x="50" y="120" width="140" height="60" rx="10" fill="#dcfce3" stroke="#4ade80" stroke-width="2"/>
-            <text x="120" y="155" text-anchor="middle" font-weight="bold" fill="#166534" font-size="16">생물권</text>
-            <rect x="410" y="120" width="140" height="60" rx="10" fill="#c7d2fe" stroke="#818cf8" stroke-width="2"/>
-            <text x="480" y="155" text-anchor="middle" font-weight="bold" fill="#3730a3" font-size="16">수권 (해수)</text>
-            <rect x="50" y="210" width="500" height="50" rx="10" fill="#ffedd5" stroke="#fdba74" stroke-width="2"/>
-            <text x="300" y="240" text-anchor="middle" font-weight="bold" fill="#9a3412" font-size="16">지권 (화석 연료, 석회암)</text>
-            <path d="M 100 80 L 100 110" fill="none" stroke="#22c55e" stroke-width="3"/>
-            <polygon points="95,110 105,110 100,118" fill="#22c55e"/>
-            <text x="80" y="100" font-size="12" font-weight="bold">(가)</text>
-            <path d="M 280 210 L 280 90" fill="none" stroke="#ef4444" stroke-width="3"/>
-            <polygon points="275,90 285,90 280,82" fill="#ef4444"/>
-            <text x="290" y="160" font-size="12" font-weight="bold">(나)</text>
-            <path d="M 460 80 L 460 110" fill="none" stroke="#3b82f6" stroke-width="3"/>
-            <polygon points="455,110 465,110 460,118" fill="#3b82f6"/>
-            <path d="M 500 120 L 500 90" fill="none" stroke="#3b82f6" stroke-width="3"/>
-            <polygon points="495,90 505,90 500,82" fill="#3b82f6"/>
-            <text x="440" y="100" font-size="12" font-weight="bold">(다)</text>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. (가)는 식물의 광합성에 의해 기권의 탄소가 생물권으로 이동하는 과정이다.",
-          "ㄴ. 화석 연료의 사용량이 증가하면 (나) 과정이 활발해져 기권의 온실 효과가 강화된다.",
-          "ㄷ. 수온이 높아지면 해수에 녹아 있던 이산화 탄소가 방출되므로, (다)에서 기권으로 이동하는 탄소의 양이 증가한다."
-        ],
-        options: ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 4, 
-        levelReason: "지구시스템 권역 간의 상호작용을 빅데이터(탄소 순환)와 연결하여 파악하고, 수온 상승 등 시스템의 균형이 깨질 때 나타나는 복합적인 연쇄 작용(지구 온난화 가속)을 완벽하게 추론할 수 있어야 하는 A수준 문항입니다."
-      }
-    ],
-    B: [
-      {
-        question: "다음은 지구시스템을 구성하는 권역 간의 상호작용 사례이다. 상호작용하는 두 권역이 바르게 짝지어진 것은?",
-        image: null,
-        conditions: [
-          "[사례] 해저 지진으로 인해 거대한 쓰나미(지진 해일)가 발생하여 해안가에 큰 피해를 주었다."
-        ],
-        options: [
-          "지권과 기권",
-          "지권과 수권",
-          "수권과 생물권",
-          "기권과 생물권",
-          "기권과 외권"
-        ],
-        answer: 1, 
-        levelReason: "해저 지진(지권의 변화)이 바닷물(수권)에 에너지를 전달하여 해일이 발생하는 현상을 통해 권역 간의 상호작용을 정확히 연결할 수 있는지를 평가하는 B수준 5지선다형 문항입니다."
-      }
-    ],
-    C: [
-      {
-        question: "그림은 지구시스템을 구성하는 주요 권역들을 모식도로 나타낸 것이다. 각 권역 사이의 상호작용에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-        image: `
-          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
-            <rect width="600" height="250" fill="#f8fafc" rx="10" stroke="#cbd5e1" stroke-width="2"/>
-            
-            <circle cx="300" cy="125" r="80" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>
-            <text x="300" y="130" text-anchor="middle" font-weight="bold" fill="#333">지구시스템</text>
-            
-            <rect x="250" y="20" width="100" height="40" rx="20" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
-            <text x="300" y="45" text-anchor="middle" font-weight="bold" fill="#0284c7">기권</text>
-            
-            <rect x="100" y="105" width="100" height="40" rx="20" fill="#fef08a" stroke="#eab308" stroke-width="2"/>
-            <text x="150" y="130" text-anchor="middle" font-weight="bold" fill="#a16207">지권</text>
-            
-            <rect x="400" y="105" width="100" height="40" rx="20" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
-            <text x="450" y="130" text-anchor="middle" font-weight="bold" fill="#1d4ed8">수권</text>
-            
-            <rect x="250" y="190" width="100" height="40" rx="20" fill="#bbf7d0" stroke="#22c55e" stroke-width="2"/>
-            <text x="300" y="215" text-anchor="middle" font-weight="bold" fill="#15803d">생물권</text>
-            
-            <path d="M 280 60 L 170 105" stroke="#94a3b8" stroke-width="2"/>
-            <path d="M 320 60 L 430 105" stroke="#94a3b8" stroke-width="2"/>
-            <path d="M 170 145 L 280 190" stroke="#94a3b8" stroke-width="2"/>
-            <path d="M 430 145 L 320 190" stroke="#94a3b8" stroke-width="2"/>
-            <path d="M 300 60 L 300 190" stroke="#94a3b8" stroke-width="2"/>
-            <path d="M 200 125 L 400 125" stroke="#94a3b8" stroke-width="2"/>
-          </svg>
-        `,
-        conditions: [
-          "ㄱ. 태풍이 발생하여 강력한 해일이 육지를 덮치는 현상은 수권, 기권, 지권의 복합적인 상호작용이다.",
-          "ㄴ. 식물의 광합성은 생물권이 수권에만 일방적으로 영향을 미치는 현상이다.",
-          "ㄷ. 대규모 화산 폭발로 발생한 화산재가 햇빛을 가려 지구의 평균 기온이 낮아지는 것은 지권이 기권에 영향을 주는 대표적인 사례이다."
-        ],
-        options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄱ, ㄷ", "ㄱ, ㄴ, ㄷ"],
-        answer: 3, // ㄱ, ㄷ 정답
-        levelReason: "지구시스템 권역들의 상호작용으로 나타나는 자연 현상(태풍, 화산재)의 구체적인 사례를 올바르게 연결하고 설명할 수 있는지를 묻는 C수준 합답형 문항입니다. (광합성은 생물권과 기권의 상호작용이므로 ㄴ은 틀림)"
-      }
-    ],
-    E: [
-      {
-        question: "지구시스템은 크게 5가지 권역으로 이루어져 상호작용하고 있다. 다음 중 지구시스템을 구성하는 권역의 이름으로 옳지 **않은** 것은?",
-        image: null,
-        conditions: [],
-        options: ["지권", "수권", "기권", "우주권", "생물권"],
-        answer: 3,
-        levelReason: "지구시스템을 구성하는 기본적인 5가지 권역(지권, 수권, 기권, 생물권, 외권)의 명칭을 정확히 알고 있는지 확인하는 기초 E수준 문항입니다."
-      }
-    ]
-  }
-
-  // --- [여기까지 복사하세요] ---
-  }
-];

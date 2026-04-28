@@ -1,4 +1,5 @@
-import { achievementData, questionTemplates, inquiryActivities } from './data.js';
+import { achievementData, questionTemplates } from './data.js';
+import { inquiryActivities } from './data1.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
