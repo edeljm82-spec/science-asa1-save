@@ -426,7 +426,34 @@ export const questionTemplates = {
         answer: 2, 
         levelReason: "측정 표준의 필요성(ㄱ, ㄷ)을 일상생활의 사례를 들어 설명할 수 있으나, 현대 과학의 발달로 단위의 정의가 더 정밀하게 변할 수 있음(ㄴ 오답)을 파악하는 B수준 합답형 문항입니다."
       }
-    ]
+    ],
+    C: [
+    {
+      "question": "다음은 어느 과학 잡지의 칼럼 일부이다. 빈칸에 들어갈 내용으로 가장 적절한 것은?",
+      "image": `
+        <svg width="100%" height="180" viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
+          <rect width="500" height="180" fill="#fff" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+          <text x="250" y="40" text-anchor="middle" font-weight="bold" fill="#334155">과학 칼럼: 왜 '미터(m)'인가?</text>
+          <path d="M 50 60 L 450 60" stroke="#e2e8f0" stroke-width="1"/>
+          <text x="50" y="90" font-size="14" fill="#333">과거에는 왕의 팔 길이나 발 크기를 기준으로 단위를 정했습니다.</text>
+          <text x="50" y="115" font-size="14" fill="#333">하지만 이는 사람마다 달라 큰 혼란을 주었죠. 따라서 현대 과학은</text>
+          <text x="50" y="140" font-size="14" fill="#333">변하지 않는 자연의 물리량을 기준으로 (      )을 정했습니다.</text>
+          <rect x="335" y="125" width="100" height="25" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="4"/>
+        </svg>
+      `,
+      "options": ["측정 오차", "측정 표준", "시행착오", "상대적 크기", "개인적 도구"],
+      "answer": 1,
+      "levelReason": "일상적인 사례를 통해 측정 표준이 필요한 이유와 그 정의를 명확히 알고 있는지 묻는 C수준 문항입니다."
+    }
+  ],
+  "D": [
+    {
+      "question": "일상생활에서 측정의 편리함과 정확성을 위해 전 세계적으로 약속하여 사용하는 단위 체계를 무엇이라 하는가?",
+      "options": ["전통 단위", "국제 표준 단위(SI)", "임의 단위", "개별 단위", "지역 단위"],
+      "answer": 1,
+      "levelReason": "측정 표준의 구체적인 명칭과 필요성을 인지하고 있는지 묻는 D수준 문항입니다."
+    }
+  ]
   },
 
   "10통과1-01-04": {
@@ -1266,6 +1293,24 @@ export const questionTemplates = {
         levelReason: "지구시스템 권역들의 상호작용으로 나타나는 자연 현상(태풍, 화산재)의 구체적인 사례를 올바르게 연결하고 설명할 수 있는지를 묻는 C수준 합답형 문항입니다. (광합성은 생물권과 기권의 상호작용이므로 ㄴ은 틀림)"
       }
     ],
+    "D": [
+    {
+      "question": "그림은 지구시스템을 구성하는 권역 간의 상호작용을 나타낸 것이다. 기권과 수권이 상호작용하여 나타나는 현상으로 옳은 것은?",
+      "image": `
+        <svg width="100%" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="200" cy="100" r="40" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
+          <text x="200" y="105" text-anchor="middle" font-weight="bold">기권</text>
+          <circle cx="100" cy="150" r="40" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="100" y="155" text-anchor="middle" font-weight="bold">수권</text>
+          <path d="M 130 130 L 170 110" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+          <text x="150" y="140" font-size="12" font-weight="bold">?</text>
+        </svg>
+      `,
+      "options": ["화산 폭발", "바람에 의한 해류 발생", "지진 해일 발생", "광합성 작용", "토양의 침식"],
+      "answer": 1,
+      "levelReason": "기권(바람)과 수권(바다)의 상호작용 사례를 직관적으로 연결할 수 있는지 묻는 D수준 문항입니다."
+    }
+  ],
     E: [
       {
         question: "지구시스템은 크게 5가지 권역으로 이루어져 상호작용하고 있다. 다음 중 지구시스템을 구성하는 권역의 이름으로 옳지 **않은** 것은?",
@@ -1546,6 +1591,30 @@ export const questionTemplates = {
         options: ["ㄱ", "ㄴ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
         answer: 4, 
         levelReason: "충격량(면적)이 같을 때 충돌 시간을 늘려 평균 힘을 줄이는 원리를 수식과 그래프로 연계하여 실생활 안전장치에 적용하는 A수준 문항입니다."
+      },
+      {
+        "question": "그림 (가)는 질량이 같은 자동차 A와 B가 각각 단단한 벽과 에어백이 설치된 벽에 충돌하여 정지하는 모습을, (나)는 두 자동차가 받는 힘을 시간에 따라 나타낸 것이다. 이에 대한 분석으로 옳은 것만을 <보기>에서 고른 것은?",
+        "image": `
+          <svg width="100%" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="250" fill="#fff" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+            <path d="M 50 200 Q 100 20 150 200" fill="none" stroke="#ef4444" stroke-width="3"/>
+            <text x="90" y="40" fill="#ef4444" font-weight="bold">A (벽)</text>
+            <path d="M 50 200 Q 250 150 450 200" fill="none" stroke="#3b82f6" stroke-width="3"/>
+            <text x="350" y="170" fill="#3b82f6" font-weight="bold">B (에어백)</text>
+            <line x1="50" y1="200" x2="500" y2="200" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+            <text x="480" y="220">시간</text>
+            <line x1="50" y1="200" x2="50" y2="30" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+            <text x="30" y="40">힘</text>
+          </svg>
+        `,
+        "conditions": [
+          "ㄱ. 자동차의 운동량 변화량은 A와 B가 같다.",
+          "ㄴ. 충돌하는 동안 자동차가 받는 평균 힘의 크기는 A가 B보다 작다.",
+          "ㄷ. 그래프의 아랫부분 면적은 자동차가 받은 충격량을 의미한다."
+        ],
+        "options": ["ㄱ", "ㄷ", "ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        "answer": 2,
+        "levelReason": "충격량(면적)이 동일할 때 시간이 길어지면 충격력(힘)이 작아진다는 물리적 원리를 그래프 해석을 통해 도출하는 수능형 문항입니다."
       }
     ],
     B: [
