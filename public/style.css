@@ -22,7 +22,7 @@ body {
 }
 
 .hero-header {
-  height: 50vh;
+  height: 30vh;
   display: grid;
   place-items: center;
   text-align: center;
@@ -292,4 +292,38 @@ main {
 
 #modal-body {
   padding: 3rem 2rem 2rem 2rem;
+}
+
+/* [추가할 코드: style.css 맨 아래에 복사+붙여넣기] */
+.user-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+}
+
+.auth-btn {
+  padding: 0.6rem 1.2rem;
+  margin-left: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  backdrop-filter: blur(4px);
+  transition: background 0.3s;
+}
+
+.auth-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* [추가할 코드: style.css 맨 아래] */
+#btn-save-api:hover {
+  background: #1e3a8a !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
