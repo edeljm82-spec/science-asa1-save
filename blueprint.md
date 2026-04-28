@@ -41,9 +41,21 @@
     - CSS 변수를 사용하여 색상, 폰트 등 디자인 시스템을 관리합니다.
     - 아코디언 UI, 문항 카드, 버튼 등 상호작용 요소의 스타일을 정의합니다.
     - 미디어 쿼리를 사용하여 반응형 레이아웃을 구현합니다.
-5.  **`public/main.js` 파일 생성:**
-    - ES 모듈 시스템을 사용하여 `data.js`의 `scienceData`를 가져옵니다.
-    - `scienceData`를 기반으로 성취기준 및 탐구활동 목록을 동적으로 생성하여 HTML에 렌더링합니다.
-    - 성취기준 및 성취수준에 대한 클릭 이벤트 리스너를 추가하여 아코디언 기능을 구현합니다.
-    - 성취수준 클릭 시 해당 문항을 필터링하여 표시하는 로직을 구현합니다.
+## 4. 배포 및 자동화 (Deployment)
+
+### 가. 배포 환경
+- **플랫폼:** Firebase Hosting
+- **프로젝트 ID:** `edeljm82-spec-science-asa1-save`
+- **호스팅 URL:** `https://edeljm82-spec-science-asa1-save.web.app` (예정)
+
+### 나. CI/CD 파이프라인 (GitHub Actions)
+- **저장소:** `https://github.com/edeljm82-spec/science-asa1-save`
+- **자동 배포 설정:**
+  - `main` 브랜치에 `push` 또는 `merge` 발생 시 자동으로 Firebase Hosting의 `live` 채널로 배포됩니다.
+  - `pull_request` 발생 시 프리뷰 채널로 자동 배포되어 변경 사항을 미리 확인할 수 있습니다.
+- **주요 설정 파일:**
+  - `.github/workflows/firebase-hosting-merge.yml`: 메인 배포 워크플로우
+  - `.github/workflows/firebase-hosting-pull-request.yml`: PR 프리뷰 배포 워크플로우
+  - `.firebaserc`: Firebase 프로젝트 연결 설정
+  - `firebase.json`: 호스팅 및 배포 규칙 설정
 
