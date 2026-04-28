@@ -11,52 +11,44 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <div id="user-controls" class="user-controls">
-    <button id="btn-google-login" class="auth-btn">구글 로그인</button>
-    <div id="user-info" style="display: none; display: flex; align-items: center;">
-      <span id="user-name-display" style="color: white; margin-right: 10px; font-weight: bold;"></span>
-      <button id="btn-api-setup" class="auth-btn">API Key 설정</button>
-      <button id="btn-logout" class="auth-btn">로그아웃</button>
-    </div>
-  </div>
+  
+<div id="api-modal-overlay" class="modal-overlay">
+  <div class="modal-content" style="max-width: 550px; padding: 2.5rem; border-radius: 12px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+    <button id="api-modal-close" class="modal-close-btn" style="top: 1rem; right: 1rem;">&times;</button>
+    <h2 style="margin-top: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+      ⚙️ 인공지능(AI) API 키 설정
+    </h2>
+    
+    <div class="api-guide-box" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+      <p style="font-size: 1rem; color: #475569; line-height: 1.6; margin-bottom: 1.5rem; margin-top: 0;">
+        이 시스템은 구글의 최신 <strong>인공지능(AI)</strong>을 사용해 선생님께서 입력하신 문항을 정밀하게 분석합니다. 인공지능을 사용하기 위한 개인 전용 비밀번호인 <strong>'API Key'</strong>가 필요합니다. Key는 선생님의 데이터베이스에 안전하게 보관되며, 한 번만 설정하면 이후에는 자동으로 불러옵니다.
+      </p>
 
-  <div id="api-modal-overlay" class="modal-overlay">
-    <div class="modal-content" style="max-width: 550px; padding: 2.5rem; border-radius: 12px;">
-      <button id="api-modal-close" class="modal-close-btn">&times;</button>
-      <h2 style="margin-top: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px;">
-        ⚙️ 구글 AI API 키 설정
-      </h2>
+      <h4 style="color: #333; display: flex; align-items: center; gap: 5px; margin-bottom: 1rem;">🚀 API 키 발급받는 방법 (가져오기)</h4>
       
-      <div class="api-guide-box" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-        <h4 style="margin-top: 0; color: #333;">💡 API 키란 무엇인가요?</h4>
-        <p style="font-size: 0.95rem; color: #475569; line-height: 1.5; margin-bottom: 1.5rem;">
-          이 시스템은 구글의 최신 인공지능을 사용해 문제를 정밀하게 분석합니다. 인공지능을 무료로 사용하기 위한 일종의 <strong>'개인 전용 출입증'</strong>이 바로 API 키입니다.
-        </p>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: block; width: 100%; text-align: center; padding: 1rem; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; border-radius: 8px; font-weight: bold; text-decoration: none; margin-bottom: 1.5rem; transition: background 0.2s;">
+        👉 구글 AI 스튜디오에서 API 키 발급받기 (가져오기)
+      </a>
 
-        <h4 style="color: #333; display: flex; align-items: center; gap: 5px;">🚀 1분 만에 API 키 발급받는 방법 (초보자용)</h4>
-        <ol style="font-size: 0.95rem; color: #475569; line-height: 1.6; padding-left: 1.2rem; margin-bottom: 0;">
-          <li>아래 파란색 링크를 클릭해 구글 AI 스튜디오로 이동하세요. (구글 로그인 필요)<br>
-              👉 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: none;">[구글 AI 스튜디오 바로가기]</a>
-          </li>
-          <li>화면 왼쪽 위에 있는 파란색 <strong>[Get API key]</strong> 또는 <strong>[Create API key]</strong> 버튼을 클릭하세요.</li>
-          <li style="background: #fef08a; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0; color: #854d0e;">
-            <strong>(핵심)</strong> '가져온 프로젝트 선택' 칸을 누르고 <strong>[+ 프로젝트 만들기]</strong>를 선택한 뒤, <strong>[키 만들기]</strong>를 누르세요.
-          </li>
-          <li>'AIzaSy...' 로 시작하는 아주 긴 비밀번호가 생성됩니다. 그 옆의 <strong>[복사 아이콘]</strong>을 누르세요.</li>
-          <li>다시 이 화면으로 돌아와서, 아래 빈칸에 복사한 키를 붙여넣기(Ctrl+V) 하세요!</li>
-        </ol>
-      </div>
-
-      <div style="margin-bottom: 1.5rem;">
-        <label for="api-key-input" style="font-weight: bold; color: #333; display: block; margin-bottom: 0.5rem;">🔑 복사한 API 키 입력</label>
-        <input type="text" id="api-key-input" placeholder="이곳을 클릭하고 Ctrl+V 를 눌러 붙여넣으세요" style="width: 100%; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box;">
-      </div>
-
-      <button id="btn-save-api" style="width: 100%; padding: 1.2rem; background: #1e40af; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s;">
-        설정 저장하고 분석 시작하기
-      </button>
+      <ol style="font-size: 0.95rem; color: #475569; line-height: 1.6; padding-left: 1.2rem; margin-bottom: 0; margin-top: 0;">
+        <li>위 파란색 버튼을 클릭해 구글 AI 스튜디오로 이동합니다. (구글 로그인 필수)</li>
+        <li>화면 왼쪽 위에 있는 파란색 <strong>[Create API key]</strong> (또는 Get API key) 버튼을 클릭합니다.</li>
+        <li>가져온 프로젝트를 선택하거나 <strong>[+ Create new project]</strong>를 선택한 뒤, <strong>[Create API key]</strong>를 누릅니다.</li>
+        <li>생성된 키('AIzaSy...' 로 시작) 옆의 <strong>[복사 아이콘]</strong>을 누릅니다.</li>
+        <li>다시 이 화면으로 돌아와서, 아래 입력칸에 붙여넣기(Ctrl+V) 하세요!</li>
+      </ol>
     </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <label for="api-key-input" style="font-weight: bold; color: #333; display: block; margin-bottom: 0.5rem;">🔑 복사한 API Key 입력</label>
+      <input type="text" id="api-key-input" placeholder="이곳을 클릭하고 Ctrl+V 를 눌러 붙여넣으세요" style="width: 100%; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background: white;">
+    </div>
+
+    <button id="btn-save-api" style="width: 100%; padding: 1.2rem; background: #1e40af; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.3);">
+      설정 저장하고 분석 시작하기
+    </button>
   </div>
+</div>
 
   <header class="hero-header">
     <div class="hero-text">
@@ -66,10 +58,21 @@
   </header>
 
   <main>
-    <nav class="tab-nav">
-      <button class="tab-button active" data-target="#standards">성취기준 및 성취수준</button>
-      <button class="tab-button" data-target="#inquiry">필수탐구활동</button>
-      <button class="tab-button" data-target="#analysis">문항분석</button>
+    <nav class="tab-nav" style="display: flex; justify-content: space-between; align-items: flex-end;">
+      
+      <div style="display: flex;">
+        <button class="tab-button active" data-target="#standards">성취기준 및 성취수준</button>
+        <button class="tab-button" data-target="#inquiry">필수탐구활동</button>
+        <button class="tab-button" data-target="#analysis">인공지능(AI) 문항분석</button>
+      </div>
+
+      <div id="user-controls" class="top-right-controls">
+        <span id="user-name-display" style="display: none; font-weight: bold; color: white; margin-right: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"></span>
+        <button id="btn-google-login" class="user-btn auth-btn-style">구글 로그인</button>
+        <button id="btn-api-setup" class="user-btn auth-btn-style">API Key 설정</button>
+        <button id="btn-logout" class="user-btn auth-btn-style" style="display: none; background: rgba(0, 0, 0, 0.3);">로그아웃</button>
+      </div>
+
     </nav>
 
     <section id="standards" class="tab-content active">
@@ -83,10 +86,26 @@
     </section>
 
     <section id="analysis" class="tab-content">
-      <h2>AI 문항분석 (Powered by gemini-3-flash-preview)</h2>
+      <h2>인공지능(AI) 문항분석</h2>
       <div class="content-container">
-        <textarea id="question-text" rows="6" placeholder="분석할 문항 내용을 여기에 입력하세요..." style="width: 100%; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
-        <button id="analyze-btn" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 1rem; transition: 0.3s;">AI 문항 분석 시작</button>
+        
+        <div id="image-upload-area" style="border: 2px dashed #cbd5e1; padding: 1.5rem; text-align: center; border-radius: 8px; margin-bottom: 1rem; background: #f8fafc; position: relative;">
+           <div id="image-preview-container" style="display: none; margin-bottom: 1rem; position: relative; display: inline-block;">
+             <img id="preview-img" src="" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+             <button id="btn-remove-image" style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold; line-height: 1;">&times;</button>
+           </div>
+           
+           <div id="upload-buttons-container" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+             <button id="btn-upload-file" class="upload-btn">📁 사진 업로드</button>
+             <button id="btn-upload-camera" class="upload-btn">📷 카메라로 찍기</button>
+           </div>
+           <p style="font-size: 0.9rem; color: #64748b; margin-top: 1rem; margin-bottom: 0;">또는 이 화면에 이미지를 <strong>복사하여 붙여넣기(Ctrl+V)</strong> 하세요.</p>
+           
+           <input type="file" id="file-input" accept="image/*" style="display: none;">
+           <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+        </div>
+        <textarea id="question-text" rows="6" placeholder="분석할 문항 내용을 여기에 입력하세요... (이미지만 올릴 경우 비워두셔도 됩니다)" style="width: 100%; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 1rem; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+        <button id="analyze-btn" style="width: 100%; padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 1rem; transition: 0.3s;">AI 문항 분석 시작</button>
         <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
       </div>
     </section>

@@ -294,36 +294,92 @@ main {
   padding: 3rem 2rem 2rem 2rem;
 }
 
-/* [추가할 코드: style.css 맨 아래에 복사+붙여넣기] */
-.user-controls {
+/* [수정할 코드: style.css 맨 아래] */
+
+
+
+.user-btn {
+  padding: 0.6rem 1.1rem;
+  background: white; /* 툴바 안이라서 흰색 배경이 어울립니다. */
+  color: #1e3a8a; /* 툴바 텍스트 색상에 맞춤 */
+  border: 1px solid #cbd5e1;
+  border-radius: 20px; /* 기존 스타일의 둥근 모양 유지 */
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.user-btn:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* API 저장 버튼 스타일 (모달 창 안) */
+#btn-save-api:hover {
+background: #1e3a8a !important;
+transform: translateY(-2px);
+box-shadow: 0 10px 15px -3px rgba(30, 64, 175, 0.4);
+}
+
+/* [추가] 모달 창 안의 발급받기 버튼 호버 효과 */
+#api-modal-overlay a:hover {
+  background: #bae6fd !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+/* === [추가할 코드: style.css 맨 아래] === */
+
+/* 1. 우측 상단 고정 위치 및 투명 디자인 */
+.top-right-controls {
   position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 100;
+  z-index: 1000;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
-.auth-btn {
-  padding: 0.6rem 1.2rem;
-  margin-left: 0.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+.auth-btn-style {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 0.6rem 1.1rem;
   border-radius: 20px;
   cursor: pointer;
   font-weight: bold;
-  backdrop-filter: blur(4px);
-  transition: background 0.3s;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.auth-btn:hover {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-/* [추가할 코드: style.css 맨 아래] */
-#btn-save-api:hover {
-  background: #1e3a8a !important;
+.auth-btn-style:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* 2. 이미지 업로드 버튼 스타일 */
+.upload-btn {
+  padding: 0.8rem 1.2rem;
+  background: white;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.95rem;
+  transition: 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.upload-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }

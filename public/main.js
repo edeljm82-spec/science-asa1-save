@@ -313,176 +313,208 @@ function initAnalysis() {
     const analyzeBtn = document.getElementById('analyze-btn');
     const resultDiv = document.getElementById('analysis-result');
     const questionText = document.getElementById('question-text');
+    
+    // 이미지 요소들
+    const btnUploadFile = document.getElementById('btn-upload-file');
+    const btnUploadCamera = document.getElementById('btn-upload-camera');
+    const fileInput = document.getElementById('file-input');
+    const cameraInput = document.getElementById('camera-input');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImg = document.getElementById('preview-img');
+    const btnRemoveImage = document.getElementById('btn-remove-image');
+    const uploadButtonsContainer = document.getElementById('upload-buttons-container');
 
     if (!analyzeBtn) return;
 
+    // --- 이미지 처리 헬퍼 함수 ---
+    const handleImageFile = (file) => {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            // Base64 데이터 추출 (data:image/jpeg;base64, 이후의 문자열)
+            selectedImageBase64 = e.target.result.split(',')[1];
+            selectedImageMimeType = file.type;
+            
+            previewContainer.style.display = 'inline-block';
+            uploadButtonsContainer.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // --- 이벤트 리스너: 사진 업로드 & 카메라 ---
+    btnUploadFile.addEventListener('click', () => fileInput.click());
+    btnUploadCamera.addEventListener('click', () => cameraInput.click());
+    fileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+    cameraInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+
+    // --- 이벤트 리스너: 붙여넣기 (Ctrl+V) ---
+    document.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let index in items) {
+            const item = items[index];
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+                const blob = item.getAsFile();
+                handleImageFile(blob);
+            }
+        }
+    });
+
+    // --- 이벤트 리스너: 이미지 삭제 ---
+    btnRemoveImage.addEventListener('click', () => {
+        selectedImageBase64 = null;
+        selectedImageMimeType = null;
+        previewImg.src = '';
+        previewContainer.style.display = 'none';
+        uploadButtonsContainer.style.display = 'flex';
+        fileInput.value = '';
+        cameraInput.value = '';
+    });
+
+    // --- 문항 분석 실행 ---
     analyzeBtn.addEventListener('click', async () => {
-        // 1. 로그인 확인
-        if (!currentUser) {
-            alert('AI 문항 분석을 사용하려면 먼저 우측 상단에서 구글 로그인을 해주세요.');
+        if (!currentUser) { alert('AI 문항 분석을 사용하려면 구글 로그인을 해주세요.'); return; }
+        if (!userApiKey) { document.getElementById('api-modal-overlay').classList.add('active'); return; }
+
+        const text = questionText.value.trim();
+        if (!text && !selectedImageBase64) {
+            alert('분석할 문항 내용(텍스트)을 입력하거나 이미지를 첨부해주세요.');
             return;
         }
 
-        // 2. API 키 확인 (없으면 모달 띄우기)
-        if (!userApiKey) {
-            document.getElementById('api-modal-overlay').classList.add('active');
-            return;
-        }
-
-        const text = questionText.value;
-        if (!text.trim()) {
-            alert('분석할 문항 내용을 입력해주세요.');
-            return;
-        }
-
-        // 로딩 상태 표시
         analyzeBtn.disabled = true;
         analyzeBtn.style.backgroundColor = "#94a3b8";
-        analyzeBtn.innerHTML = `<span style="display:inline-block; animation: spin 1s linear infinite;">⏳</span> AI가 문항을 분석 중입니다...`;
+        analyzeBtn.innerHTML = `⏳ AI가 문항을 분석 중입니다...`;
         resultDiv.style.display = 'none';
 
         try {
-            // === [핵심] gemini-3-flash-preview 모델 API 호출 ===
+            // [핵심] Gemini 멀티모달 Payload 구성
+            const promptParts = [{
+                text: `당신은 대한민국 고등학교 '통합과학' 교과목의 전문적인 평가 문항 분석 인공지능입니다.
+                다음 제공된 문항 내용(텍스트 및 이미지)을 분석하여, 어떤 단원에 속하는지, 매칭되는 성취기준(예: 10통과1-02-01)은 무엇인지, 
+                그리고 난이도(A, B, C, D, E 수준)와 그 판정 이유를 3~4문장으로 명확하게 분석해주세요.
+                결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요 (마크다운 백틱 쓰지 마세요).
+                (주의: 결과창 어디에도 gemini 등 구체적인 모델 이름을 노출하지 마세요.)
+
+                텍스트 내용: "${text || '텍스트 없음(이미지 참고)'}"
+
+                [출력 HTML 형식]
+                <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0;">
+                    <p style="margin-bottom: 0.8rem;"><strong>분석 단원:</strong> [단원명]</p>
+                    <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0;">[성취기준]</span></p>
+                    <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;">[A~E 수준]</strong></p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <strong style="color: #475569; display: block; margin-bottom: 0.5rem;">[판정 이유]</strong>
+                    <p style="line-height: 1.7; color: #333; margin: 0;">[이유 작성]</p>
+                </div>`
+            }];
+
+            // 이미지가 첨부되었다면 payload에 추가
+            if (selectedImageBase64) {
+                promptParts.push({
+                    inlineData: {
+                        mimeType: selectedImageMimeType,
+                        data: selectedImageBase64
+                    }
+                });
+            }
+
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userApiKey}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: `당신은 대한민국 고등학교 '통합과학' 교과목의 전문적인 평가 문항 분석 인공지능입니다.
-                            다음 문항 내용을 분석하여, 어떤 단원에 속하는지, 매칭되는 성취기준(예: 10통과1-02-01)은 무엇인지, 
-                            그리고 난이도(A, B, C, D, E 수준)와 그 판정 이유를 3~4문장으로 명확하게 분석해주세요.
-                            결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요 (마크다운 백틱 쓰지 마세요).
-
-                            문항 내용: "${text}"
-
-                            [출력 HTML 형식]
-                            <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0;">
-                                <p style="margin-bottom: 0.8rem;"><strong>분석 단원:</strong> [단원명 작성]</p>
-                                <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0;">[성취기준 코드 작성]</span></p>
-                                <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;">[A~E 수준]</strong></p>
-                            </div>
-                            <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                <strong style="color: #475569; display: block; margin-bottom: 0.5rem;">[판정 이유]</strong>
-                                <p style="line-height: 1.7; color: #333; margin: 0;">
-                                    [판정 이유를 3~4문장으로 자세히 작성]
-                                </p>
-                            </div>`
-                        }]
-                    }]
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: promptParts }] })
             });
 
             const data = await response.json();
+            if (!response.ok) throw new Error(data.error?.message || 'API 호출 중 오류가 발생했습니다.');
 
-            // 에러 처리 (API 키 오류 등)
-            if (!response.ok) {
-                throw new Error(data.error?.message || 'API 호출 중 오류가 발생했습니다. (API 키가 유효한지 확인해주세요.)');
-            }
-
-            // 분석 결과 렌더링
             const aiResultHtml = data.candidates[0].content.parts[0].text;
-            
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = `
                 <div class="card" style="border: 2px solid #22c55e; background: white; border-radius: 24px; padding: 2.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-top: 2rem;">
-                    <h3 style="color: #22c55e; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 800;">
-                        AI 상세 분석 결과
-                    </h3>
+                    <h3 style="color: #22c55e; margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 800;">AI 상세 분석 결과</h3>
                     ${aiResultHtml}
                 </div>
             `;
-
         } catch (error) {
-            console.error("Gemini API Error:", error);
-            alert(`분석 실패: ${error.message}\nAPI 키를 다시 확인하시거나 할당량을 초과했는지 확인해주세요.`);
-            // 실패 시 모달 다시 띄워주기
-            document.getElementById('api-modal-overlay').classList.add('active');
+            console.error(error);
+            alert(`분석 실패: ${error.message}`);
         } finally {
-            // 버튼 상태 원상복구
             analyzeBtn.disabled = false;
             analyzeBtn.style.backgroundColor = "var(--primary-color)";
             analyzeBtn.textContent = 'AI 문항 분석 시작';
         }
     });
-
-    // (선택) 로딩 스피너 애니메이션용 CSS 동적 추가
-    const style = document.createElement('style');
-    style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
-    document.head.appendChild(style);
 }
-// === [추가할 코드: main.js 맨 아래 마지막 줄에 통째로 복사+붙여넣기] ===
+// 전역 변수로 선택된 이미지를 저장할 변수 추가
+let selectedImageBase64 = null;
+let selectedImageMimeType = null;
+
 function initFirebaseAuth() {
     const btnLogin = document.getElementById('btn-google-login');
     const btnLogout = document.getElementById('btn-logout');
-    const userInfo = document.getElementById('user-info');
-    const userNameDisplay = document.getElementById('user-name-display');
-    
     const btnApiSetup = document.getElementById('btn-api-setup');
+    const userNameDisplay = document.getElementById('user-name-display');
     const apiModalOverlay = document.getElementById('api-modal-overlay');
-    const apiModalClose = document.getElementById('api-modal-close');
-    const btnSaveApi = document.getElementById('btn-save-api');
-    const apiKeyInput = document.getElementById('api-key-input');
-
-    // 1. 로그인 상태 확인 및 DB에서 내 API Key 가져오기
+    
+    // 1. 로그인 상태 관찰
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             btnLogin.style.display = 'none';
-            userInfo.style.display = 'flex';
+            userNameDisplay.style.display = 'inline-block';
             userNameDisplay.textContent = `${user.displayName} 선생님`;
+            btnLogout.style.display = 'inline-block';
             
             // DB에서 키 가져오기
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists() && docSnap.data().apiKey) {
                 userApiKey = docSnap.data().apiKey;
-                btnApiSetup.textContent = "API Key 수정";
             }
         } else {
             currentUser = null;
             userApiKey = "";
-            btnLogin.style.display = 'block';
-            userInfo.style.display = 'none';
+            btnLogin.style.display = 'inline-block';
+            userNameDisplay.style.display = 'none';
+            btnLogout.style.display = 'none';
         }
     });
 
-    // 2. 버튼 이벤트 모음
+    // 2. 버튼 이벤트
     btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
     btnLogout.addEventListener('click', () => signOut(auth));
     
+    // [핵심] API 설정 버튼 클릭 시 로그인 여부 확인
     btnApiSetup.addEventListener('click', () => {
-        apiKeyInput.value = userApiKey; 
-        apiModalOverlay.classList.add('active');
-    });
-    apiModalClose.addEventListener('click', () => apiModalOverlay.classList.remove('active'));
-
-    // 3. API Key 안전하게 데이터베이스(Firestore)에 저장
-    btnSaveApi.addEventListener('click', async () => {
-        if (!currentUser) return;
-        const newKey = apiKeyInput.value.trim();
-        if (!newKey) {
-            alert("API Key를 입력해주세요.");
+        if (!currentUser) {
+            alert("구글 로그인을 먼저 해주세요.");
             return;
         }
+        document.getElementById('api-key-input').value = userApiKey; 
+        apiModalOverlay.classList.add('active');
+    });
+    
+    document.getElementById('api-modal-close').addEventListener('click', () => apiModalOverlay.classList.remove('active'));
+
+    // 3. API Key 저장
+    document.getElementById('btn-save-api').addEventListener('click', async () => {
+        if (!currentUser) return;
+        const newKey = document.getElementById('api-key-input').value.trim();
+        if (!newKey) { alert("API Key를 입력해주세요."); return; }
         
-        btnSaveApi.textContent = "저장 중...";
+        const btn = document.getElementById('btn-save-api');
+        btn.textContent = "저장 중...";
         try {
-            await setDoc(doc(db, "users", currentUser.uid), {
-                apiKey: newKey,
-                updatedAt: new Date()
-            }, { merge: true }); // 기존 데이터 덮어쓰기 방지
-            
+            await setDoc(doc(db, "users", currentUser.uid), { apiKey: newKey, updatedAt: new Date() }, { merge: true });
             userApiKey = newKey;
             alert("개인 API Key가 데이터베이스에 안전하게 저장되었습니다!");
             apiModalOverlay.classList.remove('active');
-            btnApiSetup.textContent = "API Key 수정";
         } catch (error) {
             alert("저장 실패: " + error.message);
         } finally {
-            btnSaveApi.textContent = "저장하기";
+            btn.textContent = "설정 저장하고 분석 시작하기";
         }
     });
 }
