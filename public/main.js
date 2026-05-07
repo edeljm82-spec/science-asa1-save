@@ -312,8 +312,9 @@ function renderInquiryActivities(filter = '전체') {
 function initAnalysis() {
     const analyzeBtn = document.getElementById('analyze-btn');
     const resultDiv = document.getElementById('analysis-result');
-    const questionText = document.getElementById('question-text');
     
+    // 텍스트 입력창(questionText) 관련 코드는 삭제되었습니다.
+
     // 이미지 요소들
     const btnUploadFile = document.getElementById('btn-upload-file');
     const btnUploadCamera = document.getElementById('btn-upload-camera');
@@ -332,23 +333,20 @@ function initAnalysis() {
         const reader = new FileReader();
         reader.onload = (e) => {
             previewImg.src = e.target.result;
-            // Base64 데이터 추출 (data:image/jpeg;base64, 이후의 문자열)
             selectedImageBase64 = e.target.result.split(',')[1];
             selectedImageMimeType = file.type;
-            
             previewContainer.style.display = 'inline-block';
             uploadButtonsContainer.style.display = 'none';
         };
         reader.readAsDataURL(file);
     };
 
-    // --- 이벤트 리스너: 사진 업로드 & 카메라 ---
+    // --- 이벤트 리스너 ---
     btnUploadFile.addEventListener('click', () => fileInput.click());
     btnUploadCamera.addEventListener('click', () => cameraInput.click());
     fileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
     cameraInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
 
-    // --- 이벤트 리스너: 붙여넣기 (Ctrl+V) ---
     document.addEventListener('paste', (e) => {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let index in items) {
@@ -360,7 +358,6 @@ function initAnalysis() {
         }
     });
 
-    // --- 이벤트 리스너: 이미지 삭제 ---
     btnRemoveImage.addEventListener('click', () => {
         selectedImageBase64 = null;
         selectedImageMimeType = null;
@@ -376,27 +373,22 @@ function initAnalysis() {
         if (!currentUser) { alert('AI 문항 분석을 사용하려면 구글 로그인을 해주세요.'); return; }
         if (!userApiKey) { document.getElementById('api-modal-overlay').classList.add('active'); return; }
 
-        const text = questionText.value.trim();
-        if (!text && !selectedImageBase64) {
-            alert('분석할 문항 내용(텍스트)을 입력하거나 이미지를 첨부해주세요.');
+        if (!selectedImageBase64) {
+            alert('분석할 문항 이미지를 업로드하거나 붙여넣기 해주세요.');
             return;
         }
 
         analyzeBtn.disabled = true;
         analyzeBtn.style.backgroundColor = "#94a3b8";
-        analyzeBtn.innerHTML = `⏳ AI가 문항을 분석 중입니다...`;
+        analyzeBtn.innerHTML = `⏳ AI가 문항을 분석하고 풀이를 작성 중입니다...`;
         resultDiv.style.display = 'none';
 
         try {
-            // [핵심] Gemini 멀티모달 Payload 구성
+            // [핵심] AI에게 지시하는 프롬프트(명령어)에 "풀이"도 작성해달라고 명시합니다.
             const promptParts = [{
                 text: `당신은 대한민국 고등학교 '통합과학' 교과목의 전문적인 평가 문항 분석 인공지능입니다.
-                다음 제공된 문항 내용(텍스트 및 이미지)을 분석하여, 어떤 단원에 속하는지, 매칭되는 성취기준(예: 10통과1-02-01)은 무엇인지, 
-                그리고 난이도(A, B, C, D, E 수준)와 그 판정 이유를 3~4문장으로 명확하게 분석해주세요.
-                결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요 (마크다운 백틱 쓰지 마세요).
-                (주의: 결과창 어디에도 gemini 등 구체적인 모델 이름을 노출하지 마세요.)
-
-                텍스트 내용: "${text || '텍스트 없음(이미지 참고)'}"
+                다음 제공된 문항 이미지를 분석하여 1) 매칭 단원 및 성취기준, 2) 성취수준 판정 이유, 3) 문항에 대한 상세한 풀이와 정답을 작성해주세요.
+                결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요. (마크다운 백틱 쓰지 마세요)
 
                 [출력 HTML 형식]
                 <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0;">
@@ -404,20 +396,20 @@ function initAnalysis() {
                     <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0;">[성취기준]</span></p>
                     <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;">[A~E 수준]</strong></p>
                 </div>
-                <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                
+                <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
                     <strong style="color: #475569; display: block; margin-bottom: 0.5rem;">[판정 이유]</strong>
                     <p style="line-height: 1.7; color: #333; margin: 0;">[이유 작성]</p>
+                </div>
+
+                <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #bfdbfe;">
+                    <strong style="color: #1d4ed8; display: block; margin-bottom: 0.5rem;">[💡 문항 풀이 및 정답]</strong>
+                    <p style="line-height: 1.7; color: #333; margin: 0;">[이 문항의 단계별 풀이와 최종 정답을 상세히 작성]</p>
                 </div>`
             }];
 
-            // 이미지가 첨부되었다면 payload에 추가
             if (selectedImageBase64) {
-                promptParts.push({
-                    inlineData: {
-                        mimeType: selectedImageMimeType,
-                        data: selectedImageBase64
-                    }
-                });
+                promptParts.push({ inlineData: { mimeType: selectedImageMimeType, data: selectedImageBase64 } });
             }
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userApiKey}`, {
@@ -429,11 +421,12 @@ function initAnalysis() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error?.message || 'API 호출 중 오류가 발생했습니다.');
 
+            // AI가 만들어준 HTML(분석+풀이)을 그대로 화면에 띄웁니다.
             const aiResultHtml = data.candidates[0].content.parts[0].text;
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = `
                 <div class="card" style="border: 2px solid #22c55e; background: white; border-radius: 24px; padding: 2.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-top: 2rem;">
-                    <h3 style="color: #22c55e; margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 800;">AI 상세 분석 결과</h3>
+                    <h3 style="color: #22c55e; margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 800;">AI 상세 분석 및 풀이 결과</h3>
                     ${aiResultHtml}
                 </div>
             `;
@@ -519,3 +512,71 @@ function initFirebaseAuth() {
     });
 }
 // ====================================================================
+// main.js 파일 하단에 아래 코드를 추가하여 챗봇 기능을 구현하세요.
+
+// ----------------------------------------------------
+// 챗봇 관련 요소 가져오기
+// ----------------------------------------------------
+const chatbotPanel = document.getElementById('chatbot-panel');
+const chatbotToggleBtn = document.getElementById('chatbot-toggle-button');
+const chatbotCloseBtn = document.getElementById('chatbot-close-button');
+const chatbotInput = document.getElementById('chatbot-input');
+const chatbotSendBtn = document.getElementById('chatbot-send-button');
+const chatbotMessages = document.getElementById('chatbot-messages');
+
+// ----------------------------------------------------
+// 챗봇 열기/닫기 기능
+// ----------------------------------------------------
+function toggleChatbot() {
+  chatbotPanel.classList.toggle('chatbot-hidden');
+}
+
+chatbotToggleBtn.addEventListener('click', toggleChatbot);
+chatbotCloseBtn.addEventListener('click', toggleChatbot);
+
+// ----------------------------------------------------
+// 메시지 추가 기능
+// ----------------------------------------------------
+function addMessage(text, sender) {
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('chatbot-message', sender);
+  messageDiv.textContent = `${sender === 'user' ? '나: ' : '챗봇: '} ${text}`;
+  chatbotMessages.appendChild(messageDiv);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight; // 스크롤을 맨 아래로 이동
+}
+
+// ----------------------------------------------------
+// 메시지 전송 및 응답 처리
+// ----------------------------------------------------
+function sendMessage() {
+  const messageText = chatbotInput.value.trim();
+  if (messageText) {
+    addMessage(messageText, 'user');
+    chatbotInput.value = ''; // 입력창 초기화
+
+    // --- (예시) 챗봇 응답 로직 ---
+    // 실제로는 이곳에 'data.js', 'data1.js'의 데이터를 활용하여
+    // 자연어 처리 모델이나 API를 호출하여 응답을 받아와야 합니다.
+    // 'data.js' 및 'data1.js'의 데이터를 챗봇이나 분석 기능에 활용할 수 있습니다.
+
+    let botResponse = '통합과학에 대한 질문이군요! 어떤 점이 궁금하신가요?';
+
+    // 간단한 키워드 기반 응답 예시
+    if (messageText.includes('성취기준')) {
+      botResponse = '성취기준에 대해 궁금하시군요. data.js를 확인해보세요.';
+    } else if (messageText.includes('탐구활동')) {
+      botResponse = '탐구활동 자료는 data1.js에 있습니다.';
+    }
+
+    setTimeout(() => {
+      addMessage(botResponse, 'bot');
+    }, 1000); // 1초 뒤에 응답
+  }
+}
+
+chatbotSendBtn.addEventListener('click', sendMessage);
+chatbotInput.addEventListener('keypress', (event) => {
+  if (event.key === 'Enter') {
+    sendMessage();
+  }
+});
