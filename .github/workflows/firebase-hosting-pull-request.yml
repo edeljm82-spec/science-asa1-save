@@ -13,4 +13,4 @@ jobs:
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCIENCE_ASA1_SAVE }}'
-          projectId: science-asa1-save
+          projectId: science-asa1-13844073-164bb
