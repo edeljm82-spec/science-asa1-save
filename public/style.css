@@ -493,3 +493,33 @@ box-shadow: 0 10px 15px -3px rgba(30, 64, 175, 0.4);
   cursor: pointer;
   z-index: 1001; /* 챗봇 패널보다 위에 표시 */
 }
+/* --- 챗봇 로딩 애니메이션 (타이핑 효과) --- */
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.typing-indicator span {
+  display: block;
+  width: 6px;
+  height: 6px;
+  background-color: #3b82f6; /* 파란색 점 */
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}

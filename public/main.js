@@ -107,7 +107,7 @@ function renderAchievementDashboard() {
                         
                         <div class="std-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAccordion(this)">
                             <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div class="std-id-badge" style="background: #e0e7ff; color: #2563eb; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold;">${s.id}</div>
+                                <div class="std-id-badge" style="background: #e0e7ff; color: #2563eb; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; white-space: nowrap; flex-shrink: 0; width: 140px; text-align: center;">${s.id}</div>
                                 <div class="std-info"><h4 style="margin: 0; font-size: 1.1rem; color: #0f172a;">${s.description}</h4></div>
                             </div>
                             <div style="color: #2563eb; font-weight: bold; font-size: 1.2rem;">▼</div>
@@ -384,27 +384,50 @@ function initAnalysis() {
         resultDiv.style.display = 'none';
 
         try {
-            // [핵심] AI에게 지시하는 프롬프트(명령어)에 "풀이"도 작성해달라고 명시합니다.
+            // [추가된 부분] data.js에 있는 선생님의 실제 성취기준 데이터를 텍스트로 변환합니다.
+            const curriculumContext = achievementData.map(unit => 
+                `단원: ${unit.unit}\n` + 
+                unit.standards.map(s => 
+                    `- 성취기준 코드: ${s.id}, 내용: ${s.description}\n` +
+                    `  [성취수준] A: ${s.levels.A}, B: ${s.levels.B}, C: ${s.levels.C}, D: ${s.levels.D}, E: ${s.levels.E}`
+                ).join('\n')
+            ).join('\n\n');
+
+            
+            // [핵심] Gemini 프롬프트 고도화 (전 과목 확장 판별)
             const promptParts = [{
-                text: `당신은 대한민국 고등학교 '통합과학' 교과목의 전문적인 평가 문항 분석 인공지능입니다.
-                다음 제공된 문항 이미지를 분석하여 1) 매칭 단원 및 성취기준, 2) 성취수준 판정 이유, 3) 문항에 대한 상세한 풀이와 정답을 작성해주세요.
-                결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요. (마크다운 백틱 쓰지 마세요)
+                text: `당신은 대한민국 고등학교 과학 교과 교육과정 및 평가 권위자입니다.
+                우선적으로 아래 제공된 [2022 개정 교육과정 통합과학 공식 성취기준 데이터]를 확인하세요.
+
+                [통합과학 공식 성취기준 데이터]
+                ${curriculumContext}
+
+                [분석 및 풀이 가이드라인]
+                1. 과목 판정 및 성취기준 매칭: 
+                   - 통합과학 문항인 경우: 위 데이터에서 정확히 일치하는 성취기준 코드를 찾아 매칭하세요.
+                   - 타 과학 과목(물리학, 화학, 생명과학, 지구과학 등)인 경우: "데이터베이스에 준비 중"이라고 회피하지 마세요. 당신이 자체적으로 학습한 '2022 개정 고등학교 과학과 교육과정' 지식을 총동원하여, 해당 문항이 속한 가장 정확한 과목명과 성취기준(또는 핵심 개념)을 스스로 추론하여 명시하세요.
+                2. 성취수준 판정: 해당 문항이 요구하는 사고의 수준을 분석하여 A~E 수준(또는 상/중/하)을 판정하고, 근거를 명확히 제시하세요.
+                3. 고도화된 문항 풀이 (단계별 추론 강제):
+                   - [중요] 처음부터 정답을 말하지 마세요.
+                   - 반드시 1) 문제의 핵심 조건 분석 → 2) 적용할 심화 과학 원리 도출 → 3) 단계별 논리적 추론 및 계산(Step-by-step)의 과정을 거쳐 스스로 논리적 오류를 검증한 후 최종 정답을 제시하세요.
+                
+                결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요 (마크다운 백틱 제외).
 
                 [출력 HTML 형식]
                 <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0;">
-                    <p style="margin-bottom: 0.8rem;"><strong>분석 단원:</strong> [단원명]</p>
-                    <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0;">[성취기준]</span></p>
-                    <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;">[A~E 수준]</strong></p>
+                    <p style="margin-bottom: 0.8rem;"><strong>분석 과목 및 단원:</strong> [과목명 및 단원명 기재]</p>
+                    <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0;">[성취기준 코드 또는 2022 개정 핵심 개념]</span></p>
+                    <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;">[A~E 또는 상/중/하]</strong></p>
                 </div>
                 
                 <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                    <strong style="color: #475569; display: block; margin-bottom: 0.5rem;">[판정 이유]</strong>
-                    <p style="line-height: 1.7; color: #333; margin: 0;">[이유 작성]</p>
+                    <strong style="color: #475569; display: block; margin-bottom: 0.5rem;">[⚖️ 교육과정 기반 판정 이유]</strong>
+                    <p style="line-height: 1.7; color: #333; margin: 0;">[원칙에 근거한 엄격한 분석 내용 작성]</p>
                 </div>
-
+            
                 <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #bfdbfe;">
-                    <strong style="color: #1d4ed8; display: block; margin-bottom: 0.5rem;">[💡 문항 풀이 및 정답]</strong>
-                    <p style="line-height: 1.7; color: #333; margin: 0;">[이 문항의 단계별 풀이와 최종 정답을 상세히 작성]</p>
+                    <strong style="color: #1d4ed8; display: block; margin-bottom: 0.5rem;">[🔬 고도화된 문항 풀이 및 심화 해설]</strong>
+                    <p style="line-height: 1.7; color: #333; margin: 0;">[단계별 추론 과정이 포함된 학문적 깊이가 담긴 상세 풀이 작성]</p>
                 </div>`
             }];
 
@@ -548,35 +571,150 @@ function addMessage(text, sender) {
 // ----------------------------------------------------
 // 메시지 전송 및 응답 처리
 // ----------------------------------------------------
-function sendMessage() {
-  const messageText = chatbotInput.value.trim();
-  if (messageText) {
-    addMessage(messageText, 'user');
-    chatbotInput.value = ''; // 입력창 초기화
-
-    // --- (예시) 챗봇 응답 로직 ---
-    // 실제로는 이곳에 'data.js', 'data1.js'의 데이터를 활용하여
-    // 자연어 처리 모델이나 API를 호출하여 응답을 받아와야 합니다.
-    // 'data.js' 및 'data1.js'의 데이터를 챗봇이나 분석 기능에 활용할 수 있습니다.
-
-    let botResponse = '통합과학에 대한 질문이군요! 어떤 점이 궁금하신가요?';
-
-    // 간단한 키워드 기반 응답 예시
-    if (messageText.includes('성취기준')) {
-      botResponse = '성취기준에 대해 궁금하시군요. data.js를 확인해보세요.';
-    } else if (messageText.includes('탐구활동')) {
-      botResponse = '탐구활동 자료는 data1.js에 있습니다.';
+// ----------------------------------------------------
+// 메시지 전송 및 응답 처리 (Gemini API 연동 버전)
+// ----------------------------------------------------
+// ----------------------------------------------------
+// 메시지 전송 및 응답 처리 (Gemini API 연동 + 엄격한 전문가 모드)
+// ----------------------------------------------------
+async function sendMessage() {
+    const messageText = chatbotInput.value.trim();
+    if (!messageText) return;
+  
+    // 1. 로그인 및 API Key 확인
+    if (!currentUser || !userApiKey) {
+      alert('챗봇 기능을 사용하려면 구글 로그인 및 API Key 설정이 필요합니다.');
+      document.getElementById('api-modal-overlay').classList.add('active');
+      return;
     }
-
-    setTimeout(() => {
-      addMessage(botResponse, 'bot');
-    }, 1000); // 1초 뒤에 응답
+  
+    // 2. 사용자의 질문을 화면에 표시
+    addMessage(messageText, 'user');
+    chatbotInput.value = ''; // 입력창 비우기
+  
+    // 3. 로딩 상태 표시 (답변 중복 클릭 방지)
+    chatbotInput.disabled = true;
+    chatbotSendBtn.disabled = true;
+    chatbotSendBtn.textContent = '⏳';
+    
+    const loadingId = 'loading-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = loadingId;
+    loadingDiv.classList.add('chatbot-message', 'bot');
+    // 예쁜 애니메이션이 들어간 로딩창으로 변경
+  loadingDiv.innerHTML = `
+  <div class="typing-indicator">
+    교육과정을 기반으로 답변 작성 중<span></span><span></span><span></span>
+  </div>
+`;
+chatbotMessages.appendChild(loadingDiv);
+chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    chatbotMessages.appendChild(loadingDiv);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+  
+    try {
+      // 4. data.js의 성취기준 데이터를 챗봇에게 주입
+      const curriculumContext = achievementData.map(unit => 
+          unit.standards.map(s => `- ${s.id}: ${s.description}`).join('\n')
+      ).join('\n');
+  
+      // 5. 프롬프트 설계 (수석 교사 수준의 고도화된 전문가 모드)
+    const promptText = `
+    당신은 대한민국 고등학교 과학 교과(통합과학, 물/화/생/지)의 엄격하고 뛰어난 수석 교사이자 평가 전문가입니다.
+    
+    [참고용 기준 데이터]
+    ${curriculumContext}
+    
+    [대화 원칙 - 매우 중요]
+    1. 확장된 전문성 발휘: 사용자의 질문이 제공된 데이터(통합과학)에 없더라도 "모른다"고 하지 마세요. 당신이 내재하고 있는 2022 개정 과학과 전 과목 지식을 총동원하여 최고 수준의 답변을 제공하세요.
+    2. 논리적이고 풍부한 해설: 단답형으로 끝내지 마세요. 질문한 개념의 숨겨진 과학적 원리, 실생활 연계 예시, 학생들이 자주 헷갈리는 오개념 등 교육적으로 가치 있는 내용을 깊이 있게 덧붙여 설명하세요.
+    3. 교육적 원칙 고수: 사용자의 논리나 가정이 틀렸다면 무조건 동조하지 말고, 과학적 사실과 교육과정의 원칙에 근거하여 친절하면서도 단호하게 교정 방향을 제시해 주세요.
+    
+    질문: "${messageText}"
+  `;
+  
+      // 6. Gemini API 호출
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userApiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              contents: [{ parts: [{ text: promptText }] }] 
+          })
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'API 통신 오류');
+  
+      const botReply = data.candidates[0].content.parts[0].text;
+  
+      // 7. 화면에 답변 출력
+      document.getElementById(loadingId).remove();
+      const replyDiv = document.createElement('div');
+      replyDiv.classList.add('chatbot-message', 'bot');
+      
+      // 마크다운 문법 중 불필요한 별표(**)를 지우고 줄바꿈 적용
+      let formattedReply = botReply.replace(/\*\*/g, '').replace(/\n/g, '<br>');
+      replyDiv.innerHTML = formattedReply; 
+      chatbotMessages.appendChild(replyDiv);
+  
+    } catch (error) {
+      console.error(error);
+      document.getElementById(loadingId).remove();
+      addMessage(`⚠️ 죄송합니다. 답변을 가져오는 중 오류가 발생했습니다: ${error.message}`, 'bot');
+    } finally {
+      // 8. 입력창 잠금 해제
+      chatbotInput.disabled = false;
+      chatbotSendBtn.disabled = false;
+      chatbotSendBtn.textContent = '전송';
+      chatbotInput.focus();
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
   }
-}
+  
+  
+  // (참고: 아래에 있던 이벤트 리스너 코드는 그대로 두시면 됩니다.)
+  // chatbotSendBtn.addEventListener('click', sendMessage);
+  // chatbotInput.addEventListener('keypress', (event) => { ... });
 
 chatbotSendBtn.addEventListener('click', sendMessage);
 chatbotInput.addEventListener('keypress', (event) => {
   if (event.key === 'Enter') {
     sendMessage();
   }
+});
+// ====================================================================
+// [추가할 부분] 플로팅 버튼 기능 및 화면 초기화 로직
+// ====================================================================
+
+// '맨 위로' 버튼 클릭 시
+document.getElementById('btn-scroll-top')?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// '다른 문항 분석하기' 버튼 클릭 시 (완전 초기화)
+document.getElementById('btn-reset-analysis')?.addEventListener('click', () => {
+    // 1. 화면 맨 위로 부드럽게 이동
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 2. 분석 결과창 숨기기
+    const resultDiv = document.getElementById('analysis-result');
+    if(resultDiv) resultDiv.style.display = 'none';
+    
+    // 3. 첨부된 이미지 삭제 (기존에 만들어둔 X버튼 강제 클릭)
+    const removeImgBtn = document.getElementById('btn-remove-image');
+    if(removeImgBtn) removeImgBtn.click();
+
+    // 4. 입력창 텍스트 비우기
+    const questionInput = document.getElementById('question-text');
+    if(questionInput) questionInput.value = '';
+    
+    // 5. 챗봇 대화 내용 비우기 및 초기 안내 메시지 띄우기
+    const chatMessages = document.getElementById('chatbot-messages');
+    if(chatMessages) {
+        chatMessages.innerHTML = `
+            <div class="chatbot-message bot" style="background-color: #e0f2fe; border-left: 4px solid #0284c7;">
+                <strong style="display:block; margin-bottom:5px; font-size:0.85rem; color:#0369a1;">통합과학 도우미</strong>
+                <div>새로운 문항 분석 준비가 완료되었습니다! 분석 결과를 보신 후 무엇이든 물어보세요.</div>
+            </div>`;
+    }
 });
