@@ -453,6 +453,18 @@ function initAnalysis() {
                     ${aiResultHtml}
                 </div>
             `;
+            // 분석 완료 후 버튼과 챗봇 보이기
+            const resetBtnContainer = document.getElementById('reset-btn-container');
+            const chatbotToggleBtn = document.getElementById('chatbot-toggle-button');
+            if(resetBtnContainer) resetBtnContainer.style.display = 'block';
+            if(chatbotToggleBtn) chatbotToggleBtn.style.display = 'block';
+            
+            // 챗봇 프롬프트를 위해 분석 내용과 이미지 기억하기
+            window.lastAnalysisResult = aiResultHtml;
+            window.lastAnalyzedImage = selectedImageBase64;
+            window.lastAnalyzedImageMime = selectedImageMimeType;
+            //
+
         } catch (error) {
             console.error(error);
             alert(`분석 실패: ${error.message}`);
@@ -613,36 +625,47 @@ chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
   
     try {
-      // 4. data.js의 성취기준 데이터를 챗봇에게 주입
-      const curriculumContext = achievementData.map(unit => 
-          unit.standards.map(s => `- ${s.id}: ${s.description}`).join('\n')
-      ).join('\n');
-  
-      // 5. 프롬프트 설계 (수석 교사 수준의 고도화된 전문가 모드)
-    const promptText = `
-    당신은 대한민국 고등학교 과학 교과(통합과학, 물/화/생/지)의 엄격하고 뛰어난 수석 교사이자 평가 전문가입니다.
+        // 4. data.js의 성취기준 데이터를 챗봇에게 주입
+        const curriculumContext = achievementData.map(unit => 
+            unit.standards.map(s => `- ${s.id}: ${s.description}`).join('\n')
+        ).join('\n');
     
-    [참고용 기준 데이터]
-    ${curriculumContext}
-    
-    [대화 원칙 - 매우 중요]
-    1. 확장된 전문성 발휘: 사용자의 질문이 제공된 데이터(통합과학)에 없더라도 "모른다"고 하지 마세요. 당신이 내재하고 있는 2022 개정 과학과 전 과목 지식을 총동원하여 최고 수준의 답변을 제공하세요.
-    2. 논리적이고 풍부한 해설: 단답형으로 끝내지 마세요. 질문한 개념의 숨겨진 과학적 원리, 실생활 연계 예시, 학생들이 자주 헷갈리는 오개념 등 교육적으로 가치 있는 내용을 깊이 있게 덧붙여 설명하세요.
-    3. 교육적 원칙 고수: 사용자의 논리나 가정이 틀렸다면 무조건 동조하지 말고, 과학적 사실과 교육과정의 원칙에 근거하여 친절하면서도 단호하게 교정 방향을 제시해 주세요.
-    
-    질문: "${messageText}"
-  `;
+        // 5. 프롬프트 설계 (방금 분석한 문항에 집중하도록 강제)
+        const promptText = `
+      당신은 대한민국 고등학교 과학 교과(통합과학, 물/화/생/지)의 엄격하고 뛰어난 수석 교사이자 평가 전문가입니다.
+      
+      [참고용 기준 데이터]
+      ${curriculumContext}
   
-      // 6. Gemini API 호출
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userApiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-              contents: [{ parts: [{ text: promptText }] }] 
-          })
-      });
+      [현재 분석한 문항 정보]
+      사용자는 아래 분석 결과를 얻은 문항과 이미지를 바탕으로 당신에게 질문할 것입니다.
+      ${window.lastAnalysisResult || "분석 결과 없음"}
+      
+      [대화 원칙 - 매우 중요]
+      1. 대화의 초점: 오직 방금 분석한 문항과 관련된 과학적 개념, 원리, 풀이 과정에 대해서만 답변하세요. 문항과 전혀 관련 없는 질문(예: 농담, 타 과목 지식, 날씨 등)에는 "해당 질문은 현재 분석 중인 문항과 관련이 없습니다."라며 답변을 정중히 거절하세요.
+      2. 확장된 전문성 발휘: 질문한 개념의 숨겨진 과학적 원리, 실생활 연계 예시, 학생들이 자주 헷갈리는 오개념 등 교육적으로 가치 있는 내용을 깊이 있게 덧붙여 설명하세요.
+      3. 교육적 원칙 고수: 사용자의 논리나 가정이 틀렸다면 무조건 동조하지 말고, 과학적 사실과 교육과정의 원칙에 근거하여 친절하면서도 단호하게 교정 방향을 제시해 주세요.
+      
+      질문: "${messageText}"
+    `;
+    
+        // API에 전달할 파트 구성 (이미지가 있으면 함께 전송)
+        const promptParts = [{ text: promptText }];
+        if (window.lastAnalyzedImage) {
+            promptParts.push({ inlineData: { mimeType: window.lastAnalyzedImageMime, data: window.lastAnalyzedImage } });
+        }
   
-      const data = await response.json();
+        // 6. Gemini API 호출
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userApiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                contents: [{ parts: promptParts }] 
+            })
+        });
+    
+        const data = await response.json();
+
       if (!response.ok) throw new Error(data.error?.message || 'API 통신 오류');
   
       const botReply = data.candidates[0].content.parts[0].text;
@@ -696,25 +719,35 @@ document.getElementById('btn-reset-analysis')?.addEventListener('click', () => {
     // 1. 화면 맨 위로 부드럽게 이동
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    // 2. 분석 결과창 숨기기
+    // 2. 분석 결과창 및 하단 버튼 숨기기
     const resultDiv = document.getElementById('analysis-result');
     if(resultDiv) resultDiv.style.display = 'none';
+    const resetContainer = document.getElementById('reset-btn-container');
+    if(resetContainer) resetContainer.style.display = 'none';
     
-    // 3. 첨부된 이미지 삭제 (기존에 만들어둔 X버튼 강제 클릭)
+    // 3. 챗봇 버튼 숨기기 및 챗봇 창 닫기
+    const chatbotToggleBtn = document.getElementById('chatbot-toggle-button');
+    if(chatbotToggleBtn) chatbotToggleBtn.style.display = 'none';
+    const chatbotPanel = document.getElementById('chatbot-panel');
+    if(chatbotPanel) chatbotPanel.classList.add('chatbot-hidden');
+    
+    // 4. 전역 변수 초기화 (챗봇이 이전 문항을 기억하지 못하게 함)
+    window.lastAnalysisResult = null;
+    window.lastAnalyzedImage = null;
+    window.lastAnalyzedImageMime = null;
+    
+    // 5. 첨부된 이미지 삭제 (기존에 만들어둔 X버튼 강제 클릭)
     const removeImgBtn = document.getElementById('btn-remove-image');
     if(removeImgBtn) removeImgBtn.click();
-
-    // 4. 입력창 텍스트 비우기
-    const questionInput = document.getElementById('question-text');
-    if(questionInput) questionInput.value = '';
     
-    // 5. 챗봇 대화 내용 비우기 및 초기 안내 메시지 띄우기
+    // 6. 챗봇 대화 내용 비우기 및 초기 안내 메시지 띄우기
     const chatMessages = document.getElementById('chatbot-messages');
     if(chatMessages) {
         chatMessages.innerHTML = `
             <div class="chatbot-message bot" style="background-color: #e0f2fe; border-left: 4px solid #0284c7;">
-                <strong style="display:block; margin-bottom:5px; font-size:0.85rem; color:#0369a1;">통합과학 도우미</strong>
-                <div>새로운 문항 분석 준비가 완료되었습니다! 분석 결과를 보신 후 무엇이든 물어보세요.</div>
+                <strong style="display:block; margin-bottom:5px; font-size:0.85rem; color:#0369a1;">통합과학 챗봇</strong>
+                <div>문항 분석을 진행한 후 저를 호출해 주세요. 분석 결과를 바탕으로 궁금한 점을 답변해 드립니다!</div>
             </div>`;
     }
 });
+

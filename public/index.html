@@ -106,7 +106,13 @@
         </div>
         <button id="analyze-btn" style="width: 100%; padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 1rem; transition: 0.3s;">AI 문항 분석 시작</button>
         <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
-      </div>
+        <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
+        <div id="reset-btn-container" style="display: none; margin-top: 2rem; text-align: center;">
+          <button id="btn-reset-analysis" style="padding: 14px 28px; background: #2563eb; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+            🔄 다른 문항 분석하기
+          </button>
+        </div>
+        </div>
     </section>
   </main>
 
@@ -121,14 +127,13 @@
       <h3>통합과학 챗봇</h3>
       <button id="chatbot-close-button">&times;</button>
     </div>
-    <div id="chatbot-messages">
-      </div>
+    <div id="chatbot-messages"></div>
     <div class="chatbot-input-area">
       <input type="text" id="chatbot-input" placeholder="무엇이든 물어보세요...">
       <button id="chatbot-send-button">전송</button>
     </div>
   </div>
-  <button id="chatbot-toggle-button">챗봇 열기/닫기</button>
+  <button id="chatbot-toggle-button" style="display: none;">챗봇 열기/닫기</button>
   
   <script type="module" src="main.js"></script>
 
@@ -136,9 +141,7 @@
     <button id="btn-scroll-top" style="padding: 12px 20px; background: #334155; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
       ⬆ 맨 위로
     </button>
-    <button id="btn-reset-analysis" style="padding: 12px 20px; background: #2563eb; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-      🔄 다른 문항 분석하기
-    </button>
   </div>
   </body>
 </html>
+
