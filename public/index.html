@@ -76,7 +76,16 @@
     </nav>
 
     <section id="standards" class="tab-content active">
-      <h2>성취기준 및 성취수준</h2>
+      <div style="margin-bottom: 2rem;">
+        <select id="course-select" style="padding: 0.8rem 1rem; font-size: 1.1rem; font-weight: bold; border-radius: 8px; border: 2px solid #cbd5e1; color: #1e3a8a; background-color: #f8fafc; cursor: pointer; outline: none; width: 100%; max-width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          <option value="1. 통합과학1">통합과학1</option>
+          <option value="2. 통합과학2">통합과학2</option>
+          <option value="3. 생명과학">생명과학</option>
+          <option value="4. 세포와 물질대사">세포와 물질대사</option>
+          <option value="5. 생물의 유전">생물의 유전</option>
+        </select>
+      </div>
+      
       <div id="standards-container" class="content-container"></div>
     </section>
 
@@ -90,7 +99,7 @@
       <div class="content-container">
         
         <div id="image-upload-area" style="border: 2px dashed #cbd5e1; padding: 1.5rem; text-align: center; border-radius: 8px; margin-bottom: 1rem; background: #f8fafc; position: relative;">
-           <div id="image-preview-container" style="display: none; margin-bottom: 1rem; position: relative; display: inline-block;">
+          <div id="image-preview-container" style="display: none; margin-bottom: 1rem; position: relative;">
              <img id="preview-img" src="" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
              <button id="btn-remove-image" style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold; line-height: 1;">&times;</button>
            </div>
@@ -106,7 +115,7 @@
         </div>
         <button id="analyze-btn" style="width: 100%; padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 1rem; transition: 0.3s;">AI 문항 분석 시작</button>
         <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
-        <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
+        
         <div id="reset-btn-container" style="display: none; margin-top: 2rem; text-align: center;">
           <button id="btn-reset-analysis" style="padding: 14px 28px; background: #2563eb; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
             🔄 다른 문항 분석하기
@@ -141,6 +150,49 @@
     <button id="btn-scroll-top" style="padding: 12px 20px; background: #334155; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
       ⬆ 맨 위로
     </button>
+  </div>
+  <div id="save-modal-overlay" class="modal-overlay">
+    <div class="modal-content" style="max-width: 650px;">
+      <button id="save-modal-close" class="modal-close-btn">&times;</button>
+      <div style="padding: 2rem;">
+        <h2 style="color: #0f172a; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+          💾 분석 문항 데이터베이스 저장
+        </h2>
+        
+        <div id="save-form" style="display: grid; gap: 1.2rem;">
+          <div style="display: flex; gap: 1rem;">
+            <div style="flex: 1;">
+              <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">성취기준 코드</label>
+              <input type="text" id="save-std-id" readonly style="width: 100%; padding: 0.8rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="flex: 0.5;">
+              <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">판정 수준</label>
+              <input type="text" id="save-level" readonly style="width: 100%; padding: 0.8rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;">
+            </div>
+          </div>
+  
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">발문(문제 텍스트)</label>
+            <textarea id="save-question-text" rows="3" style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical;"></textarea>
+          </div>
+  
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">정답 번호</label>
+            <select id="save-correct-answer" style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <option value="0">1번</option>
+              <option value="1">2번</option>
+              <option value="2">3번</option>
+              <option value="3">4번</option>
+              <option value="4">5번</option>
+            </select>
+          </div>
+  
+          <button id="btn-final-db-save" style="width: 100%; padding: 1rem; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 1rem;">
+            데이터베이스에 최종 저장하기
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
   </body>
 </html>
