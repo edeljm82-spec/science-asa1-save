@@ -68,14 +68,32 @@ function initNavigation() {
 }
 
 // 2. Modal Logic
+// 2. Modal Logic
 function initModal() {
+    // 기존 기본 모달 닫기
     const overlay = document.getElementById('modal-overlay');
     const closeBtn = document.getElementById('modal-close');
-
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (overlay) {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) closeModal();
+        });
+    }
+
+    // 💡 [수정됨] DB 저장 팝업창 닫기 기능 추가
+    const saveModalOverlay = document.getElementById('save-modal-overlay');
+    // X 버튼 (클래스가 close-btn이거나 id가 save-modal-close인 요소 찾기)
+    const saveModalCloseBtn = document.querySelector('#save-modal-overlay .close-btn') || document.getElementById('save-modal-close');
+    
+    if (saveModalCloseBtn) {
+        saveModalCloseBtn.addEventListener('click', () => {
+            if (saveModalOverlay) saveModalOverlay.classList.remove('active');
+        });
+    }
+    // 배경(어두운 부분) 클릭 시 닫기
+    if (saveModalOverlay) {
+        saveModalOverlay.addEventListener('click', (e) => {
+            if (e.target === saveModalOverlay) saveModalOverlay.classList.remove('active');
         });
     }
 }
@@ -129,7 +147,7 @@ async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
             groupedData[std.unit].standards.push(std);
         });
 
-        // 성취기준 코드(id) 순으로 예쁘게 정렬합니다.
+        // 단원명 순서, 그리고 성취기준 코드(id) 순으로 예쁘게 정렬합니다.
         const filteredData = Object.values(groupedData).sort((a, b) => a.unit.localeCompare(b.unit));
         filteredData.forEach(group => {
             group.standards.sort((a, b) => a.standardId.localeCompare(b.standardId));
@@ -155,7 +173,7 @@ async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
                             </div>
                             
                             <div class="std-levels" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed #e2e8f0;">
-                                ${Object.entries(s.levels).map(([level, desc]) => `
+                                ${Object.entries(s.levels).sort((a, b) => a[0].localeCompare(b[0])).map(([level, desc]) => `
                                     <div class="level-card" style="padding: 1.2rem; margin-bottom: 0.5rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;" onclick="showDiagnosticQuestion('${s.standardId}', '${level}')" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0'">
                                         <strong style="color: ${level === 'A' ? '#2563eb' : level === 'B' ? '#10b981' : level === 'C' ? '#f59e0b' : level === 'D' ? '#ef4444' : '#64748b'}; font-size: 1.1rem; display: block; margin-bottom: 0.4rem;">[${level} 수준]</strong>
                                         <span style="font-size: 0.95rem; color: #475569; line-height: 1.5; display: block;">${desc}</span>
@@ -200,13 +218,20 @@ window.toggleAccordion = function(element) {
     }
 };
 
-// 4. Diagnostic Question (기존 함수를 찾아 아래 내용으로 완전히 덮어쓰세요)
+// ====================================================================
+// [수정] 4. Diagnostic Question (여러 문항 넘겨보기 기능 추가)
+// ====================================================================
+
+// 현재 불러온 문항 목록과 인덱스를 기억할 변수
+let currentQuestionsList = [];
+let currentQuestionIndex = 0;
+
 window.showDiagnosticQuestion = async function(standardId, level) {
     // 로딩 모달을 먼저 띄워줍니다.
     openModal('<div style="text-align:center; padding: 4rem; font-size: 1.2rem;">문항을 불러오는 중입니다... ⏳</div>');
 
     try {
-        // 파이어베이스에서 성취기준 코드와 수준이 일치하는 문항만 검색합니다.
+        // 파이어베이스에서 성취기준 코드와 수준이 일치하는 '모든' 문항을 검색합니다.
         const qRef = collection(db, "questions");
         const qQuery = query(qRef, where("standardId", "==", standardId), where("level", "==", level));
         const querySnapshot = await getDocs(qQuery);
@@ -227,65 +252,105 @@ window.showDiagnosticQuestion = async function(standardId, level) {
             return;
         }
 
-        // 문항이 여러 개면 랜덤으로 하나 선택
-        const q = templates[Math.floor(Math.random() * templates.length)];
-
-        let conditionsHtml = '';
-        if (q.conditions && q.conditions.length > 0) {
-            conditionsHtml = `
-                <div class="csat-box" style="border: 2px solid #cbd5e1; padding: 1.5rem; margin: 1.5rem 0; background: #fff; border-radius: 8px;">
-                    <div style="font-weight: bold; margin-bottom: 1rem; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">&lt;보 기&gt;</div>
-                    ${q.conditions.map(cond => `<div style="margin-bottom: 0.5rem; padding-left: 0.5rem;">${cond}</div>`).join('')}
-                </div>
-            `;
-        }
-
-        let imageHtml = '';
-        if (q.image || q.imageUrl) {
-            const imgSrc = q.image || q.imageUrl;
-            if (imgSrc.trim().startsWith('<svg')) {
-                imageHtml = `<div style="display: flex; justify-content: center; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); padding: 1.5rem; background: white;">${imgSrc}</div>`;
-            } else {
-                imageHtml = `<img src="${imgSrc}" style="max-width: 100%; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); display: block; margin: 0 auto;">`;
-            }
-        }
-
-        const content = `
-            <div class="question-container" style="padding: 1rem 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div class="std-id-badge" style="background: #e0e7ff; color: #2563eb; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold;">${standardId}</div>
-                    <div style="font-weight: 800; color: white; background: #f59e0b; padding: 0.5rem 1.5rem; border-radius: 99px;">수준 ${level} 판정 문항</div>
-                </div>
-                
-                <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; line-height: 1.6; color: #0f172a;">${q.question}</h3>
-                
-                ${imageHtml}
-                ${conditionsHtml}
-
-                <div class="options-list" style="display: grid; gap: 0.75rem; margin-top: 1.5rem;">
-                    ${(q.options || []).map((opt, idx) => `
-                        <button class="option-btn" style="text-align: left; padding: 1rem 1.5rem; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 8px; cursor: pointer; font-size: 1.05rem; transition: 0.2s;" onclick="checkAnswer(this, ${idx}, ${q.answer}, '${(q.levelReason || q.aiReason || '').replace(/'/g, "\\'")}')">
-                            <span style="display: inline-block; width: 28px; height: 28px; background: white; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">${idx + 1}</span>
-                            ${opt}
-                        </button>
-                    `).join('')}
-                </div>
-                
-                <div id="feedback-area"></div>
-                
-                <div id="reason-area" style="display:none; margin-top: 1.5rem; padding: 1.5rem; background: #f8fafc; border-left: 5px solid #2563eb; border-radius: 0 8px 8px 0;">
-                    <strong style="color: #2563eb; display: block; margin-bottom: 0.5rem;">💡 판정 이유 및 해설</strong>
-                    <p id="reason-text" style="font-size: 0.95rem; line-height: 1.6; margin: 0; color: #333;"></p>
-                </div>
-            </div>
-        `;
+        // 찾아낸 문항 목록을 변수에 저장하고 첫 번째 문항(index 0)부터 보여줍니다.
+        currentQuestionsList = templates;
+        currentQuestionIndex = 0;
         
-        document.getElementById('modal-body').innerHTML = content;
+        window.renderCurrentQuestion(standardId, level);
 
     } catch (error) {
         console.error("문항 불러오기 에러:", error);
         document.getElementById('modal-body').innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">문항을 불러오지 못했습니다.</div>';
     }
+};
+
+// 선택된 인덱스의 문항을 화면에 그리는 함수
+// 선택된 인덱스의 문항을 화면에 그리는 함수
+window.renderCurrentQuestion = function(standardId, level) {
+    const q = currentQuestionsList[currentQuestionIndex];
+    const totalQuestions = currentQuestionsList.length;
+
+    // 보기(조건) 박스 사이즈 축소
+    let conditionsHtml = '';
+    if (q.conditions && q.conditions.length > 0) {
+        conditionsHtml = `
+            <div class="csat-box" style="border: 1px solid #cbd5e1; padding: 0.8rem 1rem; margin: 0.8rem 0; background: #f8fafc; border-radius: 6px;">
+                <div style="font-weight: bold; margin-bottom: 0.5rem; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; font-size: 0.9rem;">&lt;보 기&gt;</div>
+                ${q.conditions.map(cond => `<div style="margin-bottom: 0.3rem; padding-left: 0.5rem; font-size: 0.9rem;">${cond}</div>`).join('')}
+            </div>
+        `;
+    }
+
+    // 이미지 높이 제한 (스크롤 방지)
+    let imageHtml = '';
+    if (q.image || q.imageUrl) {
+        const imgSrc = q.image || q.imageUrl;
+        if (imgSrc.trim().startsWith('<svg')) {
+            imageHtml = `<div style="display: flex; justify-content: center; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); padding: 0.5rem; background: white; max-height: 250px; overflow: hidden;">${imgSrc}</div>`;
+        } else {
+            imageHtml = `<img src="${imgSrc}" style="max-height: 250px; width: auto; max-width: 100%; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); display: block; margin: 0 auto; object-fit: contain;">`;
+        }
+    }
+
+    // 다음 버튼 크기 축소
+    let nextBtnHtml = '';
+    if (totalQuestions > 1) {
+        nextBtnHtml = `
+            <button onclick="nextQuestion('${standardId}', '${level}')" style="background: #10b981; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 99px; font-weight: bold; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                다음 문항 ➡️ (${currentQuestionIndex + 1}/${totalQuestions})
+            </button>
+        `;
+    }
+
+    // 전체 레이아웃 패딩/마진/폰트사이즈 컴팩트하게 조정
+    const content = `
+        <div class="question-container" style="padding: 0.5rem 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f1f5f9;">
+                <div class="std-id-badge" style="background: #e0e7ff; color: #2563eb; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">${standardId}</div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    ${nextBtnHtml}
+                    <div style="font-weight: 800; color: white; background: #f59e0b; padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.85rem;">수준 ${level} 판정</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem; line-height: 1.4; color: #0f172a;">${q.question}</h3>
+            
+            ${imageHtml}
+            ${conditionsHtml}
+
+            <div class="options-list" style="display: grid; gap: 0.4rem; margin-top: 0.8rem;">
+                ${(q.options || []).map((opt, idx) => `
+                    <button class="option-btn" style="text-align: left; padding: 0.6rem 1rem; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center;" onclick="checkAnswer(this, ${idx}, ${q.answer}, '${(q.levelReason || q.aiReason || '').replace(/'/g, "\\'")}')">
+                        <span style="display: inline-block; width: 22px; height: 22px; background: white; border-radius: 50%; text-align: center; line-height: 22px; margin-right: 8px; font-weight: bold; font-size: 0.8rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); flex-shrink: 0;">${idx + 1}</span>
+                        <span>${opt}</span>
+                    </button>
+                `).join('')}
+            </div>
+            
+            <div id="feedback-area"></div>
+            
+            <div id="reason-area" style="display:none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 0 6px 6px 0;">
+                <strong style="color: #2563eb; display: block; margin-bottom: 0.3rem; font-size: 0.9rem;">💡 판정 이유 및 해설</strong>
+                <p id="reason-text" style="font-size: 0.85rem; line-height: 1.5; margin: 0; color: #475569; max-height: 120px; overflow-y: auto;"></p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modal-body').innerHTML = content;
+};
+
+// ... 아래 nextQuestion과 checkAnswer 함수는 그대로 유지 ...
+
+// 다음 버튼을 눌렀을 때 실행되는 함수
+window.nextQuestion = function(standardId, level) {
+    currentQuestionIndex++; // 번호를 1 증가
+    // 만약 마지막 문제를 넘어가면 다시 1번 문제로 돌아오도록 처리
+    if (currentQuestionIndex >= currentQuestionsList.length) {
+        currentQuestionIndex = 0; 
+    }
+    // 바뀐 번호의 문제를 다시 화면에 그림
+    window.renderCurrentQuestion(standardId, level);
 };
 
 window.checkAnswer = function(btn, selected, correct, reason) {
@@ -414,28 +479,30 @@ function initAnalysis() {
         resultDiv.style.display = 'none';
 
         try {
-                        // 기존 achievementData를 사용하는 부분을 지우고 이걸 넣으세요.
             const qSnapshot = await getDocs(collection(db, "standards"));
             const allStandards = [];
             qSnapshot.forEach(doc => allStandards.push(doc.data()));
+            
+            // 💡 [추가] 상세 보기 팝업을 위해 데이터를 전역 변수에 임시 저장합니다.
+            window.cachedStandards = allStandards; 
 
             const curriculumContext = allStandards.map(std => 
                 `- 성취기준 코드: ${std.standardId}, 내용: ${std.description}\n` +
                 `  [성취수준] A: ${std.levels.A}, B: ${std.levels.B}, C: ${std.levels.C}, D: ${std.levels.D}, E: ${std.levels.E}`
             ).join('\n\n');
 
+            // 💡 [수정] 프롬프트의 HTML 구조에서 성취기준 코드를 '클릭 가능한 버튼' 모양으로 변경했습니다.
             const promptParts = [{
                 text: `당신은 대한민국 고등학교 과학 교과 교육과정 및 평가 권위자입니다.
-                우선적으로 아래 제공된 [2022 개정 교육과정 통합과학 공식 성취기준 데이터]를 확인하세요.
+                우선적으로 아래 제공된 [2022 개정 교육과정 통합과학/생명과학 공식 성취기준 데이터]를 확인하세요.
 
-                [통합과학 공식 성취기준 데이터]
+                [공식 성취기준 데이터]
                 ${curriculumContext}
 
                 [분석 및 풀이 가이드라인]
                 1. 과목 판정 및 성취기준 매칭: 
-                   - 통합과학 문항인 경우: 위 데이터에서 정확히 일치하는 성취기준 코드를 찾아 매칭하세요.
-                   - 타 과학 과목인 경우: 해당 문항이 속한 가장 정확한 과목명과 성취기준(또는 핵심 개념)을 스스로 추론하여 명시하세요.
-                2. 성취수준 판정: 해당 문항이 요구하는 사고의 수준을 분석하여 A~E 수준(또는 상/중/하)을 판정하고, 근거를 명확히 제시하세요.
+                   - 위 데이터에서 정확히 일치하는 성취기준 코드를 찾아 매칭하세요.
+                2. 성취수준 판정: 해당 문항이 요구하는 사고의 수준을 분석하여 반드시 'A', 'B', 'C', 'D', 'E' 중 하나의 알파벳으로만 판정하세요. (예: B (상 수준) 등 불필요한 수식어 절대 금지. 오직 알파벳 1글자만 출력할 것). 판정 근거를 명확히 제시하세요.
                 3. 고도화된 문항 풀이 (단계별 추론 강제):
                    - 처음부터 정답을 말하지 마세요. 반드시 1) 문제의 핵심 조건 분석 → 2) 적용할 심화 과학 원리 도출 → 3) 단계별 논리적 추론 및 계산의 과정을 거쳐 최종 정답을 제시하세요.
                 
@@ -443,8 +510,8 @@ function initAnalysis() {
 
                 <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0;">
                     <p style="margin-bottom: 0.8rem;"><strong>분석 과목 및 단원:</strong> [과목명 및 단원명 기재]</p>
-                    <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0;">[성취기준 코드 또는 핵심 개념]</span></p>
-                    <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;">[A~E 또는 상/중/하]</strong></p>
+                    <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span id="ai-std-result" onclick="showStandardDetails()" style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0; cursor: pointer; color: #2563eb; font-weight: bold; text-decoration: underline; transition: 0.2s;" onmouseover="this.style.backgroundColor='#e0e7ff'" onmouseout="this.style.backgroundColor='white'">[성취기준 코드 기재]</span> <span style="font-size: 0.85rem; color: #64748b; margin-left: 5px;">(👆 클릭하여 성취수준 세부내용 확인)</span></p>
+                    <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;" id="ai-level-result">[A, B, C, D, E 중 택 1]</strong></p>
                 </div>
                 
                 <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
@@ -489,11 +556,23 @@ function initAnalysis() {
             `;
 
             document.getElementById('btn-open-save-modal').addEventListener('click', () => {
-                const stdMatch = aiResultHtml.match(/10통과\d-\d{2}-\d{2}/);
-                const levelMatch = aiResultHtml.match(/[A-E](?=\s수준|수준)/) || aiResultHtml.match(/상|중|하/);
+                const stdMatch = aiResultHtml.match(/\d{2}[가-힣]+\d*-\d{2}-\d{2}/);
+                
+                let extractedLevel = "A"; 
+                const levelMatchExact = aiResultHtml.match(/id="ai-level-result">([A-E])<\/strong>/);
+                const levelMatchText = aiResultHtml.match(/판정\s*성취수준:.*?([A-E])/);
+                const levelMatchFallback = aiResultHtml.match(/([A-E])\s*(?:\(상|\(중|\(하|수준)/);
+
+                if (levelMatchExact) {
+                    extractedLevel = levelMatchExact[1];
+                } else if (levelMatchText) {
+                    extractedLevel = levelMatchText[1];
+                } else if (levelMatchFallback) {
+                    extractedLevel = levelMatchFallback[1];
+                }
 
                 document.getElementById('save-std-id').value = stdMatch ? stdMatch[0] : "직접 입력";
-                document.getElementById('save-level').value = levelMatch ? levelMatch[0] : "A";
+                document.getElementById('save-level').value = extractedLevel;
                 document.getElementById('save-modal-overlay').classList.add('active');
             });
 
@@ -736,7 +815,19 @@ document.getElementById('btn-reset-analysis')?.addEventListener('click', () => {
     }
 });
 
+// ====================================================================
 // 10. Database Save Logic (서랍 분리 및 연결 구조)
+// ====================================================================
+
+// 💡 [추가됨] 화면이 로드될 때 '발문'과 '정답 번호' 입력칸을 강제로 숨김 처리합니다.
+document.addEventListener('DOMContentLoaded', () => {
+    const qTextInput = document.getElementById('save-question-text');
+    const ansInput = document.getElementById('save-correct-answer');
+    // 상위 div(라벨 포함)를 찾아서 안 보이게 처리
+    if (qTextInput && qTextInput.parentElement) qTextInput.parentElement.style.display = 'none';
+    if (ansInput && ansInput.parentElement) ansInput.parentElement.style.display = 'none';
+});
+
 document.getElementById('btn-final-db-save')?.addEventListener('click', async () => {
     if (!currentUser) {
         alert("데이터베이스에 저장하려면 구글 로그인이 필요합니다.");
@@ -745,46 +836,40 @@ document.getElementById('btn-final-db-save')?.addEventListener('click', async ()
 
     const stdId = document.getElementById('save-std-id').value;
     const level = document.getElementById('save-level').value;
-    const questionText = document.getElementById('save-question-text').value;
-    const correctAnswer = document.getElementById('save-correct-answer').value;
     const saveBtn = document.getElementById('btn-final-db-save');
 
-    if (!questionText.trim()) {
-        alert("발문(문제 텍스트)을 반드시 입력해주세요.");
-        return;
-    }
+    // 발문 입력 검사 삭제! (이미지 위주이므로 통과시킴)
 
     saveBtn.textContent = "DB에 저장 중입니다...";
     saveBtn.disabled = true;
 
     try {
         // 1. 성취기준/성취수준 서랍 (standards 컬렉션)
-        // 나중에 필터링 메뉴나 통계를 만들 때 '어떤 성취기준/수준이 DB에 존재하는지' 쉽게 불러오기 위함입니다.
         const stdDocRef = doc(db, "standards", stdId);
         await setDoc(stdDocRef, {
             standardId: stdId,
-            // 어떤 성취수준(A, B, C 등) 문항들이 등록되어 있는지 기록 (예: { "A": true, "B": true })
             [level]: true, 
             lastUpdatedAt: new Date()
         }, { merge: true });
 
         // 2. 문항 서랍 (questions 컬렉션)
-        // 문항을 독립적으로 관리하되, standardId와 level을 '연결 고리'로 사용합니다.
         await addDoc(collection(db, "questions"), {
-            standardId: stdId, // 연결 고리 1
-            level: level,      // 연결 고리 2
-            question: questionText,
-            answer: parseInt(correctAnswer),
+            standardId: stdId,
+            level: level,
+            // 💡 텍스트 칸을 없앴으므로, 기본 안내 문구를 저장합니다. 화면에는 이미지가 예쁘게 뜹니다.
+            question: "[AI 분석 문항] 상세 내용은 아래 이미지와 분석/해설을 참고하세요.",
+            options: [], // 옵션 버튼 없음
+            answer: -1,  // 정답 지정 안함
             imageUrl: window.lastAnalyzedImage ? `data:${window.lastAnalyzedImageMime};base64,${window.lastAnalyzedImage}` : null,
             aiReason: window.lastAnalysisResult,
             createdAt: new Date(),
             authorUid: currentUser.uid
         });
         
-        alert("🎉 성취기준 서랍과 문항 서랍에 성공적으로 연결 저장되었습니다!");
-        document.getElementById('save-modal-overlay').classList.remove('active');
+        alert("🎉 AI 분석 문항이 성공적으로 저장되었습니다!\n'성취기준 및 수준' 탭에서 확인해 보세요.");
+        const saveModalOverlay = document.getElementById('save-modal-overlay');
+        if (saveModalOverlay) saveModalOverlay.classList.remove('active');
         
-        document.getElementById('save-question-text').value = '';
     } catch (error) {
         console.error("DB 저장 에러:", error);
         alert("저장 실패: " + error.message);
@@ -911,4 +996,58 @@ window.uploadInitialDataToFirestore = async function() {
         console.error("데이터 업로드 중 오류 발생:", error);
         alert("업로드 중 오류가 발생했습니다. 브라우저 콘솔 창을 확인해주세요.");
     }
+};
+// ====================================================================
+// 12. 성취기준 상세 보기 팝업 (모달) 기능
+// ====================================================================
+window.showStandardDetails = function() {
+    const stdElement = document.getElementById('ai-std-result');
+    if (!stdElement) return;
+    
+    const stdMatch = stdElement.innerText.match(/\d{2}[가-힣]+\d*-\d{2}-\d{2}/);
+    if (!stdMatch) return;
+    const stdId = stdMatch[0];
+
+    if (!window.cachedStandards || window.cachedStandards.length === 0) {
+        alert("성취기준 데이터를 불러오지 못했습니다.");
+        return;
+    }
+    
+    const stdObj = window.cachedStandards.find(s => s.standardId === stdId);
+    if (!stdObj) {
+        alert(`데이터베이스에서 [${stdId}]에 해당하는 상세 내용을 찾을 수 없습니다.`);
+        return;
+    }
+
+    // 💡 패딩과 폰트 사이즈를 줄였습니다.
+    const levelsHtml = Object.entries(stdObj.levels).sort().map(([lvl, desc]) => {
+        let bgColor = '#f8fafc';
+        let textColor = '#475569';
+        if (lvl === 'A') { bgColor = '#eff6ff'; textColor = '#2563eb'; }
+        else if (lvl === 'B') { bgColor = '#f0fdf4'; textColor = '#16a34a'; }
+        else if (lvl === 'C') { bgColor = '#fefce8'; textColor = '#d97706'; }
+        else if (lvl === 'D') { bgColor = '#fef2f2'; textColor = '#dc2626'; }
+
+        return `
+            <div style="padding: 0.8rem; background: ${bgColor}; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <strong style="color: ${textColor}; font-size: 0.95rem; margin-bottom: 0.3rem; display: block;">[${lvl} 수준]</strong>
+                <span style="color: #333; line-height: 1.4; font-size: 0.85rem;">${desc}</span>
+            </div>
+        `;
+    }).join('');
+
+    const modalContent = `
+        <div style="padding: 0.5rem;">
+            <h3 style="color: #0f172a; margin-bottom: 0.8rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center;">
+                <span style="background: #e0e7ff; color: #2563eb; padding: 0.2rem 0.5rem; border-radius: 6px; margin-right: 8px; font-size: 0.95rem;">${stdObj.standardId}</span>
+                <span style="font-weight: 700; font-size: 0.95rem;">상세 루브릭</span>
+            </h3>
+            <p style="font-weight: 800; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.4; color: #1e293b;">${stdObj.description}</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                ${levelsHtml}
+            </div>
+        </div>
+    `;
+    
+    openModal(modalContent);
 };
