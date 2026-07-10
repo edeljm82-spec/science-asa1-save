@@ -23,26 +23,94 @@ window.doc = doc;
 window.setDoc = setDoc;
 window.collection = collection;
 window.addDoc = addDoc;
+// 👇 새로 추가하는 부분 (DB 검색 함수들을 화면 전체에서 쓸 수 있게 연결)
+window.getDocs = getDocs;
+window.getDoc = getDoc;
+window.query = query;
+window.where = where;
 
 export let currentUser = null; 
-export let userApiKey = ""; 
+export let userApiKey = "";
+
+// 💡 여기에 구글 앱스 스크립트 URL을 추가합니다!
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfvmHBl6uHL2HF1hrzymFBX7QGXf10INSbqKyAh1Li543KwTOXUjFTcETwzfzMUejL/exec";
 
 // 전역 변수
 let selectedImageBase64 = null;
 let selectedImageMimeType = null;
+// [추가] 현재 분석 중인 문항의 최신 상태를 안전하게 보관하는 객체 (챗봇 연동용)
+window.currentAnalysisState = {
+    mainStd: "미분류",
+    subStds: "",
+    level: "A",
+    isMCP: "X",
+    question: "",
+    conditions: [], 
+    options: [],    
+    answer: 0,
+    svg: "",
+    reason: ""
+};
 
+// HTML에서 데이터를 추출하여 상태 객체를 업데이트하는 안전한 헬퍼 함수
+window.extractDataToState = function(htmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    
+    const getText = (id) => doc.getElementById(id) ? doc.getElementById(id).innerText.trim() : null;
+    const getHtml = (id) => doc.getElementById(id) ? doc.getElementById(id).innerHTML.trim() : null;
+    
+    if (getText('ai-main-std')) window.currentAnalysisState.mainStd = getText('ai-main-std');
+    if (getText('ai-sub-stds')) window.currentAnalysisState.subStds = getText('ai-sub-stds');
+    if (getText('ai-level')) window.currentAnalysisState.level = getText('ai-level');
+    if (getText('ai-is-mcp')) window.currentAnalysisState.isMCP = getText('ai-is-mcp');
+    if (getText('ai-modified-question')) window.currentAnalysisState.question = getText('ai-modified-question');
+    
+    const conds = [];
+    for(let i=1; i<=5; i++) {
+        const text = getText(`ai-cond-${i}`);
+        if (text && text.trim() !== '') conds.push(text);
+    }
+    window.currentAnalysisState.conditions = conds;
+
+    const opts = [];
+    if (getText('ai-opt-1')) opts.push(getText('ai-opt-1'));
+    if (getText('ai-opt-2')) opts.push(getText('ai-opt-2'));
+    if (getText('ai-opt-3')) opts.push(getText('ai-opt-3'));
+    if (getText('ai-opt-4')) opts.push(getText('ai-opt-4'));
+    if (getText('ai-opt-5')) opts.push(getText('ai-opt-5'));
+    
+    window.currentAnalysisState.options = opts.length === 5 ? opts : ["① 번", "② 번", "③ 번", "④ 번", "⑤ 번"];
+
+    if (getHtml('ai-reason-text')) window.currentAnalysisState.reason = getHtml('ai-reason-text');
+    
+    const ansRaw = getText('ai-modified-answer');
+    if (ansRaw) {
+        const num = parseInt(ansRaw.replace(/[^0-9]/g, ''));
+        if (!isNaN(num)) window.currentAnalysisState.answer = num - 1; 
+    }
+
+    const svgContainer = doc.getElementById('ai-modified-svg');
+    if (svgContainer && svgContainer.innerHTML.includes('<svg')) {
+        window.currentAnalysisState.svg = svgContainer.innerHTML.trim();
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     renderAchievementDashboard();
     initAnalysis();
+    initQuestionCreation(); 
     initInquiry();   
     initModal();     
     initFirebaseAuth(); 
     if (window.lucide) lucide.createIcons();
     initChatbotResize();
+    
+    // 👇 새로 추가하는 부분 (드롭다운 데이터 세팅 및 버튼 초기화)
+    window.initCreationDB(); 
+    window.selectType('general'); 
 });
-
 
 // 1. Navigation Logic
 function initNavigation() {
@@ -132,6 +200,9 @@ async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
         querySnapshot.forEach((doc) => {
             standardsData.push(doc.data());
         });
+
+        // 💡 [핵심 수정!] 파이어베이스에서 가져온 데이터를 AI가 읽을 수 있도록 메모리(전역 변수)에 저장합니다!
+        window.cachedStandards = standardsData;
 
         if (standardsData.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">등록된 성취기준 데이터가 없습니다.</div>';
@@ -231,14 +302,18 @@ window.showDiagnosticQuestion = async function(standardId, level) {
     openModal('<div style="text-align:center; padding: 4rem; font-size: 1.2rem;">문항을 불러오는 중입니다... ⏳</div>');
 
     try {
-        // 파이어베이스에서 성취기준 코드와 수준이 일치하는 '모든' 문항을 검색합니다.
+        // 💡 [핵심 수정] 복합 색인(Index) 에러를 피하기 위해 파이어베이스에서는 '성취기준(standardId)' 하나로만 검색해서 가져옵니다.
         const qRef = collection(db, "questions");
-        const qQuery = query(qRef, where("standardId", "==", standardId), where("level", "==", level));
+        const qQuery = query(qRef, where("standardId", "==", standardId));
         const querySnapshot = await getDocs(qQuery);
 
         const templates = [];
         querySnapshot.forEach((doc) => {
-            templates.push(doc.data());
+            const data = doc.data();
+            // 💡 [핵심 수정] 가져온 데이터 뭉치 중에서 자바스크립트로 한 번 더 '성취수준(level)'을 걸러냅니다.
+            if (data.level === level) {
+                templates.push(data);
+            }
         });
         
         if (templates.length === 0) {
@@ -265,7 +340,6 @@ window.showDiagnosticQuestion = async function(standardId, level) {
 };
 
 // 선택된 인덱스의 문항을 화면에 그리는 함수
-// 선택된 인덱스의 문항을 화면에 그리는 함수
 window.renderCurrentQuestion = function(standardId, level) {
     const q = currentQuestionsList[currentQuestionIndex];
     const totalQuestions = currentQuestionsList.length;
@@ -276,15 +350,23 @@ window.renderCurrentQuestion = function(standardId, level) {
         conditionsHtml = `
             <div class="csat-box" style="border: 1px solid #cbd5e1; padding: 0.8rem 1rem; margin: 0.8rem 0; background: #f8fafc; border-radius: 6px;">
                 <div style="font-weight: bold; margin-bottom: 0.5rem; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; font-size: 0.9rem;">&lt;보 기&gt;</div>
-                ${q.conditions.map(cond => `<div style="margin-bottom: 0.3rem; padding-left: 0.5rem; font-size: 0.9rem;">${cond}</div>`).join('')}
+                ${(q.conditions || []).map(cond => {
+                    // 1. 데이터에 섞여있는 \n(줄바꿈)을 제거하여 한 줄로 합침
+                    // 2. 가., 나., 다. 앞에만 줄바꿈(<br>)을 추가
+                    // 3. '다.'가 문장 끝에 있는 경우에는 줄바꿈을 하지 않도록 정규식 수정
+                    let text = cond.replace(/\n/g, ' '); 
+                    text = text.replace(/(?<!\S)(가\.|나\.|다\.|라\.|마\.)\s/g, '<br>$1 ');
+                    
+                    return `<div style="margin-bottom: 0.5rem; line-height: 1.5;">${text}</div>`;
+                }).join('')}
             </div>
         `;
     }
 
-    // 이미지 높이 제한 (스크롤 방지)
+    // 이미지 처리
     let imageHtml = '';
-    if (q.image || q.imageUrl) {
-        const imgSrc = q.image || q.imageUrl;
+    if (q.svgImage || q.image || q.imageUrl) {
+        const imgSrc = q.svgImage || q.image || q.imageUrl;
         if (imgSrc.trim().startsWith('<svg')) {
             imageHtml = `<div style="display: flex; justify-content: center; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); padding: 0.5rem; background: white; max-height: 250px; overflow: hidden;">${imgSrc}</div>`;
         } else {
@@ -292,26 +374,34 @@ window.renderCurrentQuestion = function(standardId, level) {
         }
     }
 
-    // 다음 버튼 크기 축소
-    let nextBtnHtml = '';
+    // 💡 이전/다음 버튼 생성 로직 (문항이 2개 이상일 때만 표시)
+    let navButtonsHtml = '';
     if (totalQuestions > 1) {
-        nextBtnHtml = `
-            <button onclick="nextQuestion('${standardId}', '${level}')" style="background: #10b981; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 99px; font-weight: bold; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                다음 문항 ➡️ (${currentQuestionIndex + 1}/${totalQuestions})
-            </button>
+        navButtonsHtml = `
+            <div style="display: flex; gap: 6px; align-items: center; background: #f1f5f9; padding: 3px 6px; border-radius: 99px;">
+                <button onclick="prevQuestion('${standardId}', '${level}')" style="background: transparent; color: #475569; border: none; padding: 0.2rem 0.5rem; border-radius: 99px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#0f172a'" onmouseout="this.style.background='transparent'; this.style.color='#475569'">
+                    ⬅️ 이전
+                </button>
+                <span style="font-size: 0.8rem; font-weight: bold; color: #64748b;">${currentQuestionIndex + 1}/${totalQuestions}</span>
+                <button onclick="nextQuestion('${standardId}', '${level}')" style="background: transparent; color: #475569; border: none; padding: 0.2rem 0.5rem; border-radius: 99px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#0f172a'" onmouseout="this.style.background='transparent'; this.style.color='#475569'">
+                    다음 ➡️
+                </button>
+            </div>
         `;
     }
 
-    // 전체 레이아웃 패딩/마진/폰트사이즈 컴팩트하게 조정
+    // 전체 레이아웃 (헤더 영역을 두 줄로 나누어 공간을 여유롭게 배치)
     const content = `
         <div class="question-container" style="padding: 0.5rem 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f1f5f9;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
                 <div class="std-id-badge" style="background: #e0e7ff; color: #2563eb; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">${standardId}</div>
-                
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    ${nextBtnHtml}
-                    <div style="font-weight: 800; color: white; background: #f59e0b; padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.85rem;">수준 ${level} 판정</div>
-                </div>
+                ${navButtonsHtml}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid #f1f5f9;">
+                ${q.isMCP === true ? `<div style="font-weight: 800; color: white; background: #ef4444; padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);">🎯 MCP 문항</div>` : ''}
+                <div style="font-weight: 800; color: white; background: #f59e0b; padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.85rem;">수준 ${level} 판정</div>
             </div>
             
             <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem; line-height: 1.4; color: #0f172a;">${q.question}</h3>
@@ -321,7 +411,7 @@ window.renderCurrentQuestion = function(standardId, level) {
 
             <div class="options-list" style="display: grid; gap: 0.4rem; margin-top: 0.8rem;">
                 ${(q.options || []).map((opt, idx) => `
-                    <button class="option-btn" style="text-align: left; padding: 0.6rem 1rem; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center;" onclick="checkAnswer(this, ${idx}, ${q.answer}, '${(q.levelReason || q.aiReason || '').replace(/'/g, "\\'")}')">
+                    <button class="option-btn" style="text-align: left; padding: 0.6rem 1rem; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center;" onclick="checkAnswer(this, ${idx}, ${q.answer})">
                         <span style="display: inline-block; width: 22px; height: 22px; background: white; border-radius: 50%; text-align: center; line-height: 22px; margin-right: 8px; font-weight: bold; font-size: 0.8rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); flex-shrink: 0;">${idx + 1}</span>
                         <span>${opt}</span>
                     </button>
@@ -338,22 +428,36 @@ window.renderCurrentQuestion = function(standardId, level) {
     `;
     
     document.getElementById('modal-body').innerHTML = content;
+
+    if (window.MathJax) {
+        MathJax.typesetPromise([document.getElementById('modal-body')]).catch((err) => console.error('MathJax 렌더링 에러:', err));
+    }
 };
 
-// ... 아래 nextQuestion과 checkAnswer 함수는 그대로 유지 ...
-
-// 다음 버튼을 눌렀을 때 실행되는 함수
-window.nextQuestion = function(standardId, level) {
-    currentQuestionIndex++; // 번호를 1 증가
-    // 만약 마지막 문제를 넘어가면 다시 1번 문제로 돌아오도록 처리
-    if (currentQuestionIndex >= currentQuestionsList.length) {
-        currentQuestionIndex = 0; 
+// 💡 이전 버튼 기능 추가
+window.prevQuestion = function(standardId, level) {
+    currentQuestionIndex--; // 번호를 1 감소
+    // 만약 첫 번째 문제에서 이전 버튼을 누르면 마지막 문제로 이동
+    if (currentQuestionIndex < 0) {
+        currentQuestionIndex = currentQuestionsList.length - 1; 
     }
-    // 바뀐 번호의 문제를 다시 화면에 그림
     window.renderCurrentQuestion(standardId, level);
 };
 
-window.checkAnswer = function(btn, selected, correct, reason) {
+// 💡 다음 버튼 기능 유지
+window.nextQuestion = function(standardId, level) {
+    currentQuestionIndex++; 
+    if (currentQuestionIndex >= currentQuestionsList.length) {
+        currentQuestionIndex = 0; 
+    }
+    window.renderCurrentQuestion(standardId, level);
+};
+
+window.checkAnswer = function(btn, selected, correct) {
+    // 👇 클릭한 순간 현재 문제의 해설(reason)을 직접 찾아옵니다!
+    const q = currentQuestionsList[currentQuestionIndex];
+    const reason = q.levelReason || q.aiReason || '해설이 제공되지 않았습니다.';
+
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(b => {
         b.disabled = true;
@@ -388,8 +492,14 @@ window.checkAnswer = function(btn, selected, correct, reason) {
     }
 
     if (reason) {
-        reasonText.innerText = reason;
+        // 1. innerText를 innerHTML로 변경하여 디자인 태그가 작동하게 만듭니다.
+        reasonText.innerHTML = reason; 
         reasonArea.style.display = 'block';
+
+        // 2. 해설이 화면에 뜬 직후, 수식 번역기(MathJax)를 이 구역에만 다시 실행합니다.
+        if (window.MathJax) {
+            MathJax.typesetPromise([reasonText]).catch((err) => console.error('MathJax 렌더링 에러:', err));
+        }
     }
 };
 
@@ -477,68 +587,47 @@ function initAnalysis() {
         analyzeBtn.style.backgroundColor = "#94a3b8";
         analyzeBtn.innerHTML = `⏳ AI가 문항을 분석하고 풀이를 작성 중입니다...`;
         resultDiv.style.display = 'none';
-
+        
         try {
-            const qSnapshot = await getDocs(collection(db, "standards"));
+            // 💡 [핵심 수정] 현재 화면에 선택된 과목만 보내지 않고, DB에서 '전체 과목'의 성취기준을 모조리 가져옵니다!
+            const allStdsSnapshot = await getDocs(collection(window.db, "standards"));
             const allStandards = [];
-            qSnapshot.forEach(doc => allStandards.push(doc.data()));
-            
-            // 💡 [추가] 상세 보기 팝업을 위해 데이터를 전역 변수에 임시 저장합니다.
-            window.cachedStandards = allStandards; 
+            allStdsSnapshot.forEach(doc => allStandards.push(doc.data()));
 
-            const curriculumContext = allStandards.map(std => 
-                `- 성취기준 코드: ${std.standardId}, 내용: ${std.description}\n` +
-                `  [성취수준] A: ${std.levels.A}, B: ${std.levels.B}, C: ${std.levels.C}, D: ${std.levels.D}, E: ${std.levels.E}`
-            ).join('\n\n');
+            const curriculumContext = allStandards.map(s => {
+                // 💡 안전장치: levels 데이터가 없으면 빈 객체({})로 처리하여 에러를 원천 차단합니다.
+                const lvls = s.levels || {}; 
+                return `[과목: ${s.course || '공통'}] 단원: ${s.unit || '미분류'}\n` + 
+                `- 성취기준 코드: ${s.standardId || '미상'}, 내용: ${s.description || '내용 없음'}\n` +
+                `  [성취수준] A: ${lvls.A || '없음'}, B: ${lvls.B || '없음'}, C: ${lvls.C || '없음'}, D: ${lvls.D || '없음'}, E: ${lvls.E || '없음'}`;
+            }).join('\n\n');    
 
-            // 💡 [수정] 프롬프트의 HTML 구조에서 성취기준 코드를 '클릭 가능한 버튼' 모양으로 변경했습니다.
-            const promptParts = [{
-                text: `당신은 대한민국 고등학교 과학 교과 교육과정 및 평가 권위자입니다.
-                우선적으로 아래 제공된 [2022 개정 교육과정 통합과학/생명과학 공식 성취기준 데이터]를 확인하세요.
+            // 챗봇도 전체 데이터를 볼 수 있도록 전역 변수에 저장해둡니다.
+            window.fullCurriculumContext = curriculumContext;
 
-                [공식 성취기준 데이터]
-                ${curriculumContext}
+            // 💡 프론트엔드에서 긴 프롬프트를 빼고, 백엔드로 데이터만 예쁘게 포장해서 보냅니다!
+            const payload = {
+                apiKey: userApiKey,
+                type: 'analysis',
+                curriculumContext: curriculumContext,
+                imageBase64: selectedImageBase64 || null,
+                imageMimeType: selectedImageMimeType || null
+            };
 
-                [분석 및 풀이 가이드라인]
-                1. 과목 판정 및 성취기준 매칭: 
-                   - 위 데이터에서 정확히 일치하는 성취기준 코드를 찾아 매칭하세요.
-                2. 성취수준 판정: 해당 문항이 요구하는 사고의 수준을 분석하여 반드시 'A', 'B', 'C', 'D', 'E' 중 하나의 알파벳으로만 판정하세요. (예: B (상 수준) 등 불필요한 수식어 절대 금지. 오직 알파벳 1글자만 출력할 것). 판정 근거를 명확히 제시하세요.
-                3. 고도화된 문항 풀이 (단계별 추론 강제):
-                   - 처음부터 정답을 말하지 마세요. 반드시 1) 문제의 핵심 조건 분석 → 2) 적용할 심화 과학 원리 도출 → 3) 단계별 논리적 추론 및 계산의 과정을 거쳐 최종 정답을 제시하세요.
-                
-                결과는 반드시 아래 HTML 구조를 유지하여 반환해주세요.
-
-                <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0;">
-                    <p style="margin-bottom: 0.8rem;"><strong>분석 과목 및 단원:</strong> [과목명 및 단원명 기재]</p>
-                    <p style="margin-bottom: 0.8rem;"><strong>매칭 성취기준:</strong> <span id="ai-std-result" onclick="showStandardDetails()" style="background: white; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bbf7d0; cursor: pointer; color: #2563eb; font-weight: bold; text-decoration: underline; transition: 0.2s;" onmouseover="this.style.backgroundColor='#e0e7ff'" onmouseout="this.style.backgroundColor='white'">[성취기준 코드 기재]</span> <span style="font-size: 0.85rem; color: #64748b; margin-left: 5px;">(👆 클릭하여 성취수준 세부내용 확인)</span></p>
-                    <p style="margin-bottom: 0;"><strong>판정 성취수준:</strong> <strong style="color: #7c3aed; font-size: 1.1rem;" id="ai-level-result">[A, B, C, D, E 중 택 1]</strong></p>
-                </div>
-                
-                <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                    <strong style="color: #475569; display: block; margin-bottom: 0.5rem;">[⚖️ 교육과정 기반 판정 이유]</strong>
-                    <p style="line-height: 1.7; color: #333; margin: 0;">[분석 내용 작성]</p>
-                </div>
-            
-                <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #bfdbfe;">
-                    <strong style="color: #1d4ed8; display: block; margin-bottom: 0.5rem;">[🔬 고도화된 문항 풀이 및 심화 해설]</strong>
-                    <p style="line-height: 1.7; color: #333; margin: 0;">[상세 풀이 작성]</p>
-                </div>`
-            }];
-
-            if (selectedImageBase64) {
-                promptParts.push({ inlineData: { mimeType: selectedImageMimeType, data: selectedImageBase64 } });
-            }
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${userApiKey}`, {
+            // 구글 앱스 스크립트(백엔드)로 요청 보내기
+            const response = await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: promptParts }] })
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error?.message || 'API 호출 중 오류가 발생했습니다.');
+            
+            // 백엔드에서 에러가 났다면 중단
+            if (!data.success) throw new Error(data.error || '백엔드 처리 중 오류가 발생했습니다.');
 
-            const aiResultHtml = data.candidates[0].content.parts[0].text;
+            // AI 답변 결과 받기
+            const aiResultHtml = data.text;
             resultDiv.style.display = 'block';
             
             resultDiv.innerHTML = `
@@ -550,29 +639,57 @@ function initAnalysis() {
                         <button id="btn-open-save-modal" style="padding: 12px 24px; background: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; margin: 0 auto;">
                             💾 분석 결과를 DB에 문항으로 저장하기
                         </button>
-                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.8rem;">저장된 문항은 나중에 '성취기준 및 수준' 탭에서 랜덤 문항으로 활용됩니다.</p>
                     </div>
                 </div>
             `;
 
-            document.getElementById('btn-open-save-modal').addEventListener('click', () => {
-                const stdMatch = aiResultHtml.match(/\d{2}[가-힣]+\d*-\d{2}-\d{2}/);
-                
-                let extractedLevel = "A"; 
-                const levelMatchExact = aiResultHtml.match(/id="ai-level-result">([A-E])<\/strong>/);
-                const levelMatchText = aiResultHtml.match(/판정\s*성취수준:.*?([A-E])/);
-                const levelMatchFallback = aiResultHtml.match(/([A-E])\s*(?:\(상|\(중|\(하|수준)/);
+            if (window.MathJax) {
+                MathJax.typesetPromise([resultDiv]).catch((err) => console.error('MathJax 렌더링 에러:', err));
+            }
 
-                if (levelMatchExact) {
-                    extractedLevel = levelMatchExact[1];
-                } else if (levelMatchText) {
-                    extractedLevel = levelMatchText[1];
-                } else if (levelMatchFallback) {
-                    extractedLevel = levelMatchFallback[1];
+            // 👇 [새로 추가할 코드] 성취기준 텍스트에 밑줄을 긋고 클릭 이벤트를 연결합니다.
+            const makeClickable = (id) => {
+                const el = document.getElementById(id);
+                if (el && el.innerText.trim() !== '미분류' && el.innerText.trim() !== '없음') {
+                    el.style.cursor = 'pointer';
+                    el.style.textDecoration = 'underline';
+                    el.style.color = '#2563eb';
+                    el.title = "클릭하여 성취수준 상세 루브릭 보기";
+                    el.addEventListener('click', () => showStandardDetails(el.innerText));
                 }
+            };
+            makeClickable('ai-main-std');
+            makeClickable('ai-sub-stds');
+            // 👆 추가 끝
 
-                document.getElementById('save-std-id').value = stdMatch ? stdMatch[0] : "직접 입력";
-                document.getElementById('save-level').value = extractedLevel;
+            // 최신 데이터를 메모리에 저장 (챗봇용)
+            window.extractDataToState(aiResultHtml);
+            window.lastAnalysisResult = aiResultHtml;
+            window.lastAnalyzedImage = selectedImageBase64;
+            window.lastAnalyzedImageMime = selectedImageMimeType;
+
+            document.getElementById('btn-open-save-modal').addEventListener('click', () => {
+                document.getElementById('save-std-id').value = window.currentAnalysisState.mainStd;
+                document.getElementById('save-level').value = window.currentAnalysisState.level;
+                
+                const qText = document.getElementById('save-question-text');
+                if (qText) qText.value = window.currentAnalysisState.question;
+                
+                const aText = document.getElementById('save-correct-answer');
+                if (aText) aText.value = window.currentAnalysisState.answer;
+
+                let subStdInput = document.getElementById('save-sub-stds');
+                if (!subStdInput) {
+                    const mainStdInput = document.getElementById('save-std-id');
+                    subStdInput = document.createElement('input');
+                    subStdInput.id = 'save-sub-stds';
+                    subStdInput.type = 'text';
+                    subStdInput.style.marginTop = '10px';
+                    subStdInput.placeholder = '보조성취기준 (쉼표로 구분, 예: 10통과1-01-02)';
+                    mainStdInput.parentNode.insertBefore(subStdInput, mainStdInput.nextSibling);
+                }
+                subStdInput.value = window.currentAnalysisState.subStds === '없음' ? '' : window.currentAnalysisState.subStds;
+
                 document.getElementById('save-modal-overlay').classList.add('active');
             });
 
@@ -580,10 +697,6 @@ function initAnalysis() {
             const chatbotToggleBtn = document.getElementById('chatbot-toggle-button');
             if(resetBtnContainer) resetBtnContainer.style.display = 'block';
             if(chatbotToggleBtn) chatbotToggleBtn.style.display = 'block';
-            
-            window.lastAnalysisResult = aiResultHtml;
-            window.lastAnalyzedImage = selectedImageBase64;
-            window.lastAnalyzedImageMime = selectedImageMimeType;
 
         } catch (error) {
             console.error("❌ 분석 중 에러 발생:", error);
@@ -706,51 +819,36 @@ async function sendMessage() {
     loadingDiv.classList.add('chatbot-message', 'bot');
     loadingDiv.innerHTML = `
     <div class="typing-indicator">
-      교육과정을 기반으로 답변 작성 중<span></span><span></span><span></span>
+      분석 결과를 바탕으로 답변 작성 중<span></span><span></span><span></span>
     </div>`;
     chatbotMessages.appendChild(loadingDiv);
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
   
     try {
-        const curriculumContext = achievementData.map(unit => 
-            unit.standards.map(s => `- ${s.id}: ${s.description}`).join('\n')
-        ).join('\n');
-    
-        const promptText = `
-      당신은 대한민국 고등학교 과학 교과(통합과학, 물/화/생/지)의 엄격하고 뛰어난 수석 교사이자 평가 전문가입니다.
-      
-      [참고용 기준 데이터]
-      ${curriculumContext}
-  
-      [현재 분석한 문항 정보]
-      사용자는 아래 분석 결과를 얻은 문항과 이미지를 바탕으로 당신에게 질문할 것입니다.
-      ${window.lastAnalysisResult || "분석 결과 없음"}
-      
-      [대화 원칙 - 매우 중요]
-      1. 대화의 초점: 오직 방금 분석한 문항과 관련된 과학적 개념, 원리, 풀이 과정에 대해서만 답변하세요. 문항과 전혀 관련 없는 질문(예: 농담, 타 과목 지식, 날씨 등)에는 "해당 질문은 현재 분석 중인 문항과 관련이 없습니다."라며 답변을 정중히 거절하세요.
-      2. 확장된 전문성 발휘: 질문한 개념의 숨겨진 과학적 원리, 실생활 연계 예시, 학생들이 자주 헷갈리는 오개념 등 교육적으로 가치 있는 내용을 깊이 있게 덧붙여 설명하세요.
-      3. 교육적 원칙 고수: 사용자의 논리나 가정이 틀렸다면 무조건 동조하지 말고, 과학적 사실과 교육과정의 원칙에 근거하여 친절하면서도 단호하게 교정 방향을 제시해 주세요.
-      
-      질문: "${messageText}"
-    `;
-    
-        const promptParts = [{ text: promptText }];
-        if (window.lastAnalyzedImage) {
-            promptParts.push({ inlineData: { mimeType: window.lastAnalyzedImageMime, data: window.lastAnalyzedImage } });
-        }
-  
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${userApiKey}`, {
+        // 💡 [수정] 챗봇에게도 아까 저장해둔 '전체 과목' 성취기준 데이터를 컨닝 페이퍼로 넘겨줍니다!
+        const curriculumContext = window.fullCurriculumContext || "성취기준 데이터를 불러오지 못했습니다.";
+
+        const payload = {
+            apiKey: userApiKey,
+            type: 'chat',
+            curriculumContext: curriculumContext, // 👈 [추가됨] 
+            state: window.currentAnalysisState,
+            message: messageText,
+            imageBase64: window.lastAnalyzedImage || null,
+            imageMimeType: window.lastAnalyzedImageMime || null
+        };
+
+        // 구글 앱스 스크립트(백엔드)로 챗봇 데이터 전송
+        const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                contents: [{ parts: promptParts }] 
-            })
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
         });
     
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error?.message || 'API 통신 오류');
+        if (!data.success) throw new Error(data.error || '백엔드 통신 오류');
   
-        const botReply = data.candidates[0].content.parts[0].text;
+        const botReply = data.text;
   
         document.getElementById(loadingId).remove();
         const replyDiv = document.createElement('div');
@@ -759,6 +857,16 @@ async function sendMessage() {
         let formattedReply = botReply.replace(/\*\*/g, '').replace(/\n/g, '<br>');
         replyDiv.innerHTML = formattedReply; 
         chatbotMessages.appendChild(replyDiv);
+
+        // 챗봇 대화로 인해 분석 데이터가 업데이트 된 경우 처리
+        if (botReply.includes('id="chatbot-update-data"')) {
+            window.extractDataToState(botReply);
+            console.log("✅ 챗봇 대화로 인해 분석 데이터가 업데이트 되었습니다.", window.currentAnalysisState);
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([replyDiv]).catch((err) => console.error('MathJax 렌더링 에러:', err));
+        }
   
     } catch (error) {
       console.error(error);
@@ -771,7 +879,7 @@ async function sendMessage() {
       chatbotInput.focus();
       chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
-  }
+}
 
 chatbotSendBtn.addEventListener('click', sendMessage);
 chatbotInput.addEventListener('keypress', (event) => {
@@ -816,17 +924,8 @@ document.getElementById('btn-reset-analysis')?.addEventListener('click', () => {
 });
 
 // ====================================================================
-// 10. Database Save Logic (서랍 분리 및 연결 구조)
+// 10. Database Save Logic (융합 문항 다중 저장 & 미분류 처리)
 // ====================================================================
-
-// 💡 [추가됨] 화면이 로드될 때 '발문'과 '정답 번호' 입력칸을 강제로 숨김 처리합니다.
-document.addEventListener('DOMContentLoaded', () => {
-    const qTextInput = document.getElementById('save-question-text');
-    const ansInput = document.getElementById('save-correct-answer');
-    // 상위 div(라벨 포함)를 찾아서 안 보이게 처리
-    if (qTextInput && qTextInput.parentElement) qTextInput.parentElement.style.display = 'none';
-    if (ansInput && ansInput.parentElement) ansInput.parentElement.style.display = 'none';
-});
 
 document.getElementById('btn-final-db-save')?.addEventListener('click', async () => {
     if (!currentUser) {
@@ -834,45 +933,79 @@ document.getElementById('btn-final-db-save')?.addEventListener('click', async ()
         return;
     }
 
-    const stdId = document.getElementById('save-std-id').value;
-    const level = document.getElementById('save-level').value;
+    const mainStd = document.getElementById('save-std-id').value.trim();
+    const subStdsInput = document.getElementById('save-sub-stds');
+    const subStdsStr = subStdsInput ? subStdsInput.value.trim() : "";
+    
+    const level = document.getElementById('save-level').value.trim();
     const saveBtn = document.getElementById('btn-final-db-save');
+    const questionText = document.getElementById('save-question-text').value.trim();
+    const correctAnswer = document.getElementById('save-correct-answer').value;
 
-    // 발문 입력 검사 삭제! (이미지 위주이므로 통과시킴)
+    if (!questionText) {
+        alert("발문(문제 텍스트)이 비어있습니다. AI 변형 문항이 잘 생성되었는지 확인해주세요.");
+        return;
+    }
 
-    saveBtn.textContent = "DB에 저장 중입니다...";
+    // 💡 메모리에 저장된 최신 SVG 사용
+    const generatedSvg = window.currentAnalysisState.svg || null;
+
+    saveBtn.textContent = "DB에 일괄 저장 중입니다...";
     saveBtn.disabled = true;
 
     try {
-        // 1. 성취기준/성취수준 서랍 (standards 컬렉션)
-        const stdDocRef = doc(db, "standards", stdId);
-        await setDoc(stdDocRef, {
-            standardId: stdId,
-            [level]: true, 
-            lastUpdatedAt: new Date()
-        }, { merge: true });
+        // 주성취기준과 보조성취기준을 하나의 배열로 합치고, 빈 값이 없도록 정리합니다.
+        let rawStds = [mainStd];
+        if (subStdsStr && subStdsStr !== '없음') {
+            const parsedSub = subStdsStr.split(',').map(s => s.trim()).filter(s => s);
+            rawStds = rawStds.concat(parsedSub);
+        }
 
-        // 2. 문항 서랍 (questions 컬렉션)
-        await addDoc(collection(db, "questions"), {
-            standardId: stdId,
-            level: level,
-            // 💡 텍스트 칸을 없앴으므로, 기본 안내 문구를 저장합니다. 화면에는 이미지가 예쁘게 뜹니다.
-            question: "[AI 분석 문항] 상세 내용은 아래 이미지와 분석/해설을 참고하세요.",
-            options: [], // 옵션 버튼 없음
-            answer: -1,  // 정답 지정 안함
-            imageUrl: window.lastAnalyzedImage ? `data:${window.lastAnalyzedImageMime};base64,${window.lastAnalyzedImage}` : null,
-            aiReason: window.lastAnalysisResult,
-            createdAt: new Date(),
-            authorUid: currentUser.uid
-        });
+        // 중복 제거
+        const allStds = [...new Set(rawStds)];
+
+        let savedCount = 0;
+
+        for (const std of allStds) {
+            // '미분류'이거나 형식이 완전히 틀린 경우 standards 문서 업데이트는 건너뛰고 문항만 저장합니다.
+            const isUnclassified = (std === '미분류' || std === '없음');
+
+            if (!isUnclassified) {
+                const stdDocRef = doc(db, "standards", std);
+                await setDoc(stdDocRef, {
+                    standardId: std,
+                    [level]: true, 
+                    lastUpdatedAt: new Date()
+                }, { merge: true });
+            }
+
+            // 각 성취기준 서랍(questions 컬렉션)에 동일한 변형 문항을 개별적으로 저장합니다.
+            await addDoc(collection(db, "questions"), {
+                standardId: std,  // 👈 주성취/보조성취/미분류가 각각 다르게 들어갑니다.
+                level: level,
+                isMCP: window.currentAnalysisState.isMCP === 'O', // 👈 [추가됨] 'O'면 true, 아니면 false로 저장
+                question: questionText, 
+                conditions: window.currentAnalysisState.conditions || [], 
+                options: window.currentAnalysisState.options,
+                answer: parseInt(correctAnswer), 
+                imageUrl: null, 
+                svgImage: generatedSvg, 
+                aiReason: window.currentAnalysisState.reason || "풀이 결과 없음",
+                createdAt: new Date(),
+                authorUid: currentUser.uid,
+                isMainStandard: std === mainStd // 주/보조 구분 메타데이터 추가
+            });
+            
+            savedCount++;
+        }
         
-        alert("🎉 AI 분석 문항이 성공적으로 저장되었습니다!\n'성취기준 및 수준' 탭에서 확인해 보세요.");
+        alert(`🎉 저작권 프리 문항이 총 ${savedCount}개의 성취기준 서랍에 성공적으로 분산 저장되었습니다!`);
         const saveModalOverlay = document.getElementById('save-modal-overlay');
         if (saveModalOverlay) saveModalOverlay.classList.remove('active');
         
     } catch (error) {
         console.error("DB 저장 에러:", error);
-        alert("저장 실패: " + error.message);
+        alert("저장 실패: 데이터 무결성을 위해 콘솔을 확인해주세요.\n" + error.message);
     } finally {
         saveBtn.textContent = "데이터베이스에 최종 저장하기";
         saveBtn.disabled = false;
@@ -930,124 +1063,848 @@ function initChatbotResize() {
         }
     });
 }
-
-
 // ====================================================================
-// [관리자 전용] 초기 데이터를 독립된 서랍 구조로 Firestore에 일괄 업로드
+// [임시 스크립트] 불량 문항 JSON 다운로드
 // ====================================================================
-window.uploadInitialDataToFirestore = async function() {
-    if (!currentUser) {
-        alert("데이터베이스에 쓰기 권한이 필요합니다. 먼저 구글 로그인을 해주세요.");
-        return;
-    }
-    if (!confirm("data.js의 성취기준과 문항 데이터를 데이터베이스에 일괄 업로드하시겠습니까?")) {
-        return;
-    }
-
-    console.log("🚀 데이터 마이그레이션을 시작합니다...");
-
+window.exportBadQuestionsToJson = async function() {
+    console.log("🔍 불량 문항 탐색 및 다운로드 준비 중...");
     try {
-        // 1. 성취기준 서랍 업로드 (standards 컬렉션)
-        console.log("1/2: 성취기준(standards) 서랍 업로드 중...");
-        for (const unit of achievementData) {
-            for (const std of unit.standards) {
-                // 문서 이름을 성취기준 코드(예: 10통과1-01-01)로 지정하여 고유하게 관리합니다.
-                const stdDocRef = doc(db, "standards", std.id);
-                await setDoc(stdDocRef, {
-                    course: unit.course,   // 👈 [추가됨] 과목명 (예: "1. 통합과학1")
-                    unit: unit.unit,       // 👈 [유지] 중단원명 (예: "(1) 과학의 기초")
-                    standardId: std.id,
-                    description: std.description,
-                    levels: std.levels,
-                    lastUpdatedAt: new Date()
-                }, { merge: true });
+        // 이미 파일 상단에 import 되어 있는 collection, getDocs, db를 그대로 사용합니다.
+        const qRef = collection(db, "questions"); 
+        const querySnapshot = await getDocs(qRef);
+        const badQuestions = [];
+
+        querySnapshot.forEach((document) => {
+            const data = document.data();
+            const qText = data.question || "";
+            const options = data.options || [];
+            
+            const isBadQuestion = qText.includes("①") || qText.includes("②") || 
+                                  (options.length > 0 && options[0].includes("① 번"));
+
+            if (isBadQuestion) {
+                badQuestions.push({
+                    docId: document.id, 
+                    standardId: data.standardId,
+                    level: data.level,
+                    question: qText,
+                    conditions: data.conditions || [],
+                    options: options,
+                    answer: data.answer
+                });
             }
+        });
+
+        if (badQuestions.length === 0) {
+            alert("👏 불량 문항이 없습니다!");
+            return;
         }
 
-        // 2. 문항 서랍 업로드 (questions 컬렉션)
-        console.log("2/2: 문항(questions) 서랍 일괄 업로드 중...");
-        let questionCount = 0;
+        const dataStr = JSON.stringify(badQuestions, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "bad_questions.json"; 
+        a.click();
+        URL.revokeObjectURL(url);
         
-        for (const [standardId, levelData] of Object.entries(questionTemplates)) {
-            for (const [level, questions] of Object.entries(levelData)) {
-                for (const q of questions) {
-                    await addDoc(collection(db, "questions"), {
-                        standardId: standardId,  
-                        level: level,            
-                        question: q.question,
-                        options: q.options || [],
-                        answer: q.answer,
-                        conditions: q.conditions || [],
-                        image: q.image || null,
-                        levelReason: q.levelReason || "",
-                        createdAt: new Date(),
-                        authorUid: currentUser.uid,
-                        isInitialData: true 
-                    });
-                    questionCount++;
-                }
-            }
-        }
-
-        alert(`🎉 업로드 완료!\n- 성취기준 서랍 세팅 완료\n- 총 ${questionCount}개의 문항이 성공적으로 저장되었습니다.`);
-        console.log("✅ 업로드 100% 완료!");
-
+        console.log(`✅ 총 ${badQuestions.length}개의 불량 문항이 다운로드되었습니다.`);
+        alert(`✅ 총 ${badQuestions.length}개의 불량 문항이 추출되었습니다. 다운로드 폴더를 확인해주세요.`);
+        
     } catch (error) {
-        console.error("데이터 업로드 중 오류 발생:", error);
-        alert("업로드 중 오류가 발생했습니다. 브라우저 콘솔 창을 확인해주세요.");
+        console.error("다운로드 중 오류 발생:", error);
+        alert("오류가 발생했습니다. 콘솔을 확인해주세요.");
     }
 };
+
+
 // ====================================================================
-// 12. 성취기준 상세 보기 팝업 (모달) 기능
+// 12. 성취기준 상세 보기 팝업 (모달) 기능 (DB 직접 조회로 업그레이드)
 // ====================================================================
-window.showStandardDetails = function() {
-    const stdElement = document.getElementById('ai-std-result');
-    if (!stdElement) return;
-    
-    const stdMatch = stdElement.innerText.match(/\d{2}[가-힣]+\d*-\d{2}-\d{2}/);
+window.showStandardDetails = async function(clickedText) {
+    if (!clickedText || clickedText === '미분류' || clickedText === '없음') return;
+
+    // 정규식으로 텍스트 안에서 성취기준 코드(예: 10통과1-01-01)만 쏙 뽑아냅니다.
+    const stdMatch = clickedText.match(/\d{2}[가-힣]+\d*-\d{2}-\d{2}/);
     if (!stdMatch) return;
     const stdId = stdMatch[0];
 
-    if (!window.cachedStandards || window.cachedStandards.length === 0) {
-        alert("성취기준 데이터를 불러오지 못했습니다.");
-        return;
-    }
-    
-    const stdObj = window.cachedStandards.find(s => s.standardId === stdId);
-    if (!stdObj) {
-        alert(`데이터베이스에서 [${stdId}]에 해당하는 상세 내용을 찾을 수 없습니다.`);
-        return;
-    }
+    try {
+        // 💡 핵심 수정: 화면의 캐시 데이터에 의존하지 않고, DB에서 해당 코드를 직접 검색합니다!
+        const docRef = doc(db, "standards", stdId);
+        const docSnap = await getDoc(docRef);
 
-    // 💡 패딩과 폰트 사이즈를 줄였습니다.
-    const levelsHtml = Object.entries(stdObj.levels).sort().map(([lvl, desc]) => {
-        let bgColor = '#f8fafc';
-        let textColor = '#475569';
-        if (lvl === 'A') { bgColor = '#eff6ff'; textColor = '#2563eb'; }
-        else if (lvl === 'B') { bgColor = '#f0fdf4'; textColor = '#16a34a'; }
-        else if (lvl === 'C') { bgColor = '#fefce8'; textColor = '#d97706'; }
-        else if (lvl === 'D') { bgColor = '#fef2f2'; textColor = '#dc2626'; }
+        let stdObj = null;
 
-        return `
-            <div style="padding: 0.8rem; background: ${bgColor}; border-radius: 6px; border: 1px solid #cbd5e1;">
-                <strong style="color: ${textColor}; font-size: 0.95rem; margin-bottom: 0.3rem; display: block;">[${lvl} 수준]</strong>
-                <span style="color: #333; line-height: 1.4; font-size: 0.85rem;">${desc}</span>
+        if (docSnap.exists()) {
+            stdObj = docSnap.data();
+        } else {
+            // DB에 문서가 없다면 마지막으로 캐시를 확인해봅니다.
+            stdObj = (window.cachedStandards || []).find(s => s.standardId === stdId);
+        }
+
+        if (!stdObj) {
+            alert(`데이터베이스에서 [${stdId}]에 해당하는 상세 내용을 찾을 수 없습니다.\n아직 DB에 등록되지 않은 성취기준일 수 있습니다.`);
+            return;
+        }
+
+        // levels 데이터가 비어있을 경우를 대비한 안전장치
+        const levels = stdObj.levels || {};
+        const levelsHtml = Object.entries(levels).sort().map(([lvl, desc]) => {
+            let bgColor = '#f8fafc';
+            let textColor = '#475569';
+            if (lvl === 'A') { bgColor = '#eff6ff'; textColor = '#2563eb'; }
+            else if (lvl === 'B') { bgColor = '#f0fdf4'; textColor = '#16a34a'; }
+            else if (lvl === 'C') { bgColor = '#fefce8'; textColor = '#d97706'; }
+            else if (lvl === 'D') { bgColor = '#fef2f2'; textColor = '#dc2626'; }
+
+            return `
+                <div style="padding: 0.8rem; background: ${bgColor}; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <strong style="color: ${textColor}; font-size: 0.95rem; margin-bottom: 0.3rem; display: block;">[${lvl} 수준]</strong>
+                    <span style="color: #333; line-height: 1.4; font-size: 0.85rem;">${desc || '내용 없음'}</span>
+                </div>
+            `;
+        }).join('');
+
+        const modalContent = `
+            <div style="padding: 0.5rem;">
+                <h3 style="color: #0f172a; margin-bottom: 0.8rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center;">
+                    <span style="background: #e0e7ff; color: #2563eb; padding: 0.2rem 0.5rem; border-radius: 6px; margin-right: 8px; font-size: 0.95rem;">${stdObj.standardId}</span>
+                    <span style="font-weight: 700; font-size: 0.95rem;">상세 루브릭</span>
+                </h3>
+                <p style="font-weight: 800; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.4; color: #1e293b;">${stdObj.description || '설명 없음'}</p>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    ${levelsHtml}
+                </div>
             </div>
         `;
-    }).join('');
+        
+        openModal(modalContent);
 
-    const modalContent = `
-        <div style="padding: 0.5rem;">
-            <h3 style="color: #0f172a; margin-bottom: 0.8rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center;">
-                <span style="background: #e0e7ff; color: #2563eb; padding: 0.2rem 0.5rem; border-radius: 6px; margin-right: 8px; font-size: 0.95rem;">${stdObj.standardId}</span>
-                <span style="font-weight: 700; font-size: 0.95rem;">상세 루브릭</span>
-            </h3>
-            <p style="font-weight: 800; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.4; color: #1e293b;">${stdObj.description}</p>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                ${levelsHtml}
-            </div>
+    } catch (error) {
+        console.error("성취기준 모달 로드 에러:", error);
+        alert("데이터베이스에서 상세 내용을 불러오는 중 오류가 발생했습니다.");
+    }
+};
+
+// 페이지 내의 모든 std-id-badge 클래스를 클릭하면 반응하도록 이벤트 위임
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('std-id-badge')) {
+        const stdId = event.target.innerText.trim();
+        if (stdId && stdId !== '미분류' && stdId !== '없음') {
+            // 기존에 만들어두신 팝업 함수 호출
+            window.showStandardModal(stdId); 
+        }
+    }
+});
+
+// ====================================================================
+// [수정됨] AI 문항 제작 로직 (Progressive UI 완벽 적용)
+// ====================================================================
+function initQuestionCreation() {
+    const btnGen = document.getElementById('btn-type-general');
+    const btnMcp = document.getElementById('btn-type-mcp');
+    const progSection = document.getElementById('progressive-sections');
+    const chkOther = document.getElementById('chk-other');
+    const otherTextarea = document.getElementById('create-other-textarea');
+    const btnGenerateAI = document.getElementById('btn-generate-ai');
+    const resultDiv = document.getElementById('creation-result');
+    const loadingMsg = document.getElementById('create-loading-msg');
+
+    if(!btnGen) return;
+
+    let creationType = 'general'; // 기본값 설정
+
+    // 1. 유형 선택 시 아래 메뉴들이 나타나는 효과 (Progressive Disclosure)
+    btnGen.addEventListener('click', () => {
+        creationType = 'general';
+        btnGen.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+        progSection.classList.remove('hidden');
+    });
+
+    btnMcp.addEventListener('click', () => {
+        creationType = 'mcp';
+        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnGen.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+        progSection.classList.remove('hidden');
+    });
+
+    // 2. 기타 지시사항 체크 시 텍스트 박스 나타나기
+    chkOther.addEventListener('change', (e) => {
+        if(e.target.checked) otherTextarea.classList.remove('hidden');
+        else otherTextarea.classList.add('hidden');
+    });
+
+    // 3. AI 문항 창작 실행 로직
+    btnGenerateAI.addEventListener('click', async () => {
+        if (!currentUser) { alert('AI 문항 제작을 사용하려면 구글 로그인을 해주세요.'); return; }
+        if (!userApiKey) { document.getElementById('api-modal-overlay').classList.add('active'); return; }
+
+        // 화면에서 사용자가 선택한 값들 수집
+        const mainStd = document.getElementById('create-main-std').value || '미분류';
+        const selectedLevel = document.querySelector('input[name="create-level"]:checked').value;
+        const isMultipleChoice = document.getElementById('chk-multiple').checked;
+        const isComplexChoice = document.getElementById('chk-complex').checked;
+        const otherInst = chkOther.checked ? otherTextarea.value : '';
+
+        // AI에게 보낼 프롬프트 조립
+        let conditionsText = `
+        - 타겟 성취기준 코드: ${mainStd}
+        - 목표 성취수준: ${selectedLevel} 수준
+        - 성취수준 경계선(MCP) 여부: ${creationType === 'mcp' ? 'O (MCP 최소능력자 문항으로 출제)' : 'X (일반 문항으로 출제)'}
+        - 문항 형태: ${isMultipleChoice ? '오지선다형' : ''} ${isComplexChoice ? '합답형(ㄱ,ㄴ,ㄷ)' : ''}
+        - 추가 요구사항: ${otherInst}
+        `;
+
+        // 로딩 화면 전환
+        btnGenerateAI.disabled = true;
+        btnGenerateAI.classList.add('hidden');
+        loadingMsg.classList.remove('hidden');
+        resultDiv.style.display = 'none';
+
+        try {
+            // 성취기준 DB 불러오기
+            const allStdsSnapshot = await getDocs(collection(window.db, "standards"));
+            const allStandards = [];
+            allStdsSnapshot.forEach(doc => allStandards.push(doc.data()));
+            const curriculumContext = allStandards.map(s => {
+                const lvls = s.levels || {}; 
+                return `[과목: ${s.course || '공통'}] 단원: ${s.unit || '미분류'}\n- 성취기준 코드: ${s.standardId || '미상'}, 내용: ${s.description || '내용 없음'}\n  [성취수준] A: ${lvls.A || '없음'}, B: ${lvls.B || '없음'}`;
+            }).join('\n\n');    
+
+            const payload = {
+                apiKey: userApiKey,
+                type: 'create', // 문항 제작용 통로
+                curriculumContext: curriculumContext,
+                conditions: conditionsText
+            };
+
+            // 백엔드(GAS)에 요청 보내기
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (!data.success) throw new Error(data.error || '오류 발생');
+
+            // 성공 시 결과 화면에 그리기
+            const aiResultHtml = data.text;
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="bg-white p-8 rounded-xl shadow-md border-t-4 border-blue-500 fade-in" style="font-family: 'Noto Sans KR', sans-serif;">
+                    <h3 class="text-xl font-bold mb-4 text-blue-800">✨ AI 문항 창작 완료</h3>
+                    ${aiResultHtml}
+                    
+                    <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                        <button id="btn-open-save-modal-creation" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-lg transition" style="font-size: 1.1rem;">
+                            💾 창작된 문항 DB에 저장하기
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // 수식(MathJax) 렌더링 및 데이터 메모리 저장 (융합 DB 저장 연동용)
+            if (window.MathJax) MathJax.typesetPromise([resultDiv]).catch(console.error);
+            window.extractDataToState(aiResultHtml);
+
+            // DB 저장 버튼 클릭 이벤트 연결
+            document.getElementById('btn-open-save-modal-creation').addEventListener('click', () => {
+                document.getElementById('save-std-id').value = window.currentAnalysisState.mainStd;
+                document.getElementById('save-level').value = window.currentAnalysisState.level;
+                const qText = document.getElementById('save-question-text');
+                if (qText) qText.value = window.currentAnalysisState.question;
+                const aText = document.getElementById('save-correct-answer');
+                if (aText) aText.value = window.currentAnalysisState.answer;
+                document.getElementById('save-modal-overlay').classList.add('active');
+            });
+
+        } catch (error) {
+            console.error(error);
+            alert(`문항 제작 실패: ${error.message}`);
+        } finally {
+            // 버튼 상태 원상복구
+            btnGenerateAI.disabled = false;
+            btnGenerateAI.classList.remove('hidden');
+            loadingMsg.classList.add('hidden');
+        }
+    });
+}
+// ====================================================================
+// [AI 문항 제작 탭 전용 로직 (완전 개편)] 
+// ====================================================================
+
+window.currentType = null;
+window.resultCounter = 0;
+window.isEditingMode = false;
+window.activeTargetId = null;
+window.subStandardCount = 0;
+
+// [DB 매핑] 0. Firebase에서 성취기준을 불러와서 드롭다운에 채워넣는 로직
+window.initCreationDB = async function() {
+    try {
+        const snapshot = await window.getDocs(window.collection(window.db, "standards"));
+        window.allDbStandards = [];
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // 선생님의 파이어베이스 필드명(course, unit, description)을 정확히 매핑합니다.
+            data.standardId = data.standardId || doc.id; 
+            data.course = data.course || '공통';
+            data.unit = data.unit || '미분류';
+            data.description = data.description || '성취기준 설명 없음';
+            window.allDbStandards.push(data);
+        });
+        
+        window.groupedDbStandards = {};
+        window.allDbStandards.forEach(std => {
+            if(!window.groupedDbStandards[std.course]) window.groupedDbStandards[std.course] = {};
+            if(!window.groupedDbStandards[std.course][std.unit]) window.groupedDbStandards[std.course][std.unit] = [];
+            window.groupedDbStandards[std.course][std.unit].push(std);
+        });
+        
+        window.populateCourseDropdown(0);
+    } catch(e) { 
+        console.error("DB Load Error in Creation Tab", e); 
+    }
+};
+
+window.populateCourseDropdown = function(rowId) {
+    const courseSelect = document.getElementById(`course-select-${rowId}`);
+    if(!courseSelect) return;
+    courseSelect.innerHTML = '<option value="">과목 선택</option>';
+    if(window.groupedDbStandards) {
+        Object.keys(window.groupedDbStandards).sort().forEach(course => {
+            courseSelect.innerHTML += `<option value="${course}">${course}</option>`;
+        });
+    }
+};
+
+window.loadUnits = function(selectElem, rowId) {
+    const course = selectElem.value;
+    const unitSelect = document.getElementById(`unit-select-${rowId}`);
+    const stdInput = document.getElementById(`std-input-${rowId}`);
+    
+    unitSelect.innerHTML = '<option value="">단원 선택</option>';
+    stdInput.value = '';
+    
+    if(course && window.groupedDbStandards[course]) {
+        Object.keys(window.groupedDbStandards[course]).sort().forEach(unit => {
+            unitSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+        });
+    }
+};
+
+window.loadStandards = function(selectElem, rowId) {
+    const course = document.getElementById(`course-select-${rowId}`).value;
+    const unit = selectElem.value;
+    const stdList = document.getElementById(`std-list-${rowId}`);
+    const stdInput = document.getElementById(`std-input-${rowId}`);
+    
+    stdList.innerHTML = '';
+    stdInput.value = '';
+
+    if(course && unit && window.groupedDbStandards[course][unit]) {
+        window.groupedDbStandards[course][unit].sort((a,b)=>a.standardId.localeCompare(b.standardId)).forEach(std => {
+            // 선택 리스트에서는 설명(description)과 코드를 함께 보여줌
+            const displayText = `[${std.standardId}] ${std.description}`;
+            stdList.innerHTML += `<li class="p-3 border-b hover:bg-blue-50 cursor-pointer font-medium text-gray-700" onclick="window.selectStandard(this, '${std.standardId}')">${displayText}</li>`;
+        });
+    }
+};
+
+window.toggleDropdown = function(inputElem) {
+    document.querySelectorAll('.custom-select-list').forEach(list => list.classList.add('hidden'));
+    inputElem.nextElementSibling.classList.toggle('hidden');
+};
+
+window.selectStandard = function(liElem, standardId) {
+    const inputElem = liElem.parentElement.previousElementSibling;
+    inputElem.value = standardId; // 클릭하면 코드(standardId)만 입력창에 들어감
+    liElem.parentElement.classList.add('hidden');
+};
+
+window.addSubStandard = function() {
+    window.subStandardCount++;
+    const container = document.getElementById('standards-container');
+    const newRow = document.createElement('div');
+    newRow.className = "flex space-x-2 items-center standard-row fade-in mt-3";
+    newRow.innerHTML = `
+        <span class="w-16 text-center font-bold text-gray-500 bg-gray-50 py-2 rounded-md border border-gray-200">보조</span>
+        <select id="course-select-${window.subStandardCount}" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 font-medium" onchange="window.loadUnits(this, ${window.subStandardCount})"><option value="">과목 선택</option></select>
+        <select id="unit-select-${window.subStandardCount}" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 font-medium" onchange="window.loadStandards(this, ${window.subStandardCount})"><option value="">단원 선택</option></select>
+        <div class="relative flex-[2]">
+            <input type="text" id="std-input-${window.subStandardCount}" class="w-full border p-2 rounded-md text-sm cursor-pointer custom-select-input bg-white" readonly placeholder="이곳을 눌러 보조 성취기준 선택" onclick="window.toggleDropdown(this)">
+            <ul id="std-list-${window.subStandardCount}" class="absolute z-10 w-full bg-white border mt-1 rounded-md shadow-lg hidden max-h-40 overflow-y-auto text-sm custom-select-list"></ul>
         </div>
     `;
+    container.appendChild(newRow);
+    window.populateCourseDropdown(window.subStandardCount);
+};
+
+// 화면 외부 클릭 시 드롭다운 닫기
+document.addEventListener('click', (e) => {
+    if(!e.target.classList.contains('custom-select-input')) {
+        document.querySelectorAll('.custom-select-list').forEach(list => list.classList.add('hidden'));
+    }
+});
+
+
+// 1. 유형 선택 (일반/MCP 토글)
+window.selectType = function(type) {
+    window.currentType = type;
+    const btnGeneral = document.getElementById('btn-general');
+    const btnMcp = document.getElementById('btn-mcp');
     
-    openModal(modalContent);
+    if(type === 'general') {
+        btnGeneral.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+    } else {
+        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnGeneral.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+    }
+
+    document.getElementById('section-standards').classList.remove('hidden');
+    document.getElementById('section-conditions').classList.remove('hidden');
+    document.getElementById('section-generate').classList.remove('hidden');
+    
+    // DB 로드가 아직 안됐다면 실행
+    if(!window.allDbStandards || window.allDbStandards.length === 0) {
+        window.initCreationDB();
+    }
+    
+    // Linear Scale 렌더링 호출
+    window.renderLevels();
+};
+
+// 2. 성취수준 Linear Scale 렌더링 (일반은 A+포함, MCP는 일반만)
+window.renderLevels = function() {
+    const container = document.getElementById('level-container');
+    let levels = window.currentType === 'general' ? ['A+', 'A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C', 'D', 'E'];
+    
+    container.innerHTML = levels.map((lvl, idx) => `
+        <label class="inline-flex items-center cursor-pointer group">
+            <input type="radio" name="create-level" value="${lvl}" class="form-radio text-blue-600 h-6 w-6 border-gray-400 focus:ring-blue-500 cursor-pointer" ${idx===0 ? 'checked': ''}>
+            <span class="ml-2 font-bold text-gray-700 text-lg group-hover:text-blue-700 transition-colors">${lvl}</span>
+        </label>
+    `).join('');
+};
+
+// 기타 체크박스 이벤트
+document.getElementById('chk-other')?.addEventListener('change', (e) => {
+    const ta = document.getElementById('create-other-textarea');
+    if(e.target.checked) ta.classList.remove('hidden');
+    else ta.classList.add('hidden');
+});
+
+// 클립보드 붙여넣기 (이미지)
+document.getElementById('drop-zone-creation')?.addEventListener('paste', (e) => {
+    // 문항 제작 탭이 열려있을 때만 이미지 붙여넣기 허용
+    if(!document.getElementById('creation').classList.contains('active')) return;
+    
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let index in items) {
+        const item = items[index];
+        if (item.kind === 'file') { window.handleCreationImageFile(item.getAsFile()); break; }
+    }
+});
+
+window.handleCreationImageFile = function(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dropZone = document.getElementById('drop-zone-creation');
+        const previewImg = document.getElementById('preview-img-creation');
+        
+        window.attachedImageBase64 = e.target.result.split(',')[1];
+        window.attachedImageMime = file.type;
+        
+        dropZone.innerHTML = "<span class='text-indigo-600 font-bold'>✓ 이미지가 성공적으로 첨부되었습니다.</span>";
+        previewImg.src = e.target.result;
+        previewImg.classList.remove('hidden');
+        dropZone.appendChild(previewImg);
+        dropZone.classList.add('bg-indigo-50', 'border-indigo-300');
+        
+        document.getElementById('image-options-creation').classList.remove('hidden');
+        
+        // 이미지 첨부 시 반영 옵션 체크박스 자동 활성화
+        const structCheck = document.getElementById('img-opt-structure');
+        const contentCheck = document.getElementById('img-opt-content');
+        if (structCheck) structCheck.checked = true;
+        if (contentCheck) contentCheck.checked = true;
+    };
+    reader.readAsDataURL(file);
+}
+
+// 4. AI 통신 (최초 문항 생성)
+window.generateQuestionAI = async function() {
+    const btnGenerate = document.getElementById('btn-generate-ai');
+    const loadingMsg = document.getElementById('create-loading-msg');
+    
+    if (!currentUser) { alert('AI 문항 제작을 사용하려면 구글 로그인을 해주세요.'); return; }
+    if (!userApiKey) { document.getElementById('api-modal-overlay').classList.add('active'); return; }
+
+    const mainStd = document.getElementById('std-input-0').value || '미분류';
+    
+    const subStdsArray = [];
+    const subInputs = document.querySelectorAll('input[id^="std-input-"]:not(#std-input-0)');
+    subInputs.forEach(input => { if(input.value) subStdsArray.push(input.value); });
+    const subStdsStr = subStdsArray.length > 0 ? subStdsArray.join(', ') : '없음';
+
+    const selectedLevelObj = document.querySelector('input[name="create-level"]:checked');
+    const selectedLevel = selectedLevelObj ? selectedLevelObj.value : 'A';
+    
+    const isComplex = document.getElementById('chk-complex').checked;
+    const isMultiple = document.getElementById('chk-multiple').checked;
+    const isPic = document.getElementById('chk-pic').checked;
+    const isTable = document.getElementById('chk-table').checked;
+    const otherInst = document.getElementById('chk-other').checked ? document.getElementById('create-other-textarea').value : '';
+
+    // 이미지 반영 방식 세부 조정
+    let imgOptText = "";
+    if (window.attachedImageBase64) {
+        const optStruct = document.getElementById('img-opt-structure')?.checked;
+        const optContent = document.getElementById('img-opt-content')?.checked;
+        if(optStruct) imgOptText += " [첨부된 이미지의 '문항 구조 및 형식'을 가져와서 벤치마킹할 것] ";
+        if(optContent) imgOptText += " [첨부된 이미지 속의 핵심 '데이터, 조건, 내용 요소'를 가져와서 변형할 것] ";
+    }
+
+    let conditionsText = `
+    - 타겟 주성취기준: ${mainStd}
+    - 타겟 보조성취기준: ${subStdsStr}
+    - 목표 성취수준: ${selectedLevel} 수준
+    - 성취수준 경계선(MCP) 여부: ${window.currentType === 'mcp' ? 'O (MCP 최소능력자 문항으로 출제)' : 'X (해당 수준의 일반 문항으로 출제)'}
+    - 포함 요소: ${isMultiple ? '선지형' : ''} ${isComplex ? '합답형(ㄱ,ㄴ,ㄷ)' : ''} ${isPic ? '그림 제시 필수' : ''} ${isTable ? '표 제시 필수' : ''}
+    - 기타 사용자 요청사항: ${otherInst}
+    - 첨부 이미지 반영 지시: ${imgOptText}
+    `;
+
+    btnGenerate.classList.add('hidden');
+    loadingMsg.classList.remove('hidden');
+
+    try {
+        const curriculumContext = window.fullCurriculumContext || "데이터를 불러오는 중입니다.";
+        const payload = {
+            apiKey: userApiKey,
+            type: 'create', 
+            curriculumContext: curriculumContext,
+            conditions: conditionsText,
+            imageBase64: window.attachedImageBase64 || null,
+            imageMimeType: window.attachedImageMime || null
+        };
+
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || '백엔드 통신 오류');
+
+        window.appendCreationResult(data.text, `✨ AI 창작 문항 (버전 ${++window.resultCounter})`, mainStd, selectedLevel);
+        
+    } catch (error) {
+        console.error(error);
+        alert(`제작 실패: ${error.message}`);
+    } finally {
+        btnGenerate.classList.remove('hidden');
+        loadingMsg.classList.add('hidden');
+    }
+};
+
+// 5. 창작 결과물 화면 출력
+// ====================================================================
+// [수정/출력 핵심 로직 교체 구간] 
+// ====================================================================
+
+window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
+    const container = document.getElementById('results-container');
+    const idSuffix = window.resultCounter;
+    
+    window.extractDataToState(htmlContent);
+
+    const block = document.createElement('div');
+    block.className = "bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl fade-in relative";
+    block.id = `creation-block-${idSuffix}`;
+    block.dataset.htmlContent = encodeURIComponent(htmlContent);
+
+    block.innerHTML = `
+        <h3 class="text-xl font-extrabold mb-4 text-blue-800 flex items-center gap-2">${titleText}</h3>
+        <div id="q-content-${idSuffix}" class="p-6 rounded-lg bg-gray-50 border-2 border-transparent transition-colors" onmouseup="window.handleTextDrag(${idSuffix})">${htmlContent}</div>
+        
+        <div id="edit-controls-${idSuffix}" class="mt-4 hidden bg-indigo-50 p-5 rounded-lg border border-indigo-100 shadow-inner">
+            <p class="text-sm text-indigo-800 font-bold mb-3">✏️ 위 박스 안에서 수정하고 싶은 텍스트(또는 표/그래프 일부)를 마우스로 드래그하세요.</p>
+            <div id="edit-rows-container-${idSuffix}" class="flex flex-col gap-3 mb-4">
+                </div>
+            <button id="btn-apply-edit-${idSuffix}" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-md shadow-md transition-transform hover:-translate-y-1" onclick="window.applyEdit(${idSuffix})">
+                ✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기
+            </button>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-center space-x-4">
+            <button class="bg-white border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-lg transition-colors" onclick="window.enableEditMode(${idSuffix})">✏️ 문항 수정하기(+)</button>
+            <button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform hover:-translate-y-1" onclick="window.saveCreationToDB(${idSuffix}, '${level}')">💾 이 문항을 DB에 반영하기</button>
+        </div>
+    `;
+
+    container.appendChild(block);
+    if(window.MathJax) MathJax.typesetPromise([block]).catch(console.error);
+    setTimeout(() => block.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+};
+
+// 💡 수정하기 버튼 클릭 시 새 줄을 계속 추가하도록 변경
+window.enableEditMode = function(idSuffix) {
+    window.isEditingMode = true; 
+    window.activeTargetId = idSuffix;
+    
+    const contentDiv = document.getElementById(`q-content-${idSuffix}`);
+    contentDiv.classList.add('bg-green-50', 'border-green-300', 'cursor-text'); 
+    document.getElementById(`edit-controls-${idSuffix}`).classList.remove('hidden');
+    
+    // 버튼을 누를 때마다 새로운 수정 요청 행을 하나씩 추가합니다.
+    window.addEditRow(idSuffix);
+};
+
+window.addEditRow = function(idSuffix) {
+    const container = document.getElementById(`edit-rows-container-${idSuffix}`);
+    const rowId = Date.now();
+    const rowHtml = `
+        <div class="edit-row flex space-x-2 items-center fade-in bg-white p-2 rounded border border-indigo-200" id="edit-row-${rowId}">
+            <input type="text" class="edit-source border p-2 rounded flex-1 text-sm bg-gray-50 text-gray-600 font-medium" placeholder="드래그된 원본 텍스트..." readonly>
+            <button onclick="document.getElementById('edit-row-${rowId}').remove()" class="bg-red-100 text-red-600 px-3 py-2 rounded font-bold hover:bg-red-200 transition-colors" title="이 요청 취소">✕</button>
+            <span class="text-indigo-400 font-bold">➡️</span>
+            <input type="text" class="edit-req border border-indigo-300 p-2 rounded flex-[2] text-sm focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 font-bold" placeholder="수정 요청사항 입력 (예: 이 문장을 짧게 줄여줘)">
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', rowHtml);
+};
+
+window.handleTextDrag = function(idSuffix) {
+    if (!window.isEditingMode || window.activeTargetId !== idSuffix) return;
+    let selectedText = window.getSelection().toString().trim();
+    if (selectedText) {
+        const container = document.getElementById(`edit-rows-container-${idSuffix}`);
+        const rows = container.querySelectorAll('.edit-row');
+        
+        if (rows.length > 0) {
+            // 가장 마지막 행의 원본 텍스트 칸이 비어있으면 거길 채우고, 아니면 새 줄을 만듦
+            const lastRow = rows[rows.length - 1];
+            const lastSource = lastRow.querySelector('.edit-source');
+            if (!lastSource.value) {
+                lastSource.value = selectedText;
+                lastRow.querySelector('.edit-req').focus();
+            } else {
+                window.addEditRow(idSuffix);
+                const newRows = container.querySelectorAll('.edit-row');
+                newRows[newRows.length - 1].querySelector('.edit-source').value = selectedText;
+                newRows[newRows.length - 1].querySelector('.edit-req').focus();
+            }
+        } else {
+            window.addEditRow(idSuffix);
+            container.querySelector('.edit-source').value = selectedText;
+            container.querySelector('.edit-req').focus();
+        }
+    }
+};
+
+window.applyEdit = async function(idSuffix) {
+    const container = document.getElementById(`edit-rows-container-${idSuffix}`);
+    const rows = container.querySelectorAll('.edit-row');
+    let instructions = [];
+    
+    // 여러 줄의 수정 지시사항을 하나로 묶습니다.
+    rows.forEach(r => {
+        const src = r.querySelector('.edit-source').value.trim();
+        const req = r.querySelector('.edit-req').value.trim();
+        if (req) instructions.push(`- 대상 원본: "${src}"\n- 지시사항: "${req}"`);
+    });
+
+    if (instructions.length === 0) { alert("최소 한 개 이상의 수정 요청사항을 입력해주세요."); return; }
+
+    const combinedInstruction = instructions.join('\n\n');
+    const btn = document.getElementById(`btn-apply-edit-${idSuffix}`);
+    btn.textContent = "⏳ 여러 요청사항을 종합하여 문항을 수정 중입니다..."; 
+    btn.disabled = true;
+
+    try {
+        const block = document.getElementById(`creation-block-${idSuffix}`);
+        const previousHtml = decodeURIComponent(block.dataset.htmlContent);
+        const payload = { apiKey: userApiKey, type: 'edit', previousHtml: previousHtml, targetText: "다중 수정", instruction: combinedInstruction };
+
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error);
+
+        window.isEditingMode = false;
+        const contentDiv = document.getElementById(`q-content-${idSuffix}`);
+        contentDiv.classList.remove('bg-green-50', 'border-green-300', 'cursor-text');
+        document.getElementById(`edit-controls-${idSuffix}`).classList.add('hidden');
+        btn.textContent = "✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기"; 
+        btn.disabled = false;
+
+        const newLevelObj = document.querySelector('input[name="create-level"]:checked');
+        const newLevel = newLevelObj ? newLevelObj.value : 'A';
+        window.appendCreationResult(data.text, `✍️ 종합 수정된 문항 (버전 ${++window.resultCounter})`, '수정본', newLevel);
+
+    } catch (error) {
+        console.error(error); alert(`수정 실패: ${error.message}`);
+        btn.textContent = "✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기"; btn.disabled = false;
+    }
+};
+
+window.printList = window.printList || [];
+
+// 💡 체크박스로 출력할 문항 선택하는 UI 그리기 함수
+window.updatePrintSelectionUI = function() {
+    const container = document.getElementById('print-selection-container');
+    if(!container) return; // HTML 수정이 안되어 있을 경우를 대비한 방어코드
+    
+    container.innerHTML = window.printList.map((item, idx) => `
+        <label class="flex items-center gap-2 px-4 py-2 border rounded-full cursor-pointer transition-colors ${item.selected ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white border-gray-200'}">
+            <input type="checkbox" class="form-checkbox text-blue-600 h-5 w-5" ${item.selected ? 'checked' : ''} onchange="window.togglePrintSelection(${idx}, this.checked)">
+            <span class="font-bold ${item.selected ? 'text-blue-800' : 'text-gray-600'}">${idx + 1}번 문항</span>
+        </label>
+    `).join('');
+    document.getElementById('print-count').innerText = window.printList.filter(i => i.selected).length;
+};
+
+window.togglePrintSelection = function(idx, isChecked) {
+    window.printList[idx].selected = isChecked;
+    window.updatePrintSelectionUI();
+};
+
+window.saveCreationToDB = function(idSuffix, rawLevel) {
+    const block = document.getElementById(`creation-block-${idSuffix}`);
+    const htmlContent = decodeURIComponent(block.dataset.htmlContent);
+    window.extractDataToState(htmlContent);
+
+    const qText = window.currentAnalysisState.question || "문항 텍스트 없음";
+    const qSvg = window.currentAnalysisState.svg || "";
+    const qConditions = window.currentAnalysisState.conditions || [];
+    const qOptions = window.currentAnalysisState.options || [];
+    const qLevel = rawLevel.replace('+', ''); 
+    
+    // 💡 프린트용 HTML 구성 시 <보기>와 조건문 박스를 완벽하게 포함시킵니다.
+    let printHtml = `<div style="margin-bottom: 8px;"><strong>[성취수준 ${qLevel}]</strong><br>${qText.replace(/\n/g, '<br>')}</div>`;
+    
+    if (qSvg) {
+        printHtml += `<div style="display:flex; justify-content:center; margin: 15px 0;">${qSvg}</div>`;
+    }
+    
+    // 제시문과 보기(ㄱ,ㄴ,ㄷ) 박스 그리기
+    if (qConditions.length > 0) {
+        printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff;">`;
+        qConditions.forEach(cond => {
+            printHtml += `<div style="margin-bottom: 8px;">${cond.replace(/\n/g, '<br>')}</div>`;
+        });
+        printHtml += `</div>`;
+    }
+
+    if (qOptions.length > 0) {
+        printHtml += `<div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
+            ${qOptions.map((opt, i) => `<span>${['①','②','③','④','⑤'][i]} ${opt}</span>`).join('')}
+        </div>`;
+    }
+    
+    // 객체 형태로 선택 여부(selected)와 함께 저장
+    window.printList.push({ html: printHtml, selected: true });
+    
+    document.getElementById('section-print').classList.remove('hidden');
+    window.updatePrintSelectionUI(); // UI 업데이트
+
+    document.getElementById('save-std-id').value = window.currentAnalysisState.mainStd;
+    document.getElementById('save-level').value = qLevel; 
+    
+    const qTextArea = document.getElementById('save-question-text'); if (qTextArea) qTextArea.value = window.currentAnalysisState.question;
+    const aText = document.getElementById('save-correct-answer'); if (aText) aText.value = window.currentAnalysisState.answer;
+
+    let subStdInput = document.getElementById('save-sub-stds');
+    if (!subStdInput) {
+        const mainStdInput = document.getElementById('save-std-id');
+        subStdInput = document.createElement('input'); subStdInput.id = 'save-sub-stds'; subStdInput.type = 'text';
+        subStdInput.style.marginTop = '10px'; subStdInput.placeholder = '보조성취기준 (쉼표로 구분)';
+        mainStdInput.parentNode.insertBefore(subStdInput, mainStdInput.nextSibling);
+    }
+    subStdInput.value = window.currentAnalysisState.subStds === '없음' ? '' : window.currentAnalysisState.subStds;
+
+    document.getElementById('save-modal-overlay').classList.add('active');
+};
+
+window.printTest = function() {
+    // 체크박스로 선택된 문항들만 걸러냅니다.
+    const selectedItems = window.printList.filter(item => item.selected);
+    if (selectedItems.length === 0) return alert("출력할 문항을 하나 이상 선택해주세요.");
+    
+    let printWindow = window.open('', '_blank');
+    let content = `
+    <html>
+    <head>
+        <title>과학 탐구 평가 시험지</title>
+        <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] } };</script>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <style>
+            @page { size: A4; margin: 15mm; }
+            body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; color: #111; font-size: 11pt; }
+            h2 { text-align:center; margin-bottom: 30px; border-bottom: 2px solid #111; padding-bottom: 10px; font-size: 1.8rem; }
+            
+            /* 평가원 모의고사 스타일 2단 편집 (다단 레이아웃) */
+            .test-paper {
+                column-count: 2;         /* 2단으로 나눔 */
+                column-gap: 12mm;        /* 단 사이의 간격 */
+                column-rule: 1px solid #ccc; /* 단 사이의 구분선 */
+            }
+            .q-item { 
+                margin-bottom: 40px; 
+                padding-bottom: 15px; 
+                break-inside: avoid;      /* 문항이 단 사이에서 찢어지지 않도록 보호 */
+                page-break-inside: avoid; /* 인쇄 페이지 넘어갈 때 보호 */
+            }
+        </style>
+    </head>
+    <body>
+        <h2>과학 탐구 평가 시험지</h2>
+        <div class="test-paper">
+    `;
+    
+    // 선택된 항목만 2단 레이아웃 박스 안에 그려 넣음
+    selectedItems.forEach((item, idx) => { 
+        content += `<div class="q-item"><strong style="font-size: 1.1rem; margin-right: 8px;">${idx + 1}번.</strong>${item.html}</div>`; 
+    });
+    
+    content += `
+        </div>
+        <script>
+            window.onload = function() { 
+                // 수식이 다 렌더링될 수 있게 1.5초 후 인쇄 창 띄움
+                setTimeout(function() { window.print(); }, 1500); 
+            };
+        </script>
+    </body>
+    </html>`;
+    
+    printWindow.document.write(content); 
+    printWindow.document.close();
+};
+
+window.resetCreationForm = function() {
+    if (confirm("모든 작업 내역(출력 대기열 포함)이 초기화됩니다. 계속하시겠습니까?")) {
+        document.getElementById('results-container').innerHTML = '';
+        document.getElementById('section-print').classList.add('hidden');
+        window.printList = []; 
+        document.getElementById('print-count').innerText = "0"; 
+        window.updatePrintSelectionUI();
+        window.resultCounter = 0;
+        window.attachedImageBase64 = null; window.attachedImageMime = null;
+        document.getElementById('drop-zone-creation').innerHTML = `이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.<img id="preview-img-creation" src="" class="hidden mt-3 max-h-32 mx-auto rounded-md shadow-sm border border-gray-200">`;
+        document.getElementById('drop-zone-creation').classList.remove('bg-indigo-50', 'border-indigo-300');
+        document.getElementById('image-options-creation').classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 };

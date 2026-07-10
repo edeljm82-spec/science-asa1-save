@@ -3,52 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>통합과학 성취기준 분석</title>
+  <title>통합과학 성취기준 분석 및 문항제작</title>
+  
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { corePlugins: { preflight: false } }; 
+  </script>
+  <style>
+    /* 문항제작 탭 스크롤바 및 애니메이션 */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .editable-text::selection { background: #bfdbfe; color: #1e40af; }
+    .editing-mode { background-color: #f0fdf4; border: 2px dashed #4ade80; cursor: text; padding: 1rem; border-radius: 0.5rem; transition: all 0.3s;}
+  </style>
 </head>
 <body>
   
-<div id="api-modal-overlay" class="modal-overlay">
-  <div class="modal-content" style="max-width: 550px; padding: 2.5rem; border-radius: 12px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-    <button id="api-modal-close" class="modal-close-btn" style="top: 1rem; right: 1rem;">&times;</button>
-    <h2 style="margin-top: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px; font-weight: 800;">
-      ⚙️ 인공지능(AI) API 키 설정
-    </h2>
-    
-    <div class="api-guide-box" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-      <p style="font-size: 1rem; color: #475569; line-height: 1.6; margin-bottom: 1.5rem; margin-top: 0;">
-        이 시스템은 구글의 최신 <strong>인공지능(AI)</strong>을 사용해 선생님께서 입력하신 문항을 정밀하게 분석합니다. 인공지능을 사용하기 위한 개인 전용 비밀번호인 <strong>'API Key'</strong>가 필요합니다. Key는 선생님의 데이터베이스에 안전하게 보관되며, 한 번만 설정하면 이후에는 자동으로 불러옵니다.
-      </p>
-
-      <h4 style="color: #333; display: flex; align-items: center; gap: 5px; margin-bottom: 1rem;">🚀 API 키 발급받는 방법 (가져오기)</h4>
-      
-      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: block; width: 100%; text-align: center; padding: 1rem; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; border-radius: 8px; font-weight: bold; text-decoration: none; margin-bottom: 1.5rem; transition: background 0.2s;">
-        👉 구글 AI 스튜디오에서 API 키 발급받기 (가져오기)
-      </a>
-
-      <ol style="font-size: 0.95rem; color: #475569; line-height: 1.6; padding-left: 1.2rem; margin-bottom: 0; margin-top: 0;">
-        <li>위 파란색 버튼을 클릭해 구글 AI 스튜디오로 이동합니다. (구글 로그인 필수)</li>
-        <li>화면 왼쪽 위에 있는 파란색 <strong>[Create API key]</strong> (또는 Get API key) 버튼을 클릭합니다.</li>
-        <li>가져온 프로젝트를 선택하거나 <strong>[+ Create new project]</strong>를 선택한 뒤, <strong>[Create API key]</strong>를 누릅니다.</li>
-        <li>생성된 키('AIzaSy...' 로 시작) 옆의 <strong>[복사 아이콘]</strong>을 누릅니다.</li>
-        <li>다시 이 화면으로 돌아와서, 아래 입력칸에 붙여넣기(Ctrl+V) 하세요!</li>
-      </ol>
+  <div id="api-modal-overlay" class="modal-overlay">
+    <div class="modal-content" style="max-width: 550px; padding: 2.5rem; border-radius: 12px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <button id="api-modal-close" class="modal-close-btn" style="top: 1rem; right: 1rem;">&times;</button>
+      <h2 style="margin-top: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+        ⚙️ 인공지능(AI) API 키 설정
+      </h2>
+      <div class="api-guide-box" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <p style="font-size: 1rem; color: #475569; line-height: 1.6; margin-bottom: 1.5rem; margin-top: 0;">
+          이 시스템은 구글의 최신 <strong>인공지능(AI)</strong>을 사용해 선생님께서 입력하신 문항을 정밀하게 분석합니다. 인공지능을 사용하기 위한 개인 전용 비밀번호인 <strong>'API Key'</strong>가 필요합니다. Key는 선생님의 데이터베이스에 안전하게 보관되며, 한 번만 설정하면 이후에는 자동으로 불러옵니다.
+        </p>
+        <h4 style="color: #333; display: flex; align-items: center; gap: 5px; margin-bottom: 1rem;">🚀 API 키 발급받는 방법 (가져오기)</h4>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: block; width: 100%; text-align: center; padding: 1rem; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; border-radius: 8px; font-weight: bold; text-decoration: none; margin-bottom: 1.5rem; transition: background 0.2s;">
+          👉 구글 AI 스튜디오에서 API 키 발급받기 (가져오기)
+        </a>
+        <ol style="font-size: 0.95rem; color: #475569; line-height: 1.6; padding-left: 1.2rem; margin-bottom: 0; margin-top: 0;">
+          <li>위 파란색 버튼을 클릭해 구글 AI 스튜디오로 이동합니다. (구글 로그인 필수)</li>
+          <li>화면 왼쪽 위에 있는 파란색 <strong>[Create API key]</strong> (또는 Get API key) 버튼을 클릭합니다.</li>
+          <li>가져온 프로젝트를 선택하거나 <strong>[+ Create new project]</strong>를 선택한 뒤, <strong>[Create API key]</strong>를 누릅니다.</li>
+          <li>생성된 키('AIzaSy...' 로 시작) 옆의 <strong>[복사 아이콘]</strong>을 누릅니다.</li>
+          <li>다시 이 화면으로 돌아와서, 아래 입력칸에 붙여넣기(Ctrl+V) 하세요!</li>
+        </ol>
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <label for="api-key-input" style="font-weight: bold; color: #333; display: block; margin-bottom: 0.5rem;">🔑 복사한 API Key 입력</label>
+        <input type="text" id="api-key-input" placeholder="이곳을 클릭하고 Ctrl+V 를 눌러 붙여넣으세요" style="width: 100%; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background: white;">
+      </div>
+      <button id="btn-save-api" style="width: 100%; padding: 1.2rem; background: #1e40af; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.3);">
+        설정 저장하고 분석 시작하기
+      </button>
     </div>
-
-    <div style="margin-bottom: 1.5rem;">
-      <label for="api-key-input" style="font-weight: bold; color: #333; display: block; margin-bottom: 0.5rem;">🔑 복사한 API Key 입력</label>
-      <input type="text" id="api-key-input" placeholder="이곳을 클릭하고 Ctrl+V 를 눌러 붙여넣으세요" style="width: 100%; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background: white;">
-    </div>
-
-    <button id="btn-save-api" style="width: 100%; padding: 1.2rem; background: #1e40af; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.3);">
-      설정 저장하고 분석 시작하기
-    </button>
   </div>
-</div>
 
   <header class="hero-header">
     <div class="hero-text">
@@ -59,11 +78,11 @@
 
   <main>
     <nav class="tab-nav" style="display: flex; justify-content: space-between; align-items: flex-end;">
-      
       <div style="display: flex;">
         <button class="tab-button active" data-target="#standards">성취기준 및 성취수준</button>
         <button class="tab-button" data-target="#inquiry">필수탐구활동</button>
         <button class="tab-button" data-target="#analysis">인공지능(AI) 문항분석</button>
+        <button class="tab-button" data-target="#creation">AI 문항제작</button>
       </div>
 
       <div id="user-controls" class="top-right-controls">
@@ -72,7 +91,6 @@
         <button id="btn-api-setup" class="user-btn auth-btn-style">API Key 설정</button>
         <button id="btn-logout" class="user-btn auth-btn-style" style="display: none; background: rgba(0, 0, 0, 0.3);">로그아웃</button>
       </div>
-
     </nav>
 
     <section id="standards" class="tab-content active">
@@ -85,7 +103,6 @@
           <option value="5. 생물의 유전">생물의 유전</option>
         </select>
       </div>
-      
       <div id="standards-container" class="content-container"></div>
     </section>
 
@@ -97,7 +114,6 @@
     <section id="analysis" class="tab-content">
       <h2>인공지능(AI) 문항분석</h2>
       <div class="content-container">
-        
         <div id="image-upload-area" style="border: 2px dashed #cbd5e1; padding: 1.5rem; text-align: center; border-radius: 8px; margin-bottom: 1rem; background: #f8fafc; position: relative;">
           <div id="image-preview-container" style="display: none; margin-bottom: 1rem; position: relative;">
              <img id="preview-img" src="" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -121,8 +137,121 @@
             🔄 다른 문항 분석하기
           </button>
         </div>
+      </div>
+    </section>
+
+    <section id="creation" class="tab-content" style="background-color: #f9fafb; padding-bottom: 8rem;">
+      <div class="max-w-4xl mx-auto mt-8 px-4 sm:px-6 lg:px-8 space-y-10 font-sans text-gray-800">
+        
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
+            <h2 class="text-lg font-semibold mb-4">1. 문항 유형 선택</h2>
+            <div class="flex space-x-4">
+                <button id="btn-general" class="flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors" onclick="selectType('general')">일반문항</button>
+                <button id="btn-mcp" class="flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors" onclick="selectType('mcp')">MCP문항</button>
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in hidden" id="section-standards">
+          <h2 class="text-lg font-semibold mb-4">2. 성취기준 및 성취수준 설정</h2>
+          
+          <div id="standards-container" class="space-y-4">
+              <div class="flex space-x-2 items-center standard-row fade-in">
+                  <span class="w-16 text-center font-bold text-gray-600 bg-gray-100 py-2 rounded-md border border-gray-200">주성취</span>
+                  <select id="course-select-0" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 focus:ring-blue-500 font-medium" onchange="window.loadUnits(this, 0)"><option value="">과목 선택</option></select>
+                  <select id="unit-select-0" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 focus:ring-blue-500 font-medium" onchange="window.loadStandards(this, 0)"><option value="">단원 선택</option></select>
+                  <div class="relative flex-[2]">
+                      <input type="text" id="std-input-0" class="w-full border p-2 rounded-md text-sm cursor-pointer custom-select-input focus:ring-blue-500 bg-white" readonly placeholder="이곳을 눌러 성취기준 선택" onclick="window.toggleDropdown(this)">
+                      <ul id="std-list-0" class="absolute z-10 w-full bg-white border mt-1 rounded-md shadow-lg hidden max-h-40 overflow-y-auto text-sm custom-select-list"></ul>
+                  </div>
+              </div>
+          </div>
+
+          <button class="mt-3 text-blue-600 font-bold text-sm flex items-center hover:text-blue-800 transition-colors" onclick="window.addSubStandard()">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              보조 성취기준 추가(+)
+          </button>
+
+          <div class="mt-6 flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <span class="w-24 font-extrabold text-blue-800">🎯 성취수준</span>
+              <div id="level-container" class="flex flex-wrap gap-6 ml-4">
+                  </div>
+          </div>
+      </section>
+
+      <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in hidden" id="section-conditions">
+          <h2 class="text-lg font-semibold mb-4">3. 문항 세부 조건 및 레퍼런스</h2>
+          <div class="grid grid-cols-2 gap-8">
+              <div>
+                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">✅ 포함 요소 (다중선택)</h3>
+                  <div class="flex flex-col space-y-3">
+                      <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-complex" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium">합답형(ㄱ,ㄴ,ㄷ)</span></label>
+                      <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-multiple" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" checked><span class="ml-2 font-medium">선지형</span></label>
+                      <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-pic" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium">그림 제시</span></label>
+                      <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-table" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium">표 제시</span></label>
+                      <label class="inline-flex items-center cursor-pointer">
+                          <input type="checkbox" id="chk-other" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300">
+                          <span class="ml-2 font-medium">기타 지시사항</span>
+                      </label>
+                      <textarea id="create-other-textarea" class="hidden w-full border border-gray-300 rounded-md p-3 mt-2 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" rows="3" placeholder="예: 실생활 연계 문제로 출제해줘, 계산 과정이 복잡하게 해줘 등"></textarea>
+                  </div>
+              </div>
+              
+              <div class="border-l pl-8 border-gray-200" id="image-upload-area-creation">
+                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">🖼️ 레퍼런스 이미지 <span class="text-xs font-normal text-gray-400">(선택사항)</span></h3>
+                  <div class="flex space-x-2 mb-4">
+                      <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm transition font-bold" onclick="document.getElementById('file-input-creation').click()">📁 사진 업로드</button>
+                      <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm transition font-bold" onclick="document.getElementById('camera-input-creation').click()">📷 카메라 촬영</button>
+                      <input type="file" id="file-input-creation" accept="image/*" class="hidden" onchange="window.handleCreationImageFile(this.files[0])">
+                      <input type="file" id="camera-input-creation" accept="image/*" capture="environment" class="hidden" onchange="window.handleCreationImageFile(this.files[0])">
+                  </div>
+                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 text-sm overflow-hidden transition-colors cursor-pointer hover:bg-gray-50" id="drop-zone-creation">
+                      이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.
+                      <img id="preview-img-creation" src="" class="hidden mt-3 max-h-32 mx-auto rounded-md shadow-sm border border-gray-200">
+                  </div>
+                  
+                  <div id="image-options-creation" class="hidden mt-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">
+                      <p class="text-xs text-indigo-800 font-bold mb-2">✅ 이미지가 첨부되었습니다. 반영 방식을 선택하세요.</p>
+                      <div class="flex flex-col space-y-2">
+                          <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="img-opt-structure" class="form-checkbox text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500" checked><span class="ml-2 text-sm font-bold text-indigo-900">문항 구조(형식) 가져오기</span></label>
+                          <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="img-opt-content" class="form-checkbox text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500" checked><span class="ml-2 text-sm font-bold text-indigo-900">문항 내용요소 가져오기</span></label>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
+
+        <div class="text-center fade-in hidden" id="section-generate">
+          <button id="btn-generate-ai" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-lg text-xl transition-transform transform hover:scale-105" onclick="generateQuestionAI()">
+              ✨ 인공지능 문항 만들기
+          </button>
+          <p id="create-loading-msg" class="hidden text-blue-600 mt-3 animate-pulse font-bold text-lg">⏳ AI가 교육과정 루브릭을 바탕으로 문항을 창작하고 있습니다...</p>
+      </div>
+
+      <section id="results-container" class="space-y-8 flex flex-col items-center pb-10"></section>
+      
+      <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in hidden w-full max-w-4xl mx-auto" id="section-print">
+        <div class="flex flex-col gap-5">
+            <div class="flex justify-between items-center border-b pb-4 border-gray-200">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    🖨️ 출력 대기열 
+                    <span id="print-count" class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">0</span>
+                </h2>
+                <div class="space-x-3 flex">
+                    <button class="bg-gray-800 hover:bg-gray-900 text-white py-2 px-5 rounded-md text-sm font-bold transition shadow-md whitespace-nowrap" onclick="window.printTest()">📄 선택한 문항만 시험지로 출력</button>
+                    <button class="bg-white border-2 border-gray-800 text-gray-800 py-2 px-5 rounded-md text-sm font-bold hover:bg-gray-100 transition whitespace-nowrap" onclick="window.resetCreationForm()">🔄 초기화 및 새 문제</button>
+                </div>
+            </div>
+            
+            <div>
+                <p class="text-sm font-bold text-gray-600 mb-2">✅ 시험지에 포함할 문항을 선택하세요.</p>
+                <div id="print-selection-container" class="flex flex-wrap gap-3">
+                    </div>
+            </div>
         </div>
     </section>
+
+    </div>
+  </section>
   </main>
 
   <div id="modal-overlay" class="modal-overlay">
@@ -131,6 +260,7 @@
       <div id="modal-body"></div>
     </div>
   </div>
+  
   <div id="chatbot-panel" class="chatbot-hidden">
     <div class="chatbot-header">
       <h3>통합과학 챗봇</h3>
@@ -151,6 +281,7 @@
       ⬆ 맨 위로
     </button>
   </div>
+
   <div id="save-modal-overlay" class="modal-overlay">
     <div class="modal-content" style="max-width: 650px;">
       <button id="save-modal-close" class="modal-close-btn">&times;</button>
@@ -158,7 +289,6 @@
         <h2 style="color: #0f172a; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
           💾 분석 문항 데이터베이스 저장
         </h2>
-        
         <div id="save-form" style="display: grid; gap: 1.2rem;">
           <div style="display: flex; gap: 1rem;">
             <div style="flex: 1;">
@@ -170,12 +300,10 @@
               <input type="text" id="save-level" readonly style="width: 100%; padding: 0.8rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;">
             </div>
           </div>
-  
           <div>
             <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">발문(문제 텍스트)</label>
             <textarea id="save-question-text" rows="3" style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical;"></textarea>
           </div>
-  
           <div>
             <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">정답 번호</label>
             <select id="save-correct-answer" style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px;">
@@ -186,7 +314,6 @@
               <option value="4">5번</option>
             </select>
           </div>
-  
           <button id="btn-final-db-save" style="width: 100%; padding: 1rem; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 1rem;">
             데이터베이스에 최종 저장하기
           </button>
@@ -194,6 +321,7 @@
       </div>
     </div>
   </div>
-  </body>
-</html>
 
+  
+</body>
+</html>
