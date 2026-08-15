@@ -98,16 +98,27 @@ window.extractDataToState = function(htmlString) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
-    renderAchievementDashboard();
+    
+    // 💡 [수정됨] HTML의 선택창(course-select)에 설정된 기본값을 직접 읽어와서 첫 화면을 그립니다.
+    const courseSelect = document.getElementById('course-select');
+    const initialCourse = courseSelect ? courseSelect.value : "1. 통합과학1";
+    renderAchievementDashboard(initialCourse);
+
+    // 💡 [수정됨] 드롭다운 변경 이벤트도 이곳으로 깔끔하게 통합합니다.
+    if (courseSelect) {
+        courseSelect.addEventListener('change', (e) => {
+            renderAchievementDashboard(e.target.value);
+        });
+    }
+
     initAnalysis();
-    initQuestionCreation(); 
+    //initQuestionCreation(); // ✅ 주석 처리하여 실행을 막습니다.
     initInquiry();   
     initModal();     
     initFirebaseAuth(); 
     if (window.lucide) lucide.createIcons();
     initChatbotResize();
     
-    // 👇 새로 추가하는 부분 (드롭다운 데이터 세팅 및 버튼 초기화)
     window.initCreationDB(); 
     window.selectType('general'); 
 });
@@ -135,7 +146,6 @@ function initNavigation() {
     });
 }
 
-// 2. Modal Logic
 // 2. Modal Logic
 function initModal() {
     // 기존 기본 모달 닫기
@@ -187,6 +197,12 @@ window.closeModal = function() {
 async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
     const container = document.getElementById('unit-container') || document.getElementById('standards-container');
     if (!container) return;
+    
+    // 💡 [안전장치 추가] 혹시라도 값이 비어있다면 드롭다운 값을 다시 확인합니다.
+    if (!selectedCourse) {
+        const selectElem = document.getElementById('course-select');
+        selectedCourse = selectElem ? selectElem.value : "1. 통합과학1"; // 최후의 보루
+    }
     
     // 데이터를 불러오는 동안 보여줄 로딩 메시지
     container.innerHTML = '<div style="text-align:center; padding: 3rem; font-size: 1.2rem; color: #64748b;">데이터베이스에서 성취기준을 불러오는 중입니다... ⏳</div>';
@@ -264,16 +280,7 @@ async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
     }
 }
 
-// [새로 추가할 코드] 드롭다운 메뉴를 클릭했을 때 화면을 다시 그려주는 기능
-document.addEventListener('DOMContentLoaded', () => {
-    const courseSelect = document.getElementById('course-select');
-    if (courseSelect) {
-        courseSelect.addEventListener('change', (e) => {
-            // 사용자가 선택한 과목(e.target.value)을 넘겨주며 화면 다시 그리기
-            renderAchievementDashboard(e.target.value);
-        });
-    }
-});
+
 
 window.toggleAccordion = function(element) {
     const row = element.closest('.standard-row');
@@ -558,6 +565,9 @@ function initAnalysis() {
     cameraInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
 
     document.addEventListener('paste', (e) => {
+        // 👇 [핵심 수정] 문항 분석 탭이 화면에 열려있을 때만 붙여넣기를 허용하도록 방어막 추가!
+        if (!document.getElementById('analysis').classList.contains('active')) return;
+
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let index in items) {
             const item = items[index];
@@ -1517,27 +1527,56 @@ window.handleCreationImageFile = function(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         const dropZone = document.getElementById('drop-zone-creation');
+        const previewContainer = document.getElementById('preview-container-creation');
         const previewImg = document.getElementById('preview-img-creation');
+        const dropZoneText = document.getElementById('drop-zone-text');
         
         window.attachedImageBase64 = e.target.result.split(',')[1];
         window.attachedImageMime = file.type;
         
-        dropZone.innerHTML = "<span class='text-indigo-600 font-bold'>✓ 이미지가 성공적으로 첨부되었습니다.</span>";
+        if (dropZoneText) dropZoneText.innerHTML = "<span class='text-indigo-600 font-bold'>✓ 이미지가 성공적으로 첨부되었습니다.</span>";
         previewImg.src = e.target.result;
-        previewImg.classList.remove('hidden');
-        dropZone.appendChild(previewImg);
+        previewContainer.classList.remove('hidden');
         dropZone.classList.add('bg-indigo-50', 'border-indigo-300');
         
         document.getElementById('image-options-creation').classList.remove('hidden');
         
-        // 이미지 첨부 시 반영 옵션 체크박스 자동 활성화
+        // 💡 [변경 완료] 이미지 첨부 시 사용자가 직관적으로 제어할 수 있도록 
+        // 기본값으로 '문항 구조(형식) 가져오기'에만 체크되도록 변경합니다. (내용 복제 차단 목적)
         const structCheck = document.getElementById('img-opt-structure');
         const contentCheck = document.getElementById('img-opt-content');
         if (structCheck) structCheck.checked = true;
-        if (contentCheck) contentCheck.checked = true;
+        if (contentCheck) contentCheck.checked = false;
     };
     reader.readAsDataURL(file);
 }
+
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'btn-remove-creation-image') {
+        e.stopPropagation(); // 이벤트 버블링 방지
+        window.attachedImageBase64 = null;
+        window.attachedImageMime = null;
+        
+        const dropZone = document.getElementById('drop-zone-creation');
+        const previewContainer = document.getElementById('preview-container-creation');
+        const previewImg = document.getElementById('preview-img-creation');
+        const dropZoneText = document.getElementById('drop-zone-text');
+        
+        if (dropZoneText) dropZoneText.innerHTML = "이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.";
+        previewImg.src = "";
+        previewContainer.classList.add('hidden');
+        dropZone.classList.remove('bg-indigo-50', 'border-indigo-300');
+        
+        document.getElementById('image-options-creation').classList.add('hidden');
+    }
+});
+
+// 드롭존 클릭 시 파일 선택창 열기 연동 (X 버튼 클릭은 제외)
+document.getElementById('drop-zone-creation')?.addEventListener('click', (e) => {
+    if (e.target.id !== 'btn-remove-creation-image') {
+        document.getElementById('file-input-creation').click();
+    }
+});
 
 // 4. AI 통신 (최초 문항 생성)
 window.generateQuestionAI = async function() {
@@ -1563,37 +1602,71 @@ window.generateQuestionAI = async function() {
     const isTable = document.getElementById('chk-table').checked;
     const otherInst = document.getElementById('chk-other').checked ? document.getElementById('create-other-textarea').value : '';
 
-    // 이미지 반영 방식 세부 조정
-    let imgOptText = "";
+    // =========================================================================
+    // 💡 [프론트엔드 최적화] 위계 질서 확립 및 이미지 물리적 차단 로직
+    // =========================================================================
+    let finalImageBase64 = window.attachedImageBase64;
+    let finalImageMime = window.attachedImageMime;
+    let imageInstruction = "첨부된 이미지가 없습니다.";
+
     if (window.attachedImageBase64) {
         const optStruct = document.getElementById('img-opt-structure')?.checked;
         const optContent = document.getElementById('img-opt-content')?.checked;
-        if(optStruct) imgOptText += " [첨부된 이미지의 '문항 구조 및 형식'을 가져와서 벤치마킹할 것] ";
-        if(optContent) imgOptText += " [첨부된 이미지 속의 핵심 '데이터, 조건, 내용 요소'를 가져와서 변형할 것] ";
+        
+        if (!optStruct && !optContent) {
+            // [차단] 둘 다 체크 해제 시 이미지 데이터 전송 자체를 끊어버림
+            finalImageBase64 = null;
+            finalImageMime = null;
+            imageInstruction = "[이미지 전송 차단됨] 사용자가 이미지를 올렸으나 반영을 거부했습니다. 오직 아래 '0순위 절대 기준'만으로 문항을 신규 창작하세요.";
+        } else if (optStruct && !optContent) {
+            imageInstruction = "[구조만 차용, 내용 절대 금지] 이미지 속 텍스트, 데이터, 과학적 개념은 '절대' 쓰지 마세요. 표의 형태, 그래프 레이아웃, 선지 배치 방식 등 '시각적 껍데기'만 빌려와서 내용을 완전히 0순위 타겟 성취기준으로 갈아끼우세요.";
+        } else if (!optStruct && optContent) {
+            imageInstruction = "[내용만 차용, 구조 변경] 이미지 속 과학적 데이터를 활용하되, 겉보기 형식은 반드시 사용자가 요청한 유형(합답형 등)으로 탈바꿈시키세요. 단, 이미지의 내용이 0순위 성취기준과 조금이라도 충돌하면 무조건 성취기준에 맞게 내용을 뜯어고치세요.";
+        } else {
+            imageInstruction = "[구조와 내용 모두 참고] 이미지의 형식과 데이터를 모두 활용하세요. 하지만 이 경우에도 최상위 법은 '0순위 타겟 성취기준'입니다. 어긋나는 부분은 무조건 성취기준을 따르세요.";
+        }
     }
 
+    // AI가 절대 헷갈리지 않도록 [0순위]와 [1순위]로 계급을 나누어 지시합니다.
     let conditionsText = `
+    [0순위 절대 기준 - 문항 창작의 지배적 뼈대 (최우선 반영)]
     - 타겟 주성취기준: ${mainStd}
     - 타겟 보조성취기준: ${subStdsStr}
     - 목표 성취수준: ${selectedLevel} 수준
-    - 성취수준 경계선(MCP) 여부: ${window.currentType === 'mcp' ? 'O (MCP 최소능력자 문항으로 출제)' : 'X (해당 수준의 일반 문항으로 출제)'}
-    - 포함 요소: ${isMultiple ? '선지형' : ''} ${isComplex ? '합답형(ㄱ,ㄴ,ㄷ)' : ''} ${isPic ? '그림 제시 필수' : ''} ${isTable ? '표 제시 필수' : ''}
-    - 기타 사용자 요청사항: ${otherInst}
-    - 첨부 이미지 반영 지시: ${imgOptText}
+    - 문항 유형: ${window.currentType === 'mcp' ? 'MCP(최소능력자) 변별용 하한선 문항 (일반 특성 배제)' : '일반 문항'}
+    - 필수 포함 요소: ${isMultiple ? '선지형' : ''} ${isComplex ? '합답형(ㄱ,ㄴ,ㄷ)' : ''} ${isPic ? '그림 제시' : ''} ${isTable ? '표 제시' : ''}
+    - 추가 요청사항: ${otherInst || '없음'}
+
+    [1순위 보조 자료 - 이미지 활용 지침 (0순위에 종속됨)]
+    - ${imageInstruction}
     `;
 
     btnGenerate.classList.add('hidden');
     loadingMsg.classList.remove('hidden');
 
     try {
-        const curriculumContext = window.fullCurriculumContext || "데이터를 불러오는 중입니다.";
+        // 💡 [수정] 성취기준 데이터를 직접 조립하도록 튼튼하게 변경
+        let curriculumContext = window.fullCurriculumContext;
+        if (!curriculumContext || curriculumContext === "데이터를 불러오는 중입니다.") {
+            if (window.allDbStandards && window.allDbStandards.length > 0) {
+                curriculumContext = window.allDbStandards.map(s => {
+                    const lvls = s.levels || {};
+                    return `[과목: ${s.course || '공통'}] 단원: ${s.unit || '미분류'}\n- 성취기준 코드: ${s.standardId || '미상'}, 내용: ${s.description || '내용 없음'}\n  [성취수준] A: ${lvls.A || '없음'}, B: ${lvls.B || '없음'}, C: ${lvls.C || '없음'}, D: ${lvls.D || '없음'}, E: ${lvls.E || '없음'}`;
+                }).join('\n\n');
+                window.fullCurriculumContext = curriculumContext; // 다음 번 실행을 위해 메모리에 저장
+            } else {
+                curriculumContext = "성취기준 데이터를 불러오지 못했습니다.";
+            }
+        }
+        
+        // 차단 로직이 적용된 finalImageBase64 변수를 Payload에 담아 전송
         const payload = {
             apiKey: userApiKey,
             type: 'create', 
             curriculumContext: curriculumContext,
             conditions: conditionsText,
-            imageBase64: window.attachedImageBase64 || null,
-            imageMimeType: window.attachedImageMime || null
+            imageBase64: finalImageBase64,  
+            imageMimeType: finalImageMime   
         };
 
         const response = await fetch(GAS_WEB_APP_URL, {
@@ -1617,16 +1690,45 @@ window.generateQuestionAI = async function() {
 };
 
 // 5. 창작 결과물 화면 출력
-// ====================================================================
-// [수정/출력 핵심 로직 교체 구간] 
-// ====================================================================
-
 window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
     const container = document.getElementById('results-container');
     const idSuffix = window.resultCounter;
     
     window.extractDataToState(htmlContent);
 
+    // 💡 [핵심 수정] 문항이 생성되자마자 즉시 "프린트 출력 대기열"에 자동 추가합니다! (DB 저장 유무 무관)
+    const qText = window.currentAnalysisState.question || "문항 텍스트 없음";
+    const qSvg = window.currentAnalysisState.svg || "";
+    const qConditions = window.currentAnalysisState.conditions || [];
+    const qOptions = window.currentAnalysisState.options || [];
+    const qLevel = level.replace('+', ''); 
+    
+    let printHtml = `<div style="margin-bottom: 8px;"><strong>[성취수준 ${qLevel}]</strong><br>${qText.replace(/\n/g, '<br>')}</div>`;
+    
+    if (qSvg) {
+        printHtml += `<div style="display:flex; justify-content:center; margin: 15px 0;">${qSvg}</div>`;
+    }
+    
+    if (qConditions.length > 0) {
+        printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff;">`;
+        qConditions.forEach(cond => { printHtml += `<div style="margin-bottom: 8px;">${cond.replace(/\n/g, '<br>')}</div>`; });
+        printHtml += `</div>`;
+    }
+
+    if (qOptions.length > 0) {
+        printHtml += `<div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
+            ${qOptions.map((opt, i) => `<span>${['①','②','③','④','⑤'][i]} ${opt}</span>`).join('')}
+        </div>`;
+    }
+    
+    // 글로벌 프린트 배열에 객체 형태로 저장 (기본적으로 선택되도록 설정)
+    window.printList.push({ id: idSuffix, html: printHtml, selected: true });
+    
+    // 출력 섹션 보여주기 및 UI 업데이트
+    document.getElementById('section-print').classList.remove('hidden');
+    window.updatePrintSelectionUI();
+
+    // 화면 그리기
     const block = document.createElement('div');
     block.className = "bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl fade-in relative";
     block.id = `creation-block-${idSuffix}`;
@@ -1635,37 +1737,40 @@ window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
     block.innerHTML = `
         <h3 class="text-xl font-extrabold mb-4 text-blue-800 flex items-center gap-2">${titleText}</h3>
         <div id="q-content-${idSuffix}" class="p-6 rounded-lg bg-gray-50 border-2 border-transparent transition-colors" onmouseup="window.handleTextDrag(${idSuffix})">${htmlContent}</div>
-        
+
         <div id="edit-controls-${idSuffix}" class="mt-4 hidden bg-indigo-50 p-5 rounded-lg border border-indigo-100 shadow-inner">
             <p class="text-sm text-indigo-800 font-bold mb-3">✏️ 위 박스 안에서 수정하고 싶은 텍스트(또는 표/그래프 일부)를 마우스로 드래그하세요.</p>
-            <div id="edit-rows-container-${idSuffix}" class="flex flex-col gap-3 mb-4">
-                </div>
+            <div id="edit-rows-container-${idSuffix}" class="flex flex-col gap-3 mb-4"></div>
             <button id="btn-apply-edit-${idSuffix}" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-md shadow-md transition-transform hover:-translate-y-1" onclick="window.applyEdit(${idSuffix})">
                 ✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기
             </button>
         </div>
 
         <div class="mt-8 pt-6 border-t border-gray-200 flex justify-center space-x-4">
-            <button class="bg-white border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-lg transition-colors" onclick="window.enableEditMode(${idSuffix})">✏️ 문항 수정하기(+)</button>
-            <button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform hover:-translate-y-1" onclick="window.saveCreationToDB(${idSuffix}, '${level}')">💾 이 문항을 DB에 반영하기</button>
+            <button class="bg-white border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-lg transition-colors" onclick="window.enableEditMode(${idSuffix})">
+                ✏️ 문항 수정하기(+)
+            </button>
+            <button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform hover:-translate-y-1" onclick="window.saveCreationToDB(${idSuffix}, '${level}')">
+                💾 이 문항을 DB에 반영하기
+            </button>
         </div>
     `;
 
     container.appendChild(block);
+    
     if(window.MathJax) MathJax.typesetPromise([block]).catch(console.error);
     setTimeout(() => block.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
 };
 
-// 💡 수정하기 버튼 클릭 시 새 줄을 계속 추가하도록 변경
+// 6. 드래그 수정 기능 활성화
 window.enableEditMode = function(idSuffix) {
-    window.isEditingMode = true; 
+    window.isEditingMode = true;
     window.activeTargetId = idSuffix;
     
     const contentDiv = document.getElementById(`q-content-${idSuffix}`);
-    contentDiv.classList.add('bg-green-50', 'border-green-300', 'cursor-text'); 
+    contentDiv.classList.add('bg-green-50', 'border-green-300', 'cursor-text'); // 옅은 녹색 음영 처리
     document.getElementById(`edit-controls-${idSuffix}`).classList.remove('hidden');
     
-    // 버튼을 누를 때마다 새로운 수정 요청 행을 하나씩 추가합니다.
     window.addEditRow(idSuffix);
 };
 
@@ -1683,15 +1788,16 @@ window.addEditRow = function(idSuffix) {
     container.insertAdjacentHTML('beforeend', rowHtml);
 };
 
+// 7. 텍스트 드래그 캡처
 window.handleTextDrag = function(idSuffix) {
     if (!window.isEditingMode || window.activeTargetId !== idSuffix) return;
     let selectedText = window.getSelection().toString().trim();
+    
     if (selectedText) {
         const container = document.getElementById(`edit-rows-container-${idSuffix}`);
         const rows = container.querySelectorAll('.edit-row');
         
         if (rows.length > 0) {
-            // 가장 마지막 행의 원본 텍스트 칸이 비어있으면 거길 채우고, 아니면 새 줄을 만듦
             const lastRow = rows[rows.length - 1];
             const lastSource = lastRow.querySelector('.edit-source');
             if (!lastSource.value) {
@@ -1711,12 +1817,12 @@ window.handleTextDrag = function(idSuffix) {
     }
 };
 
+// 8. 다중 수정 요청 처리
 window.applyEdit = async function(idSuffix) {
     const container = document.getElementById(`edit-rows-container-${idSuffix}`);
     const rows = container.querySelectorAll('.edit-row');
     let instructions = [];
     
-    // 여러 줄의 수정 지시사항을 하나로 묶습니다.
     rows.forEach(r => {
         const src = r.querySelector('.edit-source').value.trim();
         const req = r.querySelector('.edit-req').value.trim();
@@ -1727,16 +1833,25 @@ window.applyEdit = async function(idSuffix) {
 
     const combinedInstruction = instructions.join('\n\n');
     const btn = document.getElementById(`btn-apply-edit-${idSuffix}`);
-    btn.textContent = "⏳ 여러 요청사항을 종합하여 문항을 수정 중입니다..."; 
+    btn.textContent = "⏳ 여러 요청사항을 종합하여 문항을 수정 중입니다...";
     btn.disabled = true;
 
     try {
         const block = document.getElementById(`creation-block-${idSuffix}`);
         const previousHtml = decodeURIComponent(block.dataset.htmlContent);
-        const payload = { apiKey: userApiKey, type: 'edit', previousHtml: previousHtml, targetText: "다중 수정", instruction: combinedInstruction };
+
+        const payload = {
+            apiKey: userApiKey,
+            type: 'edit',
+            previousHtml: previousHtml,
+            targetText: "다중 수정 진행됨",
+            instruction: combinedInstruction
+        };
 
         const response = await fetch(GAS_WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();
@@ -1746,7 +1861,7 @@ window.applyEdit = async function(idSuffix) {
         const contentDiv = document.getElementById(`q-content-${idSuffix}`);
         contentDiv.classList.remove('bg-green-50', 'border-green-300', 'cursor-text');
         document.getElementById(`edit-controls-${idSuffix}`).classList.add('hidden');
-        btn.textContent = "✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기"; 
+        btn.textContent = "✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기";
         btn.disabled = false;
 
         const newLevelObj = document.querySelector('input[name="create-level"]:checked');
@@ -1754,82 +1869,59 @@ window.applyEdit = async function(idSuffix) {
         window.appendCreationResult(data.text, `✍️ 종합 수정된 문항 (버전 ${++window.resultCounter})`, '수정본', newLevel);
 
     } catch (error) {
-        console.error(error); alert(`수정 실패: ${error.message}`);
-        btn.textContent = "✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기"; btn.disabled = false;
+        console.error(error);
+        alert(`수정 실패: ${error.message}`);
+        btn.textContent = "✨ 작성된 모든 요청사항을 종합하여 새 버전 만들기";
+        btn.disabled = false;
     }
 };
 
 window.printList = window.printList || [];
 
-// 💡 체크박스로 출력할 문항 선택하는 UI 그리기 함수
+// 💡 [추가] 프린트할 문항을 체크박스로 그리는 UI 함수
 window.updatePrintSelectionUI = function() {
     const container = document.getElementById('print-selection-container');
-    if(!container) return; // HTML 수정이 안되어 있을 경우를 대비한 방어코드
+    if(!container) return; 
     
     container.innerHTML = window.printList.map((item, idx) => `
-        <label class="flex items-center gap-2 px-4 py-2 border rounded-full cursor-pointer transition-colors ${item.selected ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white border-gray-200'}">
+        <label class="flex items-center gap-2 px-4 py-2 border rounded-full cursor-pointer transition-colors ${item.selected ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-white border-gray-200'}">
             <input type="checkbox" class="form-checkbox text-blue-600 h-5 w-5" ${item.selected ? 'checked' : ''} onchange="window.togglePrintSelection(${idx}, this.checked)">
-            <span class="font-bold ${item.selected ? 'text-blue-800' : 'text-gray-600'}">${idx + 1}번 문항</span>
+            <span class="font-bold ${item.selected ? 'text-blue-800' : 'text-gray-600'}">문항 버전 ${idx + 1}</span>
         </label>
     `).join('');
     document.getElementById('print-count').innerText = window.printList.filter(i => i.selected).length;
 };
 
+// 체크박스 클릭 시 상태 업데이트
 window.togglePrintSelection = function(idx, isChecked) {
     window.printList[idx].selected = isChecked;
     window.updatePrintSelectionUI();
 };
 
+// 9. DB 저장 버튼 로직 (프린트 배열 넣는 기능은 위로 올라갔으므로 삭제)
 window.saveCreationToDB = function(idSuffix, rawLevel) {
     const block = document.getElementById(`creation-block-${idSuffix}`);
     const htmlContent = decodeURIComponent(block.dataset.htmlContent);
     window.extractDataToState(htmlContent);
 
-    const qText = window.currentAnalysisState.question || "문항 텍스트 없음";
-    const qSvg = window.currentAnalysisState.svg || "";
-    const qConditions = window.currentAnalysisState.conditions || [];
-    const qOptions = window.currentAnalysisState.options || [];
     const qLevel = rawLevel.replace('+', ''); 
-    
-    // 💡 프린트용 HTML 구성 시 <보기>와 조건문 박스를 완벽하게 포함시킵니다.
-    let printHtml = `<div style="margin-bottom: 8px;"><strong>[성취수준 ${qLevel}]</strong><br>${qText.replace(/\n/g, '<br>')}</div>`;
-    
-    if (qSvg) {
-        printHtml += `<div style="display:flex; justify-content:center; margin: 15px 0;">${qSvg}</div>`;
-    }
-    
-    // 제시문과 보기(ㄱ,ㄴ,ㄷ) 박스 그리기
-    if (qConditions.length > 0) {
-        printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff;">`;
-        qConditions.forEach(cond => {
-            printHtml += `<div style="margin-bottom: 8px;">${cond.replace(/\n/g, '<br>')}</div>`;
-        });
-        printHtml += `</div>`;
-    }
-
-    if (qOptions.length > 0) {
-        printHtml += `<div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
-            ${qOptions.map((opt, i) => `<span>${['①','②','③','④','⑤'][i]} ${opt}</span>`).join('')}
-        </div>`;
-    }
-    
-    // 객체 형태로 선택 여부(selected)와 함께 저장
-    window.printList.push({ html: printHtml, selected: true });
-    
-    document.getElementById('section-print').classList.remove('hidden');
-    window.updatePrintSelectionUI(); // UI 업데이트
 
     document.getElementById('save-std-id').value = window.currentAnalysisState.mainStd;
     document.getElementById('save-level').value = qLevel; 
     
-    const qTextArea = document.getElementById('save-question-text'); if (qTextArea) qTextArea.value = window.currentAnalysisState.question;
-    const aText = document.getElementById('save-correct-answer'); if (aText) aText.value = window.currentAnalysisState.answer;
+    const qTextArea = document.getElementById('save-question-text');
+    if (qTextArea) qTextArea.value = window.currentAnalysisState.question;
+    const aText = document.getElementById('save-correct-answer');
+    if (aText) aText.value = window.currentAnalysisState.answer;
 
     let subStdInput = document.getElementById('save-sub-stds');
     if (!subStdInput) {
         const mainStdInput = document.getElementById('save-std-id');
-        subStdInput = document.createElement('input'); subStdInput.id = 'save-sub-stds'; subStdInput.type = 'text';
-        subStdInput.style.marginTop = '10px'; subStdInput.placeholder = '보조성취기준 (쉼표로 구분)';
+        subStdInput = document.createElement('input');
+        subStdInput.id = 'save-sub-stds';
+        subStdInput.type = 'text';
+        subStdInput.style.marginTop = '10px';
+        subStdInput.placeholder = '보조성취기준 (쉼표로 구분)';
         mainStdInput.parentNode.insertBefore(subStdInput, mainStdInput.nextSibling);
     }
     subStdInput.value = window.currentAnalysisState.subStds === '없음' ? '' : window.currentAnalysisState.subStds;
@@ -1837,8 +1929,9 @@ window.saveCreationToDB = function(idSuffix, rawLevel) {
     document.getElementById('save-modal-overlay').classList.add('active');
 };
 
+// 10. 시험지 출력 (평가원 스타일 2단 편집)
 window.printTest = function() {
-    // 체크박스로 선택된 문항들만 걸러냅니다.
+    // 체크박스로 선택된 문항만 필터링합니다.
     const selectedItems = window.printList.filter(item => item.selected);
     if (selectedItems.length === 0) return alert("출력할 문항을 하나 이상 선택해주세요.");
     
@@ -1846,19 +1939,21 @@ window.printTest = function() {
     let content = `
     <html>
     <head>
-        <title>과학 탐구 평가 시험지</title>
-        <script>window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] } };</script>
+        <title>AI 생성 과학 시험지</title>
+        <script>
+            window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] } };
+        </script>
         <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <style>
             @page { size: A4; margin: 15mm; }
-            body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; color: #111; font-size: 11pt; }
+            body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; padding: 0; margin: 0; color: #111; font-size: 11pt; }
             h2 { text-align:center; margin-bottom: 30px; border-bottom: 2px solid #111; padding-bottom: 10px; font-size: 1.8rem; }
             
             /* 평가원 모의고사 스타일 2단 편집 (다단 레이아웃) */
             .test-paper {
-                column-count: 2;         /* 2단으로 나눔 */
-                column-gap: 12mm;        /* 단 사이의 간격 */
-                column-rule: 1px solid #ccc; /* 단 사이의 구분선 */
+                column-count: 2;         
+                column-gap: 12mm;        
+                column-rule: 1px solid #ccc; 
             }
             .q-item { 
                 margin-bottom: 40px; 
@@ -1873,7 +1968,7 @@ window.printTest = function() {
         <div class="test-paper">
     `;
     
-    // 선택된 항목만 2단 레이아웃 박스 안에 그려 넣음
+    // 선택된 문항을 화면에 그립니다.
     selectedItems.forEach((item, idx) => { 
         content += `<div class="q-item"><strong style="font-size: 1.1rem; margin-right: 8px;">${idx + 1}번.</strong>${item.html}</div>`; 
     });
@@ -1881,30 +1976,38 @@ window.printTest = function() {
     content += `
         </div>
         <script>
-            window.onload = function() { 
-                // 수식이 다 렌더링될 수 있게 1.5초 후 인쇄 창 띄움
+            window.onload = function() {
+                // MathJax가 수식을 다 그릴 수 있도록 1.5초 대기 후 인쇄
                 setTimeout(function() { window.print(); }, 1500); 
             };
         </script>
     </body>
     </html>`;
     
-    printWindow.document.write(content); 
+    printWindow.document.write(content);
     printWindow.document.close();
 };
 
+// 11. 초기화
 window.resetCreationForm = function() {
     if (confirm("모든 작업 내역(출력 대기열 포함)이 초기화됩니다. 계속하시겠습니까?")) {
         document.getElementById('results-container').innerHTML = '';
         document.getElementById('section-print').classList.add('hidden');
         window.printList = []; 
-        document.getElementById('print-count').innerText = "0"; 
+        document.getElementById('print-count').innerText = "0";
         window.updatePrintSelectionUI();
         window.resultCounter = 0;
-        window.attachedImageBase64 = null; window.attachedImageMime = null;
-        document.getElementById('drop-zone-creation').innerHTML = `이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.<img id="preview-img-creation" src="" class="hidden mt-3 max-h-32 mx-auto rounded-md shadow-sm border border-gray-200">`;
+        
+        // 이미지 첨부 내역도 초기화
+        window.attachedImageBase64 = null;
+        window.attachedImageMime = null;
+        document.getElementById('drop-zone-creation').innerHTML = `
+            이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.
+            <img id="preview-img-creation" src="" class="hidden mt-3 max-h-32 mx-auto rounded-md shadow-sm border border-gray-200">
+        `;
         document.getElementById('drop-zone-creation').classList.remove('bg-indigo-50', 'border-indigo-300');
         document.getElementById('image-options-creation').classList.add('hidden');
+        
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 };

@@ -204,10 +204,13 @@
                       <input type="file" id="file-input-creation" accept="image/*" class="hidden" onchange="window.handleCreationImageFile(this.files[0])">
                       <input type="file" id="camera-input-creation" accept="image/*" capture="environment" class="hidden" onchange="window.handleCreationImageFile(this.files[0])">
                   </div>
-                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 text-sm overflow-hidden transition-colors cursor-pointer hover:bg-gray-50" id="drop-zone-creation">
-                      이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.
-                      <img id="preview-img-creation" src="" class="hidden mt-3 max-h-32 mx-auto rounded-md shadow-sm border border-gray-200">
-                  </div>
+                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 text-sm transition-colors hover:bg-gray-50 relative" id="drop-zone-creation">
+                    <div id="drop-zone-text">이곳을 클릭하거나 Ctrl+V 로 이미지를 붙여넣으세요.</div>
+                    <div id="preview-container-creation" class="hidden relative mt-3 inline-block">
+                        <img id="preview-img-creation" src="" class="max-h-32 mx-auto rounded-md shadow-sm border border-gray-200">
+                        <button id="btn-remove-creation-image" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shadow-md transition-colors cursor-pointer" title="이미지 삭제">&times;</button>
+                    </div>
+                </div>
                   
                   <div id="image-options-creation" class="hidden mt-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">
                       <p class="text-xs text-indigo-800 font-bold mb-2">✅ 이미지가 첨부되었습니다. 반영 방식을 선택하세요.</p>
