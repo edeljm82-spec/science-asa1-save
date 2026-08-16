@@ -83,8 +83,37 @@ window.extractDataToState = function(htmlString) {
     if (getText('ai-opt-3')) opts.push(getText('ai-opt-3'));
     if (getText('ai-opt-4')) opts.push(getText('ai-opt-4'));
     if (getText('ai-opt-5')) opts.push(getText('ai-opt-5'));
-    
-    window.currentAnalysisState.options = opts.length === 5 ? opts : ["① 번", "② 번", "③ 번", "④ 번", "⑤ 번"];
+
+    if (opts.length === 5) {
+        window.currentAnalysisState.options = opts;
+    } else {
+        // 💡 [안전장치] id(ai-opt-N)로 못 찾은 경우, '정답' 표시 직전에 나온 ①~⑤ 기호를 기준으로
+        // 본문 텍스트에서 직접 선지 내용을 복구합니다. (AI가 가끔 id 속성을 누락하는 경우 대비)
+        const bodyText = (doc.body ? doc.body.innerText : htmlString).replace(/\s+/g, ' ');
+        const markers = ['①', '②', '③', '④', '⑤'];
+        const answerIdx = bodyText.indexOf('정답');
+        const zone = answerIdx !== -1 ? bodyText.slice(0, answerIdx) : bodyText;
+        const positions = markers.map(m => zone.lastIndexOf(m));
+        const inOrder = positions.every((p, i) => p !== -1 && (i === 0 || p > positions[i - 1]));
+
+        let recovered = null;
+        if (inOrder) {
+            const candidate = positions.map((pos, i) => {
+                const start = pos + 1;
+                const end = i < 4 ? positions[i + 1] : zone.length;
+                return zone.slice(start, end).trim();
+            });
+            if (candidate.every(t => t.length > 0)) recovered = candidate;
+        }
+
+        if (recovered) {
+            window.currentAnalysisState.options = recovered;
+        } else {
+            // 복구도 실패하면, 혼동을 막기 위해 진짜 선지처럼 보이지 않는 명확한 오류 문구로 표시합니다.
+            console.error("선지 추출 실패. 원본 htmlContent:", htmlString);
+            window.currentAnalysisState.options = ["⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)"];
+        }
+    }
 
     if (getHtml('ai-reason-text')) window.currentAnalysisState.reason = getHtml('ai-reason-text');
     
@@ -1098,8 +1127,8 @@ window.exportBadQuestionsToJson = async function() {
             const qText = data.question || "";
             const options = data.options || [];
             
-            const isBadQuestion = qText.includes("①") || qText.includes("②") || 
-                                  (options.length > 0 && options[0].includes("① 번"));
+            const isBadQuestion = qText.includes("①") || qText.includes("②") ||
+                                  (options.length > 0 && (options[0].includes("① 번") || options[0].includes("선지 인식 실패")));
 
             if (isBadQuestion) {
                 badQuestions.push({
