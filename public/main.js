@@ -652,6 +652,17 @@ function inquiryDocId(courseKey, unitIdx, topicIdx) {
     return `${courseKey}-${unitIdx + 1}-${topicIdx + 1}`;
 }
 
+// 예전/새 활동지 모두에서 AI가 넣은 밑줄("___") 텍스트를 제거합니다. 답 쓸 공간은 레이아웃이 확보합니다.
+function stripAnswerBlanks(html) {
+    return html.replace(/_{2,}/g, '').replace(/\s+$/, '').trim();
+}
+
+function getProcessItems(processHtml) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `<ol>${processHtml}</ol>`;
+    return Array.from(wrapper.querySelectorAll('li')).map(li => stripAnswerBlanks(li.innerHTML));
+}
+
 window.showInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
     openModal('<div style="text-align:center; padding: 4rem; font-size: 1.2rem;">활동지를 불러오는 중입니다... ⏳</div>');
 
@@ -762,7 +773,7 @@ function renderInquiryModal(data, courseKey, unitIdx, topicIdx) {
 
             <div style="margin-bottom:1rem;">
                 <strong style="color:#0f172a; display:block; margin-bottom:0.5rem;">📋 탐구 과정</strong>
-                <ol style="padding-left:1.4rem; display:flex; flex-direction:column; gap:0.8rem; color:#1e293b; line-height:1.6;">${data.processHtml}</ol>
+                <ol style="padding-left:1.4rem; display:flex; flex-direction:column; gap:1.2rem; color:#1e293b; line-height:1.6;">${getProcessItems(data.processHtml).map(html => `<li>${html}</li>`).join('')}</ol>
             </div>
 
             <details style="background:#fdf4ff; border:1px solid #f0abfc; border-radius:8px; padding:1rem;">
@@ -781,7 +792,13 @@ window.printInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
     if (!docSnap.exists()) return;
     const data = docSnap.data();
 
-    const svgHtml = data.svg ? `<div style="display:flex; justify-content:center; margin: 15px 0;">${data.svg}</div>` : '';
+    const svgHtml = data.svg ? `<div class="svg-wrap">${data.svg}</div>` : '';
+    const processItemsHtml = getProcessItems(data.processHtml).map((html, i) => `
+        <div class="process-item">
+            <div class="process-num">${i + 1}</div>
+            <div class="process-text">${html}</div>
+        </div>
+    `).join('');
 
     const printWindow = window.open('', '_blank');
     const content = `
@@ -790,16 +807,22 @@ window.printInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
         <title>${data.title} - 탐구활동지</title>
         <style>
             @page { size: A4; margin: 18mm; }
-            body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.7; color: #111; padding:0; margin:0; font-size: 11.5pt; }
-            .header { border-bottom: 3px solid #111; padding-bottom: 12px; margin-bottom: 20px; }
+            html, body { height: 261mm; }
+            body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; color: #111; padding:0; margin:0; font-size: 11.5pt; display: flex; flex-direction: column; }
+            .header { flex-shrink: 0; border-bottom: 3px solid #111; padding-bottom: 10px; margin-bottom: 14px; }
             .meta { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
-            h1 { font-size: 1.5rem; margin: 4px 0 0; }
-            .student-info { display:flex; gap: 30px; margin-top: 14px; font-size: 0.95rem; }
+            h1 { font-size: 1.4rem; margin: 4px 0 0; }
+            .student-info { display:flex; gap: 30px; margin-top: 10px; font-size: 0.95rem; }
             .student-info span { border-bottom: 1px solid #999; padding: 2px 40px 2px 4px; }
-            .box { border: 1px solid #999; border-radius: 6px; padding: 14px 16px; margin-bottom: 18px; }
-            .box-title { font-weight: bold; margin-bottom: 8px; }
-            ol { padding-left: 22px; }
-            ol li { margin-bottom: 22px; }
+            .box { flex-shrink: 0; border: 1px solid #999; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
+            .box-title { font-weight: bold; margin-bottom: 6px; }
+            .svg-wrap { flex-shrink: 0; display:flex; justify-content:center; margin-bottom: 12px; }
+            .process-box { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+            .process-list { flex: 1; display: flex; flex-direction: column; }
+            .process-item { flex: 1; display: flex; align-items: flex-start; gap: 10px; padding: 8px 2px; border-bottom: 1px dashed #bbb; }
+            .process-item:last-child { border-bottom: none; }
+            .process-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #111; color: #fff; display:flex; align-items:center; justify-content:center; font-size: 0.85rem; font-weight: bold; }
+            .process-text { flex: 1; }
         </style>
     </head>
     <body>
@@ -812,8 +835,10 @@ window.printInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
         <div class="box"><div class="box-title">🎯 학습 목표</div>${data.goal}</div>
         <div class="box"><div class="box-title">🧰 준비물</div>${data.materials}</div>
         ${svgHtml}
-        <div class="box-title">📋 탐구 과정</div>
-        <ol>${data.processHtml}</ol>
+        <div class="process-box">
+            <div class="box-title">📋 탐구 과정</div>
+            <div class="process-list">${processItemsHtml}</div>
+        </div>
 
         <script>
             window.onload = function() { setTimeout(function(){ window.print(); }, 800); };
