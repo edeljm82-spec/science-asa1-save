@@ -53,6 +53,8 @@ main {
 
 .tab-nav {
   display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
   border-bottom: 2px solid var(--border-color);
   margin-bottom: 2rem;
 }
@@ -80,6 +82,9 @@ main {
 }
 
 @media (max-width: 768px) {
+  .tab-nav {
+    align-items: flex-start;
+  }
   .tab-button {
     padding: 0.8rem 0.6rem;
     font-size: 0.95rem;
