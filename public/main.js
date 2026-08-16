@@ -549,24 +549,280 @@ window.checkAnswer = function(btn, selected, correct) {
 };
 
 // 5. Inquiry Logic
+// 💡 2022 개정 교육과정 공식 '필수탐구활동' 목록 (제목만 사용 - 저작권 문제 없음. 내용은 AI가 매번 새로 창작함)
+const INQUIRY_TOPICS = {
+    int1: {
+        label: "통합과학1",
+        units: [
+            { name: "(1) 과학의 기초", topics: [
+                "미시세계와 거시세계의 물체의 크기에 따른 차이점 분석하기",
+                "일상생활에서 측정 표준이 활용되는 사례 탐색하기",
+                "스마트 기기를 활용하여 여러 가지 기본량을 측정하고 분석하기"
+            ]},
+            { name: "(2) 물질과 규칙성", topics: [
+                "분광기를 활용하여 다양한 물질이 방출하는 스펙트럼을 관찰·비교하기",
+                "지구와 생명체의 구성 성분을 비교하여, 우주와 지구 역사를 통한 구성 성분의 유래 탐구하기",
+                "같은 족 원소들의 유사성을 탐구하는 실험 설계하기",
+                "이온 결합 화합물과 공유 결합 화합물의 성질을 비교하는 실험하기",
+                "DNA 모형을 제작하고 DNA의 구조적 특징과 규칙성 탐구하기"
+            ]},
+            { name: "(3) 시스템과 상호작용", topics: [
+                "화산 분출로 인한 환경·사회경제적 피해의 종류를 조사하고, 지구와 생명 시스템 측면에서 피해를 줄이기 위한 대책 수립하기",
+                "자유 낙하와 수평으로 던진 물체의 운동을 시각화하여 비교하기",
+                "교통수단과 스포츠 등에서 충격을 줄이는 방법 탐색하기",
+                "막을 통한 물질의 이동을 실험하고 생명 활동 유지에서 세포막의 역할 탐구하기",
+                "효소 작용의 원리에 관한 실험하기"
+            ]}
+        ]
+    },
+    int2: {
+        label: "통합과학2",
+        units: [
+            { name: "(1) 변화와 다양성", topics: [
+                "생물 대멸종의 원인과 그 이후의 변화를 설명하는 여러 가설들의 타당성 평가하기",
+                "자연선택 과정에 대한 모의실험하기",
+                "산과 염기를 혼합할 때 용액의 온도를 측정하여 그래프로 나타내기",
+                "가열장치 없이 물과 산화 칼슘을 이용한 음식 조리 방법 설계하고 실험하기"
+            ]},
+            { name: "(2) 환경과 에너지", topics: [
+                "개체군 변동 모의실험하기",
+                "지구온난화에 따른 지구 열수지 변동 탐구하기",
+                "기후변화로 인한 생태계와 지구계의 미래 시나리오 구상하기",
+                "자석과 코일의 상대 운동에 의해 운동 에너지가 전기 에너지로 전환되는 과정 탐구하기"
+            ]},
+            { name: "(3) 과학과 미래 사회", topics: [
+                "핵산과 단백질을 이용한 감염병 진단 기술 체험하기",
+                "디지털 탐구 도구를 활용한 실시간 생활 데이터 측정하기",
+                "일상생활에 활용되는 로봇의 특징 분석 및 개선방안 고안하기"
+            ]}
+        ]
+    }
+};
+
+let currentInquiryCourse = 'int1';
+
 function initInquiry() {
-    const chips = document.querySelectorAll('.pub-chip');
-    if (chips.length === 0) return;
-    
-    chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            chips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            renderInquiryActivities(chip.textContent);
+    const selectContainer = document.getElementById('inquiry-course-select');
+    if (!selectContainer) return;
+
+    selectContainer.innerHTML = Object.keys(INQUIRY_TOPICS).map(key => `
+        <button class="inquiry-course-btn" data-course="${key}" style="padding: 0.7rem 1.3rem; border-radius: 8px; border: 2px solid ${key === currentInquiryCourse ? '#2563eb' : '#cbd5e1'}; background: ${key === currentInquiryCourse ? '#2563eb' : '#f8fafc'}; color: ${key === currentInquiryCourse ? 'white' : '#1e3a8a'}; font-weight: bold; cursor: pointer; transition: 0.2s;">
+            ${INQUIRY_TOPICS[key].label}
+        </button>
+    `).join('');
+
+    selectContainer.querySelectorAll('.inquiry-course-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentInquiryCourse = btn.dataset.course;
+            initInquiry();
+            renderInquiryUnits(currentInquiryCourse);
         });
     });
+
+    renderInquiryUnits(currentInquiryCourse);
 }
 
-function renderInquiryActivities(filter = '전체') {
-    const container = document.getElementById('inquiry-list') || document.getElementById('inquiry-container');
-    if (!container) return;
-    container.innerHTML = '<div style="padding: 3rem; text-align: center; color: #64748b;">필수탐구활동 데이터도 데이터베이스로 이전 작업 중입니다. 🚧</div>';
+// 나브 클릭 시 다시 호출되는 진입점 (initNavigation에서 호출)
+function renderInquiryActivities() {
+    renderInquiryUnits(currentInquiryCourse);
 }
+
+function renderInquiryUnits(courseKey) {
+    const container = document.getElementById('inquiry-container');
+    if (!container) return;
+
+    const course = INQUIRY_TOPICS[courseKey];
+    if (!course) { container.innerHTML = ''; return; }
+
+    container.innerHTML = course.units.map((unit, unitIdx) => `
+        <div class="inquiry-unit-section" style="margin-bottom: 2rem;">
+            <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-main); border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">${unit.name}</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                ${unit.topics.map((topic, topicIdx) => `
+                    <button class="inquiry-topic-btn" onclick="window.showInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="text-align: left; padding: 1rem 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; cursor: pointer; font-size: 0.98rem; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: 0.2s;" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0'">
+                        🔬 ${topic}
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function inquiryDocId(courseKey, unitIdx, topicIdx) {
+    return `${courseKey}-${unitIdx + 1}-${topicIdx + 1}`;
+}
+
+window.showInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
+    openModal('<div style="text-align:center; padding: 4rem; font-size: 1.2rem;">활동지를 불러오는 중입니다... ⏳</div>');
+
+    const docId = inquiryDocId(courseKey, unitIdx, topicIdx);
+    try {
+        const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
+        if (docSnap.exists()) {
+            renderInquiryModal(docSnap.data(), courseKey, unitIdx, topicIdx);
+        } else {
+            const course = INQUIRY_TOPICS[courseKey];
+            const topicTitle = course.units[unitIdx].topics[topicIdx];
+            document.getElementById('modal-body').innerHTML = `
+                <div style="text-align:center; padding: 3rem;">
+                    <h3 style="margin-bottom: 1rem;">아직 준비되지 않은 활동지입니다.</h3>
+                    <p style="color:#64748b; margin-bottom: 1.5rem;">"${topicTitle}"</p>
+                    <button onclick="window.generateInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="padding: 0.8rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">✨ AI로 지금 생성하기</button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error(error);
+        document.getElementById('modal-body').innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">활동지를 불러오지 못했습니다.</div>';
+    }
+};
+
+window.generateInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
+    if (!currentUser) { alert("구글 로그인을 먼저 해주세요."); return; }
+    if (!userApiKey) { document.getElementById('api-modal-overlay').classList.add('active'); return; }
+
+    const course = INQUIRY_TOPICS[courseKey];
+    const unit = course.units[unitIdx];
+    const topicTitle = unit.topics[topicIdx];
+
+    document.getElementById('modal-body').innerHTML = '<div style="text-align:center; padding: 4rem; font-size: 1.2rem;">AI가 활동지를 창작하는 중입니다... ⏳</div>';
+
+    try {
+        const payload = { apiKey: userApiKey, type: 'inquiry', course: course.label, unit: unit.name, topicTitle: topicTitle };
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || '백엔드 통신 오류');
+
+        const parsed = parseInquiryHtml(data.text);
+        const docData = {
+            course: course.label,
+            unit: unit.name,
+            title: topicTitle,
+            goal: parsed.goal,
+            materials: parsed.materials,
+            svg: parsed.svg,
+            processHtml: parsed.processHtml,
+            exampleAnswerHtml: parsed.exampleAnswerHtml,
+            createdAt: new Date()
+        };
+
+        await setDoc(doc(db, "inquiry_worksheets", inquiryDocId(courseKey, unitIdx, topicIdx)), docData);
+        renderInquiryModal(docData, courseKey, unitIdx, topicIdx);
+    } catch (error) {
+        console.error(error);
+        document.getElementById('modal-body').innerHTML = `<div style="text-align:center; padding: 3rem; color: #ef4444;">활동지 생성에 실패했습니다.<br>${error.message}</div>`;
+    }
+};
+
+function parseInquiryHtml(htmlString) {
+    const parser = new DOMParser();
+    const parsedDoc = parser.parseFromString(htmlString, 'text/html');
+    const getHtml = (id) => parsedDoc.getElementById(id) ? parsedDoc.getElementById(id).innerHTML.trim() : '';
+    const getText = (id) => parsedDoc.getElementById(id) ? parsedDoc.getElementById(id).innerText.trim() : '';
+
+    const svgRaw = getHtml('ia-svg');
+
+    return {
+        goal: getText('ia-goal'),
+        materials: getText('ia-materials'),
+        svg: svgRaw.includes('<svg') ? svgRaw : '',
+        processHtml: getHtml('ia-process'),
+        exampleAnswerHtml: getHtml('ia-example-answer')
+    };
+}
+
+function renderInquiryModal(data, courseKey, unitIdx, topicIdx) {
+    const svgHtml = data.svg ? `<div style="display:flex; justify-content:center; margin: 1rem 0; padding: 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">${data.svg}</div>` : '';
+
+    const content = `
+        <div style="padding: 0.5rem 1rem;">
+            <div style="display:flex; justify-content: space-between; align-items:flex-start; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <div style="font-size: 0.85rem; color:#64748b; margin-bottom:0.3rem;">${data.course} · ${data.unit}</div>
+                    <h3 style="font-size:1.3rem; font-weight:800; color:#0f172a;">🔬 ${data.title}</h3>
+                </div>
+                <button onclick="window.printInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="flex-shrink:0; padding: 0.6rem 1rem; background:#0f172a; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">🖨️ 인쇄하기</button>
+            </div>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:1rem; margin-bottom:1rem;">
+                <strong style="color:#1d4ed8;">🎯 학습 목표</strong>
+                <p style="margin: 0.4rem 0 0; color:#1e3a8a;">${data.goal}</p>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin-bottom:1rem;">
+                <strong style="color:#475569;">🧰 준비물</strong>
+                <p style="margin: 0.4rem 0 0; color:#334155;">${data.materials}</p>
+            </div>
+
+            ${svgHtml}
+
+            <div style="margin-bottom:1rem;">
+                <strong style="color:#0f172a; display:block; margin-bottom:0.5rem;">📋 탐구 과정</strong>
+                <ol style="padding-left:1.4rem; display:flex; flex-direction:column; gap:0.8rem; color:#1e293b; line-height:1.6;">${data.processHtml}</ol>
+            </div>
+
+            <details style="background:#fdf4ff; border:1px solid #f0abfc; border-radius:8px; padding:1rem;">
+                <summary style="cursor:pointer; font-weight:bold; color:#a21caf;">💡 (교사용) 예시 답안 보기</summary>
+                <div style="margin-top:0.8rem; color:#4a044e; line-height:1.6;">${data.exampleAnswerHtml}</div>
+            </details>
+        </div>
+    `;
+
+    document.getElementById('modal-body').innerHTML = content;
+    if (window.MathJax) MathJax.typesetPromise([document.getElementById('modal-body')]).catch((err) => console.error('MathJax 렌더링 에러:', err));
+}
+
+window.printInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
+    const docSnap = await getDoc(doc(db, "inquiry_worksheets", inquiryDocId(courseKey, unitIdx, topicIdx)));
+    if (!docSnap.exists()) return;
+    const data = docSnap.data();
+
+    const svgHtml = data.svg ? `<div style="display:flex; justify-content:center; margin: 15px 0;">${data.svg}</div>` : '';
+
+    const printWindow = window.open('', '_blank');
+    const content = `
+    <html>
+    <head>
+        <title>${data.title} - 탐구활동지</title>
+        <style>
+            @page { size: A4; margin: 18mm; }
+            body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.7; color: #111; padding:0; margin:0; font-size: 11.5pt; }
+            .header { border-bottom: 3px solid #111; padding-bottom: 12px; margin-bottom: 20px; }
+            .meta { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
+            h1 { font-size: 1.5rem; margin: 4px 0 0; }
+            .student-info { display:flex; gap: 30px; margin-top: 14px; font-size: 0.95rem; }
+            .student-info span { border-bottom: 1px solid #999; padding: 2px 40px 2px 4px; }
+            .box { border: 1px solid #999; border-radius: 6px; padding: 14px 16px; margin-bottom: 18px; }
+            .box-title { font-weight: bold; margin-bottom: 8px; }
+            ol { padding-left: 22px; }
+            ol li { margin-bottom: 22px; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="meta">${data.course} · ${data.unit} · 필수탐구활동</div>
+            <h1>${data.title}</h1>
+            <div class="student-info"><span>이름:</span><span>모둠/번호:</span></div>
+        </div>
+
+        <div class="box"><div class="box-title">🎯 학습 목표</div>${data.goal}</div>
+        <div class="box"><div class="box-title">🧰 준비물</div>${data.materials}</div>
+        ${svgHtml}
+        <div class="box-title">📋 탐구 과정</div>
+        <ol>${data.processHtml}</ol>
+
+        <script>
+            window.onload = function() { setTimeout(function(){ window.print(); }, 800); };
+        </script>
+    </body>
+    </html>`;
+    printWindow.document.write(content);
+    printWindow.document.close();
+};
 
 // 6. Analysis Logic
 function initAnalysis() {

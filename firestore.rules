@@ -15,8 +15,14 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // 필수탐구활동: 현재 프론트엔드에서는 사용하지 않지만, 읽기는 유지하고 쓰기만 제한
+    // 필수탐구활동 (예전 데이터, 현재 프론트엔드에서는 사용하지 않지만 읽기는 유지)
     match /inquiry_activities/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 필수탐구활동 활동지 (AI 창작): 누구나 볼 수 있어야 함, 생성/수정은 로그인한 사용자만
+    match /inquiry_worksheets/{docId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
