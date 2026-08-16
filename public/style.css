@@ -83,11 +83,11 @@ main {
 
 @media (max-width: 768px) {
   .tab-nav {
-    align-items: flex-start;
+    align-items: center;
   }
   .tab-button {
-    padding: 0.8rem 0.6rem;
-    font-size: 0.95rem;
+    padding: 0.9rem 0.8rem;
+    font-size: 1.1rem;
   }
   .tab-label-full {
     display: none;
