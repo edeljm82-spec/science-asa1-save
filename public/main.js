@@ -2,7 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 // 👇 맨 끝에 getDocs, query, where를 추가했습니다.
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// 👇 오프라인에서도 이전에 불러온 데이터를 볼 수 있도록 persistence 관련 모듈을 추가했습니다.
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDV_er1ecvJ6ll_6nqiHe10W7nX6kvEyt4",
@@ -15,7 +16,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+// 오프라인 캐시(IndexedDB)를 켜서, 한 번 불러온 데이터는 인터넷이 없어도 기기에서 그대로 보이게 합니다.
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
 const provider = new GoogleAuthProvider();
 
 window.db = db;
@@ -221,7 +225,12 @@ async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
         window.cachedStandards = standardsData;
 
         if (standardsData.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">등록된 성취기준 데이터가 없습니다.</div>';
+            // 💡 [수정] 네트워크가 없어서 못 가져온 것인지, 진짜로 등록된 데이터가 없는 것인지 구분해서 안내합니다.
+            if (!navigator.onLine || querySnapshot.metadata.fromCache) {
+                container.innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">인터넷 연결이 없어 성취기준 데이터를 불러올 수 없습니다.<br>와이파이 또는 데이터 연결을 확인한 후 새로고침해주세요.</div>';
+            } else {
+                container.innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">등록된 성취기준 데이터가 없습니다.</div>';
+            }
             return;
         }
 
