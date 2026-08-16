@@ -75,6 +75,24 @@ main {
   border-bottom-color: var(--primary-color);
 }
 
+.tab-label-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tab-button {
+    padding: 0.8rem 0.6rem;
+    font-size: 0.95rem;
+  }
+  .tab-label-full {
+    display: none;
+  }
+  .tab-label-mobile {
+    display: block;
+    line-height: 1.3;
+  }
+}
+
 .tab-content {
   display: none;
 }
