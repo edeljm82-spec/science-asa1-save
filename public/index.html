@@ -156,11 +156,11 @@
           <h2 class="text-lg font-semibold mb-4">2. 성취기준 및 성취수준 설정</h2>
           
           <div id="standards-container" class="space-y-4">
-              <div class="flex space-x-2 items-center standard-row fade-in">
-                  <span class="w-16 text-center font-bold text-gray-600 bg-gray-100 py-2 rounded-md border border-gray-200">주성취</span>
-                  <select id="course-select-0" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 focus:ring-blue-500 font-medium" onchange="window.loadUnits(this, 0)"><option value="">과목 선택</option></select>
-                  <select id="unit-select-0" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 focus:ring-blue-500 font-medium" onchange="window.loadStandards(this, 0)"><option value="">단원 선택</option></select>
-                  <div class="relative flex-[2]">
+              <div class="flex flex-wrap gap-2 items-center standard-row fade-in">
+                  <span class="w-16 shrink-0 text-center font-bold text-gray-600 bg-gray-100 py-2 rounded-md border border-gray-200">주성취</span>
+                  <select id="course-select-0" class="border p-2 rounded-md flex-1 min-w-[110px] text-sm bg-gray-50 focus:ring-blue-500 font-medium" onchange="window.loadUnits(this, 0)"><option value="">과목 선택</option></select>
+                  <select id="unit-select-0" class="border p-2 rounded-md flex-1 min-w-[110px] text-sm bg-gray-50 focus:ring-blue-500 font-medium" onchange="window.loadStandards(this, 0)"><option value="">단원 선택</option></select>
+                  <div class="relative flex-[2] min-w-[200px]">
                       <input type="text" id="std-input-0" class="w-full border p-2 rounded-md text-sm cursor-pointer custom-select-input focus:ring-blue-500 bg-white" readonly placeholder="이곳을 눌러 성취기준 선택" onclick="window.toggleDropdown(this)">
                       <ul id="std-list-0" class="absolute z-10 w-full bg-white border mt-1 rounded-md shadow-lg hidden max-h-40 overflow-y-auto text-sm custom-select-list"></ul>
                   </div>
@@ -173,8 +173,8 @@
           </button>
 
           <div class="mt-6 flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <span class="w-24 font-extrabold text-blue-800">🎯 성취수준</span>
-              <div id="level-container" class="flex flex-wrap gap-6 ml-4">
+              <span class="w-24 shrink-0 break-keep font-extrabold text-blue-800">🎯 성취 수준</span>
+              <div id="level-container" class="grid grid-cols-2 gap-x-6 gap-y-3 ml-4">
                   </div>
           </div>
       </section>

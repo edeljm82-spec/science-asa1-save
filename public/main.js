@@ -1998,12 +1998,12 @@ window.addSubStandard = function() {
     window.subStandardCount++;
     const container = document.getElementById('standards-container');
     const newRow = document.createElement('div');
-    newRow.className = "flex space-x-2 items-center standard-row fade-in mt-3";
+    newRow.className = "flex flex-wrap gap-2 items-center standard-row fade-in mt-3";
     newRow.innerHTML = `
-        <span class="w-16 text-center font-bold text-gray-500 bg-gray-50 py-2 rounded-md border border-gray-200">보조</span>
-        <select id="course-select-${window.subStandardCount}" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 font-medium" onchange="window.loadUnits(this, ${window.subStandardCount})"><option value="">과목 선택</option></select>
-        <select id="unit-select-${window.subStandardCount}" class="border p-2 rounded-md flex-1 text-sm bg-gray-50 font-medium" onchange="window.loadStandards(this, ${window.subStandardCount})"><option value="">단원 선택</option></select>
-        <div class="relative flex-[2]">
+        <span class="w-16 shrink-0 text-center font-bold text-gray-500 bg-gray-50 py-2 rounded-md border border-gray-200">보조</span>
+        <select id="course-select-${window.subStandardCount}" class="border p-2 rounded-md flex-1 min-w-[110px] text-sm bg-gray-50 font-medium" onchange="window.loadUnits(this, ${window.subStandardCount})"><option value="">과목 선택</option></select>
+        <select id="unit-select-${window.subStandardCount}" class="border p-2 rounded-md flex-1 min-w-[110px] text-sm bg-gray-50 font-medium" onchange="window.loadStandards(this, ${window.subStandardCount})"><option value="">단원 선택</option></select>
+        <div class="relative flex-[2] min-w-[200px]">
             <input type="text" id="std-input-${window.subStandardCount}" class="w-full border p-2 rounded-md text-sm cursor-pointer custom-select-input bg-white" readonly placeholder="이곳을 눌러 보조 성취기준 선택" onclick="window.toggleDropdown(this)">
             <ul id="std-list-${window.subStandardCount}" class="absolute z-10 w-full bg-white border mt-1 rounded-md shadow-lg hidden max-h-40 overflow-y-auto text-sm custom-select-list"></ul>
         </div>
