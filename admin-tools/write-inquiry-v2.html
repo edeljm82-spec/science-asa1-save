@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>필수탐구활동 세트2 일괄 저장</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #0f172a; }
+  button { padding: 0.7rem 1.3rem; font-size: 1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; margin-right: 0.5rem; }
+  #btn-login { background: #2563eb; color: white; }
+  #btn-write { background: #16a34a; color: white; }
+  #btn-write:disabled { background: #94a3b8; cursor: not-allowed; }
+  #status { white-space: pre-wrap; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; line-height: 1.6; max-height: 60vh; overflow-y: auto; }
+  .ok { color: #16a34a; }
+  .err { color: #dc2626; }
+  .skip { color: #ca8a04; }
+</style>
+</head>
+<body>
+  <h1>필수탐구활동 &mdash; 두 번째 세트(변형 2) 일괄 저장</h1>
+  <p>구글 로그인 후 아래 버튼을 누르면, 47개 주제의 두 번째 활동지 세트를 <code>inquiry_worksheets</code> 컬렉션에 <code>{과목}-{단원}-{주제}-2</code> 문서ID로 저장합니다. 기존 첫 번째 세트는 건드리지 않습니다.</p>
+  <div>
+    <span id="login-status">로그인 필요</span><br><br>
+    <button id="btn-login">Google로 로그인</button>
+    <button id="btn-write" disabled>47개 활동지 저장 시작</button>
+    <button id="btn-fix" disabled>깨진 문서 수정 (int2-1-3)</button>
+  </div>
+  <p style="color:#64748b; font-size:0.85rem;">"깨진 문서 수정"은 예전 생성 실패로 예시답안이 비어있고 탐구과정이 중간에 끊긴 <code>int2-1-3</code>(변형 1) 문서 하나만 완전한 내용으로 덮어씁니다.</p>
+  <div id="status"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { WORKSHEETS_V2 } from "./inquiry-v2-data.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDV_er1ecvJ6ll_6nqiHe10W7nX6kvEyt4",
+  authDomain: "science-asa1-13844073-164bb.firebaseapp.com",
+  projectId: "science-asa1-13844073-164bb",
+  storageBucket: "science-asa1-13844073-164bb.firebasestorage.app",
+  messagingSenderId: "946177749957",
+  appId: "1:946177749957:web:c3a98314a79871d219d1ac"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginStatus = document.getElementById('login-status');
+const btnLogin = document.getElementById('btn-login');
+const btnWrite = document.getElementById('btn-write');
+const btnFix = document.getElementById('btn-fix');
+const statusEl = document.getElementById('status');
+
+// 예전 생성 실패로 예시답안이 비어있고 탐구과정이 중간에 끊긴 변형 1 문서를 완전한 내용으로 교체
+const FIX_INT2_1_3 = {
+  id: "int2-1-3", course: "통합과학2", unit: "(1) 변화와 다양성",
+  title: "산과 염기를 혼합할 때 용액의 온도를 측정하여 그래프로 나타내기",
+  goal: "산과 염기를 여러 부피 비율로 섞어 온도 변화를 측정하고 그래프로 나타내어, 중화 반응이 가장 활발히 일어나는 부피비(중화점)를 찾는다.",
+  materials: "1.0 M 염산(HCl), 1.0 M 수산화나트륨(NaOH) 수용액, 간이 스티로폼 열량컵 6개, 50 mL 눈금실린더 2개, 디지털 온도계, 보안경, 실험용 고무장갑, 비커(100 mL) 2개",
+  svg: "",
+  process: [
+    "실험을 시작하기 전, 준비된 1.0 M 염산과 1.0 M 수산화나트륨 수용액의 처음 온도를 각각 측정하여 기록합니다. 이때 두 수용액의 처음 온도가 서로 같아야 하는 과학적 이유를 서술해 봅시다.",
+    "간이 스티로폼 열량컵 6개에 각각 기호를 쓰고, 염산과 수산화나트륨 수용액의 부피 합이 항상 50 mL가 되도록 비율(예: 5:45, 15:35, 25:25, 35:15, 45:5 mL 등)을 달리하여 빠르게 혼합한 뒤, 온도계로 각 컵의 최고 온도를 측정하여 기록합니다. 부피 합을 항상 50 mL로 고정하는 까닭은 무엇일까요?",
+    "측정한 각 컵의 최고 온도에서 처음 온도를 뺀 온도 변화량(Δt)을 계산하고, 가로축을 염산의 부피(mL), 세로축을 온도 변화량으로 하여 그래프를 그립니다.",
+    "그래프에서 온도 변화량이 가장 큰(그래프의 꼭짓점에 해당하는) 지점의 염산과 수산화나트륨 부피비를 찾아, 이 비율이 의미하는 것이 무엇인지 중화 반응과 관련지어 서술합니다."
+  ],
+  answers: [
+    "두 용액의 처음 온도가 다르면 온도 변화가 반응열 때문인지 단순 온도차 때문인지 구분할 수 없기 때문에 처음 온도를 같게 맞춰야 함",
+    "혼합 용액의 전체 양(열용량)을 일정하게 유지해야 온도 변화량만으로 발생한 열량을 컵끼리 공정하게 비교할 수 있기 때문",
+    "혼합 비율별 온도 변화량을 나타낸 그래프 완성 (가운데 부근에서 최고점을 이루는 산 모양)",
+    "그래프의 꼭짓점(온도 변화가 최대인 지점)은 산과 염기가 과부족 없이 완전히 중화되는 지점(중화점)을 의미함"
+  ]
+};
+
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  statusEl.appendChild(line);
+  statusEl.scrollTop = statusEl.scrollHeight;
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginStatus.textContent = `로그인됨: ${user.email}`;
+    btnWrite.disabled = false;
+    btnFix.disabled = false;
+  } else {
+    loginStatus.textContent = '로그인 필요';
+    btnWrite.disabled = true;
+    btnFix.disabled = true;
+  }
+});
+
+btnLogin.addEventListener('click', async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    log('로그인 실패: ' + e.message, 'err');
+  }
+});
+
+function buildDocData(item) {
+  const processHtml = item.process.map(p => `<li>${p}</li>`).join('\n    ');
+  const exampleAnswerHtml = item.answers.map((a, i) => `${i + 1}. ${a}`).join('<br>');
+  return {
+    course: item.course,
+    unit: item.unit,
+    title: item.title,
+    goal: item.goal,
+    materials: item.materials,
+    svg: item.svg || "",
+    processHtml,
+    exampleAnswerHtml,
+    createdAt: new Date()
+  };
+}
+
+btnWrite.addEventListener('click', async () => {
+  btnWrite.disabled = true;
+  statusEl.innerHTML = '';
+  log(`총 ${WORKSHEETS_V2.length}개 저장을 시작합니다...`);
+
+  let done = 0, skipped = 0, failed = 0;
+  for (const item of WORKSHEETS_V2) {
+    try {
+      const ref = doc(db, "inquiry_worksheets", item.id);
+      const existing = await getDoc(ref);
+      if (existing.exists() && existing.data().processHtml) {
+        log(`SKIP (이미 존재) ${item.id}`, 'skip');
+        skipped++;
+        continue;
+      }
+      await setDoc(ref, buildDocData(item));
+      log(`OK ${item.id} - ${item.title}`, 'ok');
+      done++;
+    } catch (e) {
+      log(`FAIL ${item.id}: ${e.message}`, 'err');
+      failed++;
+    }
+  }
+
+  log(`\n완료: 저장 ${done} / 건너뜀 ${skipped} / 실패 ${failed}`);
+  btnWrite.disabled = false;
+});
+
+btnFix.addEventListener('click', async () => {
+  btnFix.disabled = true;
+  log('int2-1-3 (변형 1) 문서를 완전한 내용으로 덮어씁니다...');
+  try {
+    const ref = doc(db, "inquiry_worksheets", FIX_INT2_1_3.id);
+    await setDoc(ref, buildDocData(FIX_INT2_1_3));
+    log(`OK int2-1-3 수정 완료`, 'ok');
+  } catch (e) {
+    log(`FAIL int2-1-3: ${e.message}`, 'err');
+  }
+  btnFix.disabled = false;
+});
+</script>
+</body>
+</html>

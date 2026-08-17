@@ -57,11 +57,33 @@ window.currentAnalysisState = {
 };
 
 // HTML에서 데이터를 추출하여 상태 객체를 업데이트하는 안전한 헬퍼 함수
+// 💡 SVG 안의 marker/gradient 등 id(및 그것을 가리키는 url(#id))가 다른 문항의 SVG와 겹치면,
+// 브라우저는 문서 전체에서 처음 매칭되는 id를 사용해버려 화살표 등이 엉뚱하게(또는 안 보이게) 렌더링됩니다.
+// 문항마다 고유한 접미사를 붙여 이 충돌을 원천적으로 막습니다.
+let svgIdNamespaceCounter = 0;
+function namespaceSvgIds(svgString) {
+    const suffix = '-' + Date.now().toString(36) + '-' + (svgIdNamespaceCounter++);
+    const ids = new Set();
+    svgString.replace(/\bid="([^"]+)"/g, (m, id) => { ids.add(id); return m; });
+    let result = svgString;
+    ids.forEach(id => {
+        const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const newId = id + suffix;
+        result = result
+            .replace(new RegExp(`id="${escaped}"`, 'g'), `id="${newId}"`)
+            .replace(new RegExp(`url\\(#${escaped}\\)`, 'g'), `url(#${newId})`)
+            .replace(new RegExp(`href="#${escaped}"`, 'g'), `href="#${newId}"`);
+    });
+    return result;
+}
+
 window.extractDataToState = function(htmlString) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
     
-    const getText = (id) => doc.getElementById(id) ? doc.getElementById(id).innerText.trim() : null;
+    // 💡 innerText는 DOMParser로 만든(화면에 붙지 않은) 문서에서는 레이아웃이 없어 빈 값을 반환할 수 있으므로,
+    // 레이아웃과 무관하게 항상 안정적으로 동작하는 textContent를 사용합니다.
+    const getText = (id) => doc.getElementById(id) ? doc.getElementById(id).textContent.trim() : null;
     const getHtml = (id) => doc.getElementById(id) ? doc.getElementById(id).innerHTML.trim() : null;
     
     if (getText('ai-main-std')) window.currentAnalysisState.mainStd = getText('ai-main-std');
@@ -125,7 +147,11 @@ window.extractDataToState = function(htmlString) {
 
     const svgContainer = doc.getElementById('ai-modified-svg');
     if (svgContainer && svgContainer.innerHTML.includes('<svg')) {
-        window.currentAnalysisState.svg = svgContainer.innerHTML.trim();
+        window.currentAnalysisState.svg = namespaceSvgIds(svgContainer.innerHTML.trim());
+    } else {
+        // 💡 이 문항에는 그림이 없는데, 직전에 생성했던 다른 문항의 svg가 상태에 그대로 남아
+        // 이번 문항에 잘못 붙어 저장되는 것을 막기 위해 명시적으로 비웁니다.
+        window.currentAnalysisState.svg = '';
     }
 };
 
@@ -704,8 +730,23 @@ function renderInquiryUnits(courseKey) {
     `).join('');
 }
 
-function inquiryDocId(courseKey, unitIdx, topicIdx) {
-    return `${courseKey}-${unitIdx + 1}-${topicIdx + 1}`;
+function inquiryDocId(courseKey, unitIdx, topicIdx, variant = 1) {
+    const base = `${courseKey}-${unitIdx + 1}-${topicIdx + 1}`;
+    return variant > 1 ? `${base}-${variant}` : base;
+}
+
+// 주제 하나에 딸린 활동지 세트를 변형 번호(1, 2, 3...) 순서로 존재하는 만큼 모두 불러옵니다.
+async function loadInquiryVariants(courseKey, unitIdx, topicIdx) {
+    const variants = [];
+    let variant = 1;
+    while (true) {
+        const docId = inquiryDocId(courseKey, unitIdx, topicIdx, variant);
+        const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
+        if (!docSnap.exists()) break;
+        variants.push({ docId, data: docSnap.data() });
+        variant++;
+    }
+    return variants;
 }
 
 // 예전/새 활동지 모두에서 AI가 넣은 밑줄("___") 텍스트를 제거합니다. 답 쓸 공간은 레이아웃이 확보합니다.
@@ -722,11 +763,12 @@ function getProcessItems(processHtml) {
 window.showInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
     openModal('<div style="text-align:center; padding: 4rem; font-size: 1.2rem;">활동지를 불러오는 중입니다... ⏳</div>');
 
-    const docId = inquiryDocId(courseKey, unitIdx, topicIdx);
     try {
-        const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
-        if (docSnap.exists()) {
-            renderInquiryModal(docSnap.data(), courseKey, unitIdx, topicIdx);
+        const variants = await loadInquiryVariants(courseKey, unitIdx, topicIdx);
+        if (variants.length > 0) {
+            window.currentInquiryVariants = variants;
+            window.currentInquiryVariantIndex = 0;
+            renderInquiryModal(variants[0].data, courseKey, unitIdx, topicIdx, variants[0].docId);
         } else {
             const course = INQUIRY_TOPICS[courseKey];
             const topicTitle = course.units[unitIdx].topics[topicIdx];
@@ -742,6 +784,19 @@ window.showInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
         console.error(error);
         document.getElementById('modal-body').innerHTML = '<div style="text-align:center; padding: 3rem; color: #ef4444;">활동지를 불러오지 못했습니다.</div>';
     }
+};
+
+// 세트 여러 개를 이전/다음으로 넘겨보는 기능 (문항 탐색과 동일한 패턴)
+window.showInquiryVariant = function(courseKey, unitIdx, topicIdx, direction) {
+    const variants = window.currentInquiryVariants;
+    if (!variants || variants.length <= 1) return;
+
+    window.currentInquiryVariantIndex += direction;
+    if (window.currentInquiryVariantIndex < 0) window.currentInquiryVariantIndex = variants.length - 1;
+    if (window.currentInquiryVariantIndex >= variants.length) window.currentInquiryVariantIndex = 0;
+
+    const current = variants[window.currentInquiryVariantIndex];
+    renderInquiryModal(current.data, courseKey, unitIdx, topicIdx, current.docId);
 };
 
 window.generateInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
@@ -778,7 +833,9 @@ window.generateInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
         };
 
         await setDoc(doc(db, "inquiry_worksheets", inquiryDocId(courseKey, unitIdx, topicIdx)), docData);
-        renderInquiryModal(docData, courseKey, unitIdx, topicIdx);
+        window.currentInquiryVariants = [{ docId: inquiryDocId(courseKey, unitIdx, topicIdx), data: docData }];
+        window.currentInquiryVariantIndex = 0;
+        renderInquiryModal(docData, courseKey, unitIdx, topicIdx, inquiryDocId(courseKey, unitIdx, topicIdx));
     } catch (error) {
         console.error(error);
         document.getElementById('modal-body').innerHTML = `<div style="text-align:center; padding: 3rem; color: #ef4444;">활동지 생성에 실패했습니다.<br>${error.message}</div>`;
@@ -802,19 +859,32 @@ function parseInquiryHtml(htmlString) {
     };
 }
 
-function renderInquiryModal(data, courseKey, unitIdx, topicIdx) {
+function renderInquiryModal(data, courseKey, unitIdx, topicIdx, docId) {
     const svgHtml = data.svg ? `<div style="display:flex; justify-content:center; margin: 1rem 0; padding: 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">${data.svg}</div>` : '';
+
+    const variants = window.currentInquiryVariants || [];
+    let navButtonsHtml = '';
+    if (variants.length > 1) {
+        navButtonsHtml = `
+            <div style="display:flex; gap:6px; align-items:center; background:#f1f5f9; padding:3px 6px; border-radius:99px; margin-bottom:0.6rem;">
+                <button onclick="window.showInquiryVariant('${courseKey}', ${unitIdx}, ${topicIdx}, -1)" style="background:transparent; color:#475569; border:none; padding:0.2rem 0.5rem; border-radius:99px; font-weight:bold; font-size:0.85rem; cursor:pointer;">⬅️ 이전</button>
+                <span style="font-size:0.8rem; font-weight:bold; color:#64748b;">활동지 ${window.currentInquiryVariantIndex + 1}/${variants.length}</span>
+                <button onclick="window.showInquiryVariant('${courseKey}', ${unitIdx}, ${topicIdx}, 1)" style="background:transparent; color:#475569; border:none; padding:0.2rem 0.5rem; border-radius:99px; font-weight:bold; font-size:0.85rem; cursor:pointer;">다음 ➡️</button>
+            </div>
+        `;
+    }
 
     const content = `
         <div style="padding: 0.5rem 1rem;">
+            ${navButtonsHtml}
             <div style="display:flex; justify-content: space-between; align-items:flex-start; gap: 1rem; margin-bottom: 1rem;">
                 <div>
                     <div style="font-size: 0.85rem; color:#64748b; margin-bottom:0.3rem;">${data.course} · ${data.unit}</div>
                     <h3 style="font-size:1.3rem; font-weight:800; color:#0f172a;">🔬 ${data.title}</h3>
                 </div>
                 <div style="display:flex; gap:0.5rem; flex-shrink:0;">
-                    <button onclick="window.downloadInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="padding: 0.6rem 1rem; background:white; color:#0f172a; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">💾 저장하기</button>
-                    <button onclick="window.printInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="padding: 0.6rem 1rem; background:#0f172a; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">🖨️ 인쇄하기</button>
+                    <button onclick="window.downloadInquiryActivity('${docId}')" style="padding: 0.6rem 1rem; background:white; color:#0f172a; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">💾 저장하기</button>
+                    <button onclick="window.printInquiryActivity('${docId}')" style="padding: 0.6rem 1rem; background:#0f172a; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">🖨️ 인쇄하기</button>
                 </div>
             </div>
 
@@ -846,8 +916,8 @@ function renderInquiryModal(data, courseKey, unitIdx, topicIdx) {
     if (window.MathJax) MathJax.typesetPromise([document.getElementById('modal-body')]).catch((err) => console.error('MathJax 렌더링 에러:', err));
 }
 
-window.printInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
-    const docSnap = await getDoc(doc(db, "inquiry_worksheets", inquiryDocId(courseKey, unitIdx, topicIdx)));
+window.printInquiryActivity = async function(docId) {
+    const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
     if (!docSnap.exists()) return;
     const data = docSnap.data();
 
@@ -937,8 +1007,8 @@ function svgToPngDataUrl(svgString) {
 }
 
 // 교사가 인쇄 전 자유롭게 고칠 수 있도록, 워드(한글에서도 열림)에서 여는 .doc 파일로 저장합니다.
-window.downloadInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
-    const docSnap = await getDoc(doc(db, "inquiry_worksheets", inquiryDocId(courseKey, unitIdx, topicIdx)));
+window.downloadInquiryActivity = async function(docId) {
+    const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
     if (!docSnap.exists()) return;
     const data = docSnap.data();
 
