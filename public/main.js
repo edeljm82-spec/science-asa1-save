@@ -1996,7 +1996,7 @@ window.selectStandard = function(liElem, standardId) {
 
 window.addSubStandard = function() {
     window.subStandardCount++;
-    const container = document.getElementById('standards-container');
+    const container = document.getElementById('creation-standards-container');
     const newRow = document.createElement('div');
     newRow.className = "flex flex-wrap gap-2 items-center standard-row fade-in mt-3";
     newRow.innerHTML = `
@@ -2052,9 +2052,12 @@ window.renderLevels = function() {
     const container = document.getElementById('level-container');
     let levels = window.currentType === 'general' ? ['A+', 'A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C', 'D', 'E'];
     
+    // 💡 "form-radio" 클래스는 이 프로젝트에 forms 플러그인이 없어 아무 효과가 없고,
+    // 브라우저 기본 라디오 렌더링에 맡기면 기본 선택된 항목과 나머지의 크기가 기기별로 다르게 보이는 경우가 있어
+    // appearance-none으로 완전히 직접 그려서 항상 동일한 크기로 보이도록 합니다.
     container.innerHTML = levels.map((lvl, idx) => `
         <label class="inline-flex items-center cursor-pointer group">
-            <input type="radio" name="create-level" value="${lvl}" class="form-radio text-blue-600 h-6 w-6 border-gray-400 focus:ring-blue-500 cursor-pointer" ${idx===0 ? 'checked': ''}>
+            <input type="radio" name="create-level" value="${lvl}" class="appearance-none box-border shrink-0 h-6 w-6 rounded-full border-2 border-gray-400 bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 cursor-pointer transition-colors" ${idx===0 ? 'checked': ''}>
             <span class="ml-2 font-bold text-gray-700 text-lg group-hover:text-blue-700 transition-colors">${lvl}</span>
         </label>
     `).join('');
