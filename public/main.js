@@ -812,7 +812,10 @@ function renderInquiryModal(data, courseKey, unitIdx, topicIdx) {
                     <div style="font-size: 0.85rem; color:#64748b; margin-bottom:0.3rem;">${data.course} · ${data.unit}</div>
                     <h3 style="font-size:1.3rem; font-weight:800; color:#0f172a;">🔬 ${data.title}</h3>
                 </div>
-                <button onclick="window.printInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="flex-shrink:0; padding: 0.6rem 1rem; background:#0f172a; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">🖨️ 인쇄하기</button>
+                <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+                    <button onclick="window.downloadInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="padding: 0.6rem 1rem; background:white; color:#0f172a; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">💾 저장하기</button>
+                    <button onclick="window.printInquiryActivity('${courseKey}', ${unitIdx}, ${topicIdx})" style="padding: 0.6rem 1rem; background:#0f172a; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap;">🖨️ 인쇄하기</button>
+                </div>
             </div>
 
             <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:1rem; margin-bottom:1rem;">
@@ -903,6 +906,100 @@ window.printInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
     </html>`;
     printWindow.document.write(content);
     printWindow.document.close();
+};
+
+// SVG를 워드 문서에 넣을 수 있는 PNG 이미지로 변환합니다. (Word는 인라인 SVG를 제대로 표시하지 못함)
+function svgToPngDataUrl(svgString) {
+    return new Promise((resolve, reject) => {
+        const viewBoxMatch = svgString.match(/viewBox="[\d.\-]+\s+[\d.\-]+\s+([\d.]+)\s+([\d.]+)"/);
+        const w = viewBoxMatch ? Math.round(parseFloat(viewBoxMatch[1])) : 600;
+        const h = viewBoxMatch ? Math.round(parseFloat(viewBoxMatch[2])) : 250;
+
+        const img = new Image();
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = () => {
+            const scale = 2; // 인쇄 품질을 위해 2배 확대
+            const canvas = document.createElement('canvas');
+            canvas.width = w * scale;
+            canvas.height = h * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+        img.src = url;
+    });
+}
+
+// 교사가 인쇄 전 자유롭게 고칠 수 있도록, 워드(한글에서도 열림)에서 여는 .doc 파일로 저장합니다.
+window.downloadInquiryActivity = async function(courseKey, unitIdx, topicIdx) {
+    const docSnap = await getDoc(doc(db, "inquiry_worksheets", inquiryDocId(courseKey, unitIdx, topicIdx)));
+    if (!docSnap.exists()) return;
+    const data = docSnap.data();
+
+    let imageHtml = '';
+    if (data.svg) {
+        try {
+            const pngDataUrl = await svgToPngDataUrl(data.svg);
+            imageHtml = `<p style="text-align:center;"><img src="${pngDataUrl}" style="max-width:500px;"></p>`;
+        } catch (e) {
+            console.error('SVG 변환 실패:', e);
+        }
+    }
+
+    const processItemsHtml = getProcessItems(data.processHtml).map((html, i) => `
+        <p style="margin:0 0 10px 0;"><b>${i + 1}.</b> ${html}</p>
+    `).join('');
+
+    const htmlContent = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="utf-8">
+        <title>${data.title}</title>
+        <style>
+            body { font-family: '맑은 고딕', sans-serif; font-size: 11pt; line-height: 1.7; color:#111; }
+            h1 { font-size: 16pt; margin: 6px 0 12px; }
+            .meta { color: #555; font-size: 10pt; }
+            .box-title { font-weight: bold; margin-top: 16px; margin-bottom: 6px; }
+        </style>
+    </head>
+    <body>
+        <div class="meta">${data.course} · ${data.unit} · 필수탐구활동</div>
+        <h1>${data.title}</h1>
+        <p>이름: ______________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;모둠/번호: ______________</p>
+
+        <p class="box-title">🎯 학습 목표</p>
+        <p>${data.goal}</p>
+
+        <p class="box-title">🧰 준비물</p>
+        <p>${data.materials}</p>
+
+        ${imageHtml}
+
+        <p class="box-title">📋 탐구 과정</p>
+        ${processItemsHtml}
+
+        <br clear="all" style="page-break-before:always">
+
+        <p class="box-title">💡 (교사용) 예시 답안</p>
+        <p>${data.exampleAnswerHtml}</p>
+    </body>
+    </html>`;
+
+    const blob = new Blob(["﻿", htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.title}_활동지.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
 // 6. Analysis Logic
