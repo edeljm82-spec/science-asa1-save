@@ -92,10 +92,12 @@ window.extractDataToState = function(htmlString) {
     if (getText('ai-is-mcp')) window.currentAnalysisState.isMCP = getText('ai-is-mcp');
     if (getText('ai-modified-question')) window.currentAnalysisState.question = getText('ai-modified-question');
     
+    // 💡 ai-cond-1(제시문)에는 <table> 등 HTML 구조가 들어있을 수 있으므로,
+    // 텍스트만 남기는 getText 대신 마크업을 보존하는 getHtml로 추출합니다.
     const conds = [];
     for(let i=1; i<=5; i++) {
-        const text = getText(`ai-cond-${i}`);
-        if (text && text.trim() !== '') conds.push(text);
+        const html = getHtml(`ai-cond-${i}`);
+        if (html && html.trim() !== '') conds.push(html);
     }
     window.currentAnalysisState.conditions = conds;
 
@@ -410,26 +412,39 @@ window.showDiagnosticQuestion = async function(standardId, level) {
     }
 };
 
+// 💡 conditions 배열 안에는 제시문(표/자료 등, ai-cond-1)과 <보기> ㄱ,ㄴ,ㄷ 항목(ai-cond-2~4)이
+// 순서대로 섞여 들어옵니다. 둘을 구분해 AI문항제작 탭 미리보기와 같은 모양(제시문 → 구분선 → <보기>)으로
+// 렌더링할 수 있도록, ㄱ/ㄴ/ㄷ(또는 가/나/다) 기호로 시작하는 항목만 "보기"로 분류합니다.
+function splitConditions(conditions) {
+    const bogiRe = /^\s*[ㄱㄴㄷㄹㅁ가나다라마]\.\s?/;
+    const presentation = [];
+    const bogi = [];
+    (conditions || []).forEach(c => {
+        if (bogiRe.test(c)) bogi.push(c); else presentation.push(c);
+    });
+    return { presentation, bogi };
+}
+
 // 선택된 인덱스의 문항을 화면에 그리는 함수
 window.renderCurrentQuestion = function(standardId, level) {
     const q = currentQuestionsList[currentQuestionIndex];
     const totalQuestions = currentQuestionsList.length;
 
-    // 보기(조건) 박스 사이즈 축소
+    // 제시문(표 등)과 <보기> ㄱ,ㄴ,ㄷ을 구분해서 표시
     let conditionsHtml = '';
     if (q.conditions && q.conditions.length > 0) {
+        const { presentation, bogi } = splitConditions(q.conditions);
         conditionsHtml = `
             <div class="csat-box" style="border: 1px solid #cbd5e1; padding: 0.8rem 1rem; margin: 0.8rem 0; background: #f8fafc; border-radius: 6px;">
-                <div style="font-weight: bold; margin-bottom: 0.5rem; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; font-size: 0.9rem;">&lt;보 기&gt;</div>
-                ${(q.conditions || []).map(cond => {
-                    // 1. 데이터에 섞여있는 \n(줄바꿈)을 제거하여 한 줄로 합침
-                    // 2. 가., 나., 다. 앞에만 줄바꿈(<br>)을 추가
-                    // 3. '다.'가 문장 끝에 있는 경우에는 줄바꿈을 하지 않도록 정규식 수정
-                    let text = cond.replace(/\n/g, ' '); 
-                    text = text.replace(/(?<!\S)(가\.|나\.|다\.|라\.|마\.)\s/g, '<br>$1 ');
-                    
-                    return `<div style="margin-bottom: 0.5rem; line-height: 1.5;">${text}</div>`;
-                }).join('')}
+                ${presentation.length > 0 ? `
+                    <div style="${bogi.length > 0 ? 'margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dashed #cbd5e1;' : ''} line-height: 1.5;">
+                        ${presentation.map(p => `<div style="margin-bottom: 0.5rem;">${p}</div>`).join('')}
+                    </div>
+                ` : ''}
+                ${bogi.length > 0 ? `
+                    <div style="font-weight: bold; margin-bottom: 0.5rem; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; font-size: 0.9rem;">&lt;보 기&gt;</div>
+                    ${bogi.map(cond => `<div style="margin-bottom: 0.5rem; line-height: 1.5;">${cond}</div>`).join('')}
+                ` : ''}
             </div>
         `;
     }
@@ -877,8 +892,8 @@ function renderInquiryModal(data, courseKey, unitIdx, topicIdx, docId) {
     const content = `
         <div style="padding: 0.5rem 1rem;">
             ${navButtonsHtml}
-            <div style="display:flex; justify-content: space-between; align-items:flex-start; gap: 1rem; margin-bottom: 1rem;">
-                <div>
+            <div style="display:flex; flex-wrap:wrap; justify-content: space-between; align-items:flex-start; gap: 0.6rem 1rem; margin-bottom: 1rem;">
+                <div style="flex: 1 1 200px; min-width: 200px;">
                     <div style="font-size: 0.85rem; color:#64748b; margin-bottom:0.3rem;">${data.course} · ${data.unit}</div>
                     <h3 style="font-size:1.3rem; font-weight:800; color:#0f172a;">🔬 ${data.title}</h3>
                 </div>
@@ -2252,8 +2267,17 @@ window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
     }
     
     if (qConditions.length > 0) {
+        const { presentation, bogi } = splitConditions(qConditions);
         printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff;">`;
-        qConditions.forEach(cond => { printHtml += `<div style="margin-bottom: 8px;">${cond.replace(/\n/g, '<br>')}</div>`; });
+        if (presentation.length > 0) {
+            printHtml += `<div style="${bogi.length > 0 ? 'margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #999;' : ''}">`;
+            presentation.forEach(p => { printHtml += `<div style="margin-bottom: 8px;">${p.replace(/\n/g, '<br>')}</div>`; });
+            printHtml += `</div>`;
+        }
+        if (bogi.length > 0) {
+            printHtml += `<div style="font-weight:bold; text-align:center; margin-bottom: 8px;">&lt;보 기&gt;</div>`;
+            bogi.forEach(cond => { printHtml += `<div style="margin-bottom: 8px;">${cond.replace(/\n/g, '<br>')}</div>`; });
+        }
         printHtml += `</div>`;
     }
 

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>깨진 저장 문항 수정 (10통과1-03-05 E수준 2건)</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #0f172a; }
+  button { padding: 0.7rem 1.3rem; font-size: 1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; margin-right: 0.5rem; }
+  #btn-login { background: #2563eb; color: white; }
+  #btn-fix { background: #16a34a; color: white; }
+  #btn-fix:disabled { background: #94a3b8; cursor: not-allowed; }
+  #status { white-space: pre-wrap; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; line-height: 1.6; }
+  .ok { color: #16a34a; }
+  .err { color: #dc2626; }
+</style>
+</head>
+<body>
+  <h1>깨진 저장 문항 수정</h1>
+  <p>10통과1-03-05 · E수준 2건(선지 인식 실패 + SVG 오염)을 올바른 내용으로 교체합니다.</p>
+  <div>
+    <span id="login-status">로그인 필요</span><br><br>
+    <button id="btn-login">Google로 로그인</button>
+    <button id="btn-fix" disabled>2건 수정 실행</button>
+  </div>
+  <div id="status"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDV_er1ecvJ6ll_6nqiHe10W7nX6kvEyt4",
+  authDomain: "science-asa1-13844073-164bb.firebaseapp.com",
+  projectId: "science-asa1-13844073-164bb",
+  storageBucket: "science-asa1-13844073-164bb.firebasestorage.app",
+  messagingSenderId: "946177749957",
+  appId: "1:946177749957:web:c3a98314a79871d219d1ac"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginStatus = document.getElementById('login-status');
+const btnLogin = document.getElementById('btn-login');
+const btnFix = document.getElementById('btn-fix');
+const statusEl = document.getElementById('status');
+
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  statusEl.appendChild(line);
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginStatus.textContent = `로그인됨: ${user.email}`;
+    btnFix.disabled = false;
+  } else {
+    loginStatus.textContent = '로그인 필요';
+    btnFix.disabled = true;
+  }
+});
+
+btnLogin.addEventListener('click', async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    log('로그인 실패: ' + e.message, 'err');
+  }
+});
+
+// 두 문항 모두 화면 미리보기(스크린샷)에 실제로 표시됐던 선지/정답을 그대로 옮겨 적었습니다.
+// 정답은 UI에서 0-indexed로 쓰이므로 "5번"은 4로 저장합니다.
+const TABLE_HTML = `<table style="width:100%; border-collapse: collapse; font-size: 0.95rem;">
+  <thead>
+    <tr>
+      <th style="border:1px solid #cbd5e1; padding:6px 10px; background:#f1f5f9;">구분</th>
+      <th style="border:1px solid #cbd5e1; padding:6px 10px; background:#f1f5f9;">생명체 내에서 일어나는 현상</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="border:1px solid #cbd5e1; padding:6px 10px; text-align:center;">(가)</td><td style="border:1px solid #cbd5e1; padding:6px 10px;">식물이 빛에너지를 이용하여 스스로 양분을 합성함</td></tr>
+    <tr><td style="border:1px solid #cbd5e1; padding:6px 10px; text-align:center;">(나)</td><td style="border:1px solid #cbd5e1; padding:6px 10px;">세포가 영양소를 분해하여 생명 활동에 필요한 에너지를 얻음</td></tr>
+    <tr><td style="border:1px solid #cbd5e1; padding:6px 10px; text-align:center;">(다)</td><td style="border:1px solid #cbd5e1; padding:6px 10px;">세포막을 통해 산소가 세포 안으로 들어옴</td></tr>
+  </tbody>
+</table>`;
+
+// 두 문항 모두 화면 미리보기(스크린샷)에 실제로 표시됐던 선지/정답/제시문을 그대로 옮겨 적었습니다.
+// 정답은 UI에서 0-indexed로 쓰이므로 "5번"은 4로 저장합니다.
+const FIXES = [
+  {
+    id: "WDoSUVm5fB6cxNxWMM6V", // 사례1: 세포막 물질 이동 다이어그램 문항 (그림 있음 - svg는 그대로 둠)
+    options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+    answer: 4
+  },
+  {
+    id: "8d8Wh0JKbo6862ANxqel", // 사례2: 표 기반 문항 (그림 없음 - 이전 문항의 svg가 잘못 붙어있었으므로 제거)
+    options: ["ㄱ", "ㄷ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+    answer: 4,
+    svgImage: null,
+    // 예전 저장본은 표 구조가 텍스트로 뭉개져 있었던 것을 실제 <table>로 복원합니다.
+    conditions: [
+      TABLE_HTML,
+      "ㄱ. (가)는 생명체 내에서 일어나는 화학 반응이다.",
+      "ㄴ. (나)는 생명체 내에서 일어나는 화학 반응이다.",
+      "ㄷ. (다)는 생명체 내에서 일어나는 물질 출입이다."
+    ]
+  }
+];
+
+btnFix.addEventListener('click', async () => {
+  btnFix.disabled = true;
+  statusEl.innerHTML = '';
+  for (const fix of FIXES) {
+    try {
+      const ref = doc(db, "questions", fix.id);
+      const update = { options: fix.options, answer: fix.answer };
+      if ('svgImage' in fix) update.svgImage = fix.svgImage;
+      if ('conditions' in fix) update.conditions = fix.conditions;
+      await updateDoc(ref, update);
+      log(`OK ${fix.id} 수정 완료`, 'ok');
+    } catch (e) {
+      log(`FAIL ${fix.id}: ${e.message}`, 'err');
+    }
+  }
+  log('\n완료');
+  btnFix.disabled = false;
+});
+</script>
+</body>
+</html>
