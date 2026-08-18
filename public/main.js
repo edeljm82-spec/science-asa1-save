@@ -2499,6 +2499,57 @@ window.saveCreationToDB = function(idSuffix, rawLevel) {
     document.getElementById('save-modal-overlay').classList.add('active');
 };
 
+// 9.5. 선택한 문항을 워드(.doc) 파일로 저장 (필수탐구활동 탭의 저장하기 기능과 동일한 방식)
+window.downloadCreationTest = async function() {
+    const selectedItems = window.printList.filter(item => item.selected);
+    if (selectedItems.length === 0) return alert("저장할 문항을 하나 이상 선택해주세요.");
+
+    // Word는 인라인 SVG를 제대로 표시하지 못하므로, 문항 안의 SVG를 PNG 이미지로 바꿔치기합니다.
+    const itemsHtml = await Promise.all(selectedItems.map(async (item, idx) => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = item.html;
+        const svgs = wrapper.querySelectorAll('svg');
+        for (const svg of svgs) {
+            try {
+                const pngDataUrl = await svgToPngDataUrl(svg.outerHTML);
+                const img = document.createElement('img');
+                img.src = pngDataUrl;
+                img.style.maxWidth = '500px';
+                svg.replaceWith(img);
+            } catch (e) {
+                console.error('SVG 변환 실패:', e);
+            }
+        }
+        return `<div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #ccc;"><p style="font-weight:bold; font-size: 12pt; margin-bottom: 8px;">${idx + 1}번.</p>${wrapper.innerHTML}</div>`;
+    }));
+
+    const htmlContent = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta charset="utf-8">
+        <title>과학 탐구 평가 시험지</title>
+        <style>
+            body { font-family: '맑은 고딕', sans-serif; font-size: 11pt; line-height: 1.7; color:#111; }
+            h1 { font-size: 16pt; text-align:center; margin: 0 0 20px; border-bottom: 2px solid #111; padding-bottom: 10px; }
+        </style>
+    </head>
+    <body>
+        <h1>과학 탐구 평가 시험지</h1>
+        ${itemsHtml.join('')}
+    </body>
+    </html>`;
+
+    const blob = new Blob(["﻿", htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `과학_탐구_평가_시험지.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
 // 10. 시험지 출력 (평가원 스타일 2단 편집)
 window.printTest = function() {
     // 체크박스로 선택된 문항만 필터링합니다.
@@ -2538,7 +2589,15 @@ window.printTest = function() {
                 padding-bottom: 15px;
                 break-inside: avoid;      /* 문항이 단 사이에서 찢어지지 않도록 보호(가능한 경우) */
                 page-break-inside: avoid;
+                max-width: 100%;
+                overflow-wrap: break-word;
             }
+            /* 💡 표나 긴 영어/염기서열 문자열이 단 너비보다 넓으면 단 경계를 넘어가면서
+               왼쪽 단이 실제보다 좁아 보이는 것처럼 보이는 원인이 됩니다. 항상 단 너비 안에
+               맞도록 강제합니다. */
+            .q-item table { width: 100% !important; table-layout: fixed; }
+            .q-item td, .q-item th { word-break: break-word; overflow-wrap: break-word; }
+            .q-item img, .q-item svg { max-width: 100%; height: auto; }
         </style>
     </head>
     <body>
