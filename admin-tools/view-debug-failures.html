@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>추출 실패 원본 로그 조회</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #0f172a; }
+  button { padding: 0.7rem 1.3rem; font-size: 1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
+  #btn-login { background: #2563eb; color: white; }
+  .item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+  .item textarea { width: 100%; height: 300px; font-family: monospace; font-size: 12px; white-space: pre; }
+  .meta { color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+  <h1>선지/데이터 추출 실패 원본 로그</h1>
+  <span id="login-status">로그인 필요</span><br><br>
+  <button id="btn-login">Google로 로그인</button>
+  <div id="results"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDV_er1ecvJ6ll_6nqiHe10W7nX6kvEyt4",
+  authDomain: "science-asa1-13844073-164bb.firebaseapp.com",
+  projectId: "science-asa1-13844073-164bb",
+  storageBucket: "science-asa1-13844073-164bb.firebasestorage.app",
+  messagingSenderId: "946177749957",
+  appId: "1:946177749957:web:c3a98314a79871d219d1ac"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+document.getElementById('btn-login').addEventListener('click', async () => {
+  await signInWithPopup(auth, new GoogleAuthProvider());
+});
+
+onAuthStateChanged(auth, async (user) => {
+  const statusEl = document.getElementById('login-status');
+  if (!user) { statusEl.textContent = '로그인 필요'; return; }
+  statusEl.textContent = `로그인됨: ${user.email}`;
+
+  const q = query(collection(db, "debug_extraction_failures"), orderBy("createdAt", "desc"), limit(10));
+  const snap = await getDocs(q);
+  const container = document.getElementById('results');
+  container.innerHTML = `<p>${snap.size}건</p>`;
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="meta">${docSnap.id} / ${data.createdAt?.toDate?.().toLocaleString() || ''}</div>
+      <textarea readonly>${(data.html || '').replace(/</g, '&lt;')}</textarea>
+    `;
+    container.appendChild(div);
+  });
+});
+</script>
+</body>
+</html>

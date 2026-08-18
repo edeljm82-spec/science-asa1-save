@@ -171,8 +171,13 @@ window.extractDataToState = function(htmlString) {
     }
 
     const svgContainer = doc.getElementById('ai-modified-svg');
-    if (svgContainer && svgContainer.innerHTML.includes('<svg')) {
-        window.currentAnalysisState.svg = namespaceSvgIds(svgContainer.innerHTML.trim());
+    const svgSearchSpace = (svgContainer && svgContainer.innerHTML.includes('<svg')) ? svgContainer.innerHTML : htmlString;
+    // 💡 응답 어딘가의 이스케이프 안 된 문자로 DOM이 깨지면, svg 컨테이너 안에 엉뚱한 설명 텍스트가
+    // svg와 함께 섞여 들어올 수 있습니다(그 텍스트가 그대로 <img src="...">에 들어가면 화면에
+    // 글자가 그대로 노출됨). 정규식으로 <svg>...</svg> 부분만 정확히 잘라내 이 문제를 원천 차단합니다.
+    const svgMatch = svgSearchSpace.match(/<svg[\s\S]*?<\/svg>/);
+    if (svgMatch) {
+        window.currentAnalysisState.svg = namespaceSvgIds(svgMatch[0].trim());
     } else {
         // 💡 이 문항에는 그림이 없는데, 직전에 생성했던 다른 문항의 svg가 상태에 그대로 남아
         // 이번 문항에 잘못 붙어 저장되는 것을 막기 위해 명시적으로 비웁니다.
@@ -474,13 +479,14 @@ window.renderCurrentQuestion = function(standardId, level) {
 
     // 이미지 처리
     let imageHtml = '';
-    if (q.svgImage || q.image || q.imageUrl) {
-        const imgSrc = q.svgImage || q.image || q.imageUrl;
-        if (imgSrc.trim().startsWith('<svg')) {
-            imageHtml = `<div style="display: flex; justify-content: center; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); padding: 0.5rem; background: white; max-height: 250px; overflow: hidden;">${imgSrc}</div>`;
-        } else {
-            imageHtml = `<img src="${imgSrc}" style="max-height: 250px; width: auto; max-width: 100%; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); display: block; margin: 0 auto; object-fit: contain;">`;
-        }
+    const imgSrcRaw = (q.svgImage || q.image || q.imageUrl || '').trim();
+    if (imgSrcRaw.startsWith('<svg')) {
+        imageHtml = `<div style="display: flex; justify-content: center; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); padding: 0.5rem; background: white; max-height: 250px; overflow: hidden;">${imgSrcRaw}</div>`;
+    } else if (/^(https?:|data:)/i.test(imgSrcRaw)) {
+        // 💡 유효한 URL/데이터 URI일 때만 <img src>로 렌더링합니다. 저장된 값이 URL도 SVG도 아닌
+        // (추출 실패로 섞여 들어간) 텍스트인 경우, 그대로 src에 넣으면 깨진 태그가 되어
+        // 화면에 글자가 그대로 노출되므로 아예 표시하지 않습니다.
+        imageHtml = `<img src="${imgSrcRaw}" style="max-height: 250px; width: auto; max-width: 100%; margin-bottom: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); display: block; margin: 0 auto; object-fit: contain;">`;
     }
 
     // 💡 이전/다음 버튼 생성 로직 (문항이 2개 이상일 때만 표시)
