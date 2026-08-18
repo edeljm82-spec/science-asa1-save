@@ -1507,7 +1507,7 @@ document.getElementById('btn-reset-analysis')?.addEventListener('click', () => {
     if(chatMessages) {
         chatMessages.innerHTML = `
             <div class="chatbot-message bot" style="background-color: #e0f2fe; border-left: 4px solid #0284c7;">
-                <strong style="display:block; margin-bottom:5px; font-size:0.85rem; color:#0369a1;">통합과학 챗봇</strong>
+                <strong style="display:block; margin-bottom:5px; font-size:0.85rem; color:#0369a1;">과학 탐구 챗봇</strong>
                 <div>문항 분석을 진행한 후 저를 호출해 주세요. 분석 결과를 바탕으로 궁금한 점을 답변해 드립니다!</div>
             </div>`;
     }
