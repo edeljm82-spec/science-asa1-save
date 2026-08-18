@@ -1810,15 +1810,15 @@ function initQuestionCreation() {
     // 1. 유형 선택 시 아래 메뉴들이 나타나는 효과 (Progressive Disclosure)
     btnGen.addEventListener('click', () => {
         creationType = 'general';
-        btnGen.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
-        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+        btnGen.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnMcp.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
         progSection.classList.remove('hidden');
     });
 
     btnMcp.addEventListener('click', () => {
         creationType = 'mcp';
-        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
-        btnGen.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+        btnMcp.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnGen.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
         progSection.classList.remove('hidden');
     });
 
@@ -2051,11 +2051,11 @@ window.selectType = function(type) {
     const btnMcp = document.getElementById('btn-mcp');
     
     if(type === 'general') {
-        btnGeneral.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
-        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+        btnGeneral.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnMcp.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
     } else {
-        btnMcp.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
-        btnGeneral.className = "flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
+        btnMcp.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-blue-500 bg-blue-50 text-blue-700 transition-colors";
+        btnGeneral.className = "flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors";
     }
 
     document.getElementById('section-standards').classList.remove('hidden');

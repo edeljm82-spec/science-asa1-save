@@ -78,11 +78,11 @@
 
   <main>
     <nav class="tab-nav">
-      <div style="display: flex;">
-        <button class="tab-button active" data-target="#standards"><span class="tab-label-full">성취기준 및 성취수준</span><span class="tab-label-mobile">성취<br>기준<br>및<br>성취<br>수준</span></button>
-        <button class="tab-button" data-target="#analysis"><span class="tab-label-full">AI 문항분석</span><span class="tab-label-mobile">AI<br>문항<br>분석</span></button>
-        <button class="tab-button" data-target="#creation"><span class="tab-label-full">AI 문항제작</span><span class="tab-label-mobile">AI<br>문항<br>제작</span></button>
-        <button class="tab-button" data-target="#inquiry"><span class="tab-label-full">필수탐구활동</span><span class="tab-label-mobile">필수<br>탐구<br>활동</span></button>
+      <div class="tab-button-group" style="display: flex;">
+        <button class="tab-button active" data-target="#standards"><span class="tab-label-full">성취기준 및 성취수준</span><span class="tab-label-mobile">성취기준<br>및 성취수준</span></button>
+        <button class="tab-button" data-target="#analysis"><span class="tab-label-full">AI 문항분석</span><span class="tab-label-mobile">AI<br>문항분석</span></button>
+        <button class="tab-button" data-target="#creation"><span class="tab-label-full">AI 문항제작</span><span class="tab-label-mobile">AI<br>문항제작</span></button>
+        <button class="tab-button" data-target="#inquiry"><span class="tab-label-full">필수탐구활동</span><span class="tab-label-mobile">필수<br>탐구활동</span></button>
       </div>
 
       <div id="user-controls" class="top-right-controls">
@@ -147,8 +147,8 @@
         <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
             <h2 class="text-lg font-semibold mb-4">1. 문항 유형 선택</h2>
             <div class="flex space-x-4">
-                <button id="btn-general" class="flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors" onclick="selectType('general')">일반문항</button>
-                <button id="btn-mcp" class="flex-1 py-4 rounded-lg font-bold text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors" onclick="selectType('mcp')">MCP문항</button>
+                <button id="btn-general" class="flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors" onclick="selectType('general')">일반문항</button>
+                <button id="btn-mcp" class="flex-1 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg border-2 border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors" onclick="selectType('mcp')">MCP문항</button>
             </div>
         </section>
 
@@ -183,21 +183,21 @@
           <h2 class="text-lg font-semibold mb-4">3. 문항 세부 조건 및 레퍼런스</h2>
           <div class="grid grid-cols-2 gap-8">
               <div>
-                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">✅ 포함 요소 (다중선택)</h3>
+                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2 break-keep">✅ 포함 요소 <span class="whitespace-nowrap">(다중선택)</span></h3>
                   <div class="flex flex-col space-y-3">
-                      <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-complex" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium">합답형(ㄱ,ㄴ,ㄷ)</span></label>
+                      <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-complex" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium break-keep">합답형<span class="whitespace-nowrap">(ㄱ,ㄴ,ㄷ)</span></span></label>
                       <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-multiple" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" checked><span class="ml-2 font-medium">선지형</span></label>
                       <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-pic" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium">그림 제시</span></label>
                       <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-table" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium">표 제시</span></label>
                       <label class="inline-flex items-center cursor-pointer">
                           <input type="checkbox" id="chk-other" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300">
-                          <span class="ml-2 font-medium">기타 지시사항</span>
+                          <span class="ml-2 font-medium">기타사항</span>
                       </label>
                       <textarea id="create-other-textarea" class="hidden w-full border border-gray-300 rounded-md p-3 mt-2 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" rows="3" placeholder="예: 실생활 연계 문제로 출제해줘, 계산 과정이 복잡하게 해줘 등"></textarea>
                   </div>
               </div>
-              
-              <div class="border-l pl-8 border-gray-200" id="image-upload-area-creation">
+
+              <div class="md:border-l md:pl-8 border-gray-200" id="image-upload-area-creation">
                   <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">🖼️ 레퍼런스 이미지 <span class="text-xs font-normal text-gray-400">(선택사항)</span></h3>
                   <div class="flex space-x-2 mb-4">
                       <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm transition font-bold" onclick="document.getElementById('file-input-creation').click()">📁 사진 업로드</button>
