@@ -341,9 +341,9 @@ async function renderAchievementDashboard(selectedCourse = "1. 통합과학1") {
                         <div class="standard-row" data-id="${s.standardId}" style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.3s;">
                             
                             <div class="std-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAccordion(this)">
-                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem;">
                                     <div class="std-id-badge" style="background: #e0e7ff; color: #2563eb; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; white-space: nowrap; flex-shrink: 0; width: 140px; text-align: center;">${s.standardId}</div>
-                                    <div class="std-info"><h4 style="margin: 0; font-size: 1.1rem; color: #0f172a;">${s.description}</h4></div>
+                                    <div class="std-info" style="flex: 1 1 200px; min-width: 200px;"><h4 style="margin: 0; font-size: 1.1rem; color: #0f172a;">${s.description}</h4></div>
                                 </div>
                                 <div style="color: #2563eb; font-weight: bold; font-size: 1.2rem;">▼</div>
                             </div>

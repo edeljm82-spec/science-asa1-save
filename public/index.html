@@ -183,7 +183,10 @@
           <h2 class="text-lg font-semibold mb-4">3. 문항 세부 조건 및 레퍼런스</h2>
           <div class="grid grid-cols-2 gap-8">
               <div>
-                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2 break-keep">✅ 포함 요소 <span class="whitespace-nowrap">(다중선택)</span></h3>
+                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2 flex items-start gap-1">
+                      <span>✅</span>
+                      <span class="break-keep">포함 요소 <span class="whitespace-nowrap">(다중선택)</span></span>
+                  </h3>
                   <div class="flex flex-col space-y-3">
                       <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-complex" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300"><span class="ml-2 font-medium break-keep">합답형<span class="whitespace-nowrap">(ㄱ,ㄴ,ㄷ)</span></span></label>
                       <label class="inline-flex items-center cursor-pointer"><input type="checkbox" id="chk-multiple" class="form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" checked><span class="ml-2 font-medium">선지형</span></label>
@@ -198,10 +201,19 @@
               </div>
 
               <div class="md:border-l md:pl-8 border-gray-200" id="image-upload-area-creation">
-                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">🖼️ 레퍼런스 이미지 <span class="text-xs font-normal text-gray-400">(선택사항)</span></h3>
+                  <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2 flex items-start gap-1">
+                      <span>🖼️</span>
+                      <span class="break-keep">레퍼런스 이미지 <span class="text-xs font-normal text-gray-400 whitespace-nowrap">(선택사항)</span></span>
+                  </h3>
                   <div class="flex space-x-2 mb-4">
-                      <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm transition font-bold" onclick="document.getElementById('file-input-creation').click()">📁 사진 업로드</button>
-                      <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-md text-sm transition font-bold" onclick="document.getElementById('camera-input-creation').click()">📷 카메라 촬영</button>
+                      <button class="flex-1 flex flex-col items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-md text-sm transition font-bold" onclick="document.getElementById('file-input-creation').click()">
+                          <span class="text-xl">📁</span>
+                          <span>사진<br>업로드</span>
+                      </button>
+                      <button class="flex-1 flex flex-col items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-md text-sm transition font-bold" onclick="document.getElementById('camera-input-creation').click()">
+                          <span class="text-xl">📷</span>
+                          <span>카메라<br>촬영</span>
+                      </button>
                       <input type="file" id="file-input-creation" accept="image/*" class="hidden" onchange="window.handleCreationImageFile(this.files[0])">
                       <input type="file" id="camera-input-creation" accept="image/*" capture="environment" class="hidden" onchange="window.handleCreationImageFile(this.files[0])">
                   </div>
