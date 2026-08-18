@@ -115,7 +115,11 @@ window.extractDataToState = function(htmlString) {
         // 본문 텍스트에서 직접 선지 내용을 복구합니다. (AI가 가끔 id 속성을 누락하는 경우 대비)
         const bodyText = (doc.body ? doc.body.textContent : htmlString).replace(/\s+/g, ' ');
         const markers = ['①', '②', '③', '④', '⑤'];
-        const answerIdx = bodyText.indexOf('정답');
+        // 💡 "정답"이라는 글자는 앞쪽 [판정 이유 & 풀이] 문단에서 "정답 도출 과정" 같은 말로 먼저
+        // 등장하는 경우가 많아, indexOf(첫 번째 등장)를 쓰면 실제 선지보다 훨씬 앞에서 잘려
+        // 마커를 하나도 못 찾는 원인이 됩니다. 실제 선지 뒤의 "정답:"을 잡기 위해
+        // 콜론을 포함한 문자열의 마지막 등장 위치를 사용합니다.
+        const answerIdx = bodyText.lastIndexOf('정답:');
         const zone = answerIdx !== -1 ? bodyText.slice(0, answerIdx) : bodyText;
         const positions = markers.map(m => zone.lastIndexOf(m));
         const inOrder = positions.every((p, i) => p !== -1 && (i === 0 || p > positions[i - 1]));
@@ -150,7 +154,7 @@ window.extractDataToState = function(htmlString) {
         // 문서 다른 곳이 깨져 있어도 영향받지 않습니다.
         if (!recovered) {
             const plainText = htmlString.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-            const answerIdx2 = plainText.indexOf('정답');
+            const answerIdx2 = plainText.lastIndexOf('정답:');
             const zone2 = answerIdx2 !== -1 ? plainText.slice(0, answerIdx2) : plainText;
             const positions2 = markers.map(m => zone2.lastIndexOf(m));
             const inOrder2 = positions2.every((p, i) => p !== -1 && (i === 0 || p > positions2[i - 1]));
