@@ -32,6 +32,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // 디버그용: 선지/데이터 추출 실패 시 원본 응답을 남겨 원인 분석에 사용 (로그인한 사용자만 기록)
+    match /debug_extraction_failures/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
     // 그 외 모든 컬렉션: 기본적으로 차단
     match /{document=**} {
       allow read, write: if false;

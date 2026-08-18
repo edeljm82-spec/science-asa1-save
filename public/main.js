@@ -149,6 +149,16 @@ window.extractDataToState = function(htmlString) {
             // 복구도 실패하면, 혼동을 막기 위해 진짜 선지처럼 보이지 않는 명확한 오류 문구로 표시합니다.
             console.error("선지 추출 실패. 원본 htmlContent:", htmlString);
             window.currentAnalysisState.options = ["⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)", "⚠️ 선지 인식 실패 (문항 재생성 필요)"];
+            // 💡 원인 분석용: 실패한 원본 응답을 기록해둡니다(로그인 상태에서만, 실패해도 무시).
+            try {
+                if (window.db && typeof collection === 'function' && currentUser) {
+                    addDoc(collection(window.db, "debug_extraction_failures"), {
+                        html: htmlString,
+                        createdAt: new Date(),
+                        authorUid: currentUser.uid
+                    }).catch(() => {});
+                }
+            } catch (e) { /* 디버그 기록 실패는 무시 */ }
         }
     }
 
@@ -2299,8 +2309,14 @@ window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
     }
 
     if (qOptions.length > 0) {
-        printHtml += `<div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
-            ${qOptions.map((opt, i) => `<span>${['①','②','③','④','⑤'][i]} ${opt}</span>`).join('')}
+        // 💡 ㄱ,ㄴ,ㄷ 합답형처럼 선지가 짧으면(평가원 스타일) 한 줄로 이어 붙여 공간을 절약하고,
+        // 문장형 선지처럼 길면 기존처럼 한 줄에 하나씩 세로로 배치합니다.
+        const isCompact = qOptions.every(opt => opt.replace(/\s/g, '').length <= 10);
+        const optionsStyle = isCompact
+            ? 'display:flex; flex-wrap:wrap; gap:6px 20px;'
+            : 'display:flex; flex-direction:column; gap:6px;';
+        printHtml += `<div style="${optionsStyle} margin-top:10px;">
+            ${qOptions.map((opt, i) => `<span style="${isCompact ? 'white-space:nowrap;' : ''}">${['①','②','③','④','⑤'][i]} ${opt}</span>`).join('')}
         </div>`;
     }
     
