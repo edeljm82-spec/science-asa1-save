@@ -111,9 +111,9 @@ window.extractDataToState = function(htmlString) {
     if (opts.length === 5) {
         window.currentAnalysisState.options = opts;
     } else {
-        // 💡 [안전장치] id(ai-opt-N)로 못 찾은 경우, '정답' 표시 직전에 나온 ①~⑤ 기호를 기준으로
+        // 💡 [1차 안전장치] id(ai-opt-N)로 못 찾은 경우, '정답' 표시 직전에 나온 ①~⑤ 기호를 기준으로
         // 본문 텍스트에서 직접 선지 내용을 복구합니다. (AI가 가끔 id 속성을 누락하는 경우 대비)
-        const bodyText = (doc.body ? doc.body.innerText : htmlString).replace(/\s+/g, ' ');
+        const bodyText = (doc.body ? doc.body.textContent : htmlString).replace(/\s+/g, ' ');
         const markers = ['①', '②', '③', '④', '⑤'];
         const answerIdx = bodyText.indexOf('정답');
         const zone = answerIdx !== -1 ? bodyText.slice(0, answerIdx) : bodyText;
@@ -128,6 +128,19 @@ window.extractDataToState = function(htmlString) {
                 return zone.slice(start, end).trim();
             });
             if (candidate.every(t => t.length > 0)) recovered = candidate;
+        }
+
+        // 💡 [2차 안전장치] 위 두 방법 모두 DOM 파싱 결과(doc)에 의존하는데, 응답 어딘가의
+        // 이스케이프되지 않은 문자 하나 때문에 DOM 트리 자체가 깨지면 둘 다 실패할 수 있습니다.
+        // 이 경우 DOM 파싱을 아예 거치지 않고, 원본 텍스트(htmlString)에서 정규식으로
+        // id="ai-opt-N" 뒤에 오는 내용을 직접 긁어옵니다.
+        if (!recovered) {
+            const regexRecovered = [];
+            for (let i = 1; i <= 5; i++) {
+                const m = htmlString.match(new RegExp(`id=["']ai-opt-${i}["'][^>]*>([^<]*)<`));
+                regexRecovered.push(m ? m[1].trim() : '');
+            }
+            if (regexRecovered.every(t => t.length > 0)) recovered = regexRecovered;
         }
 
         if (recovered) {
@@ -2568,21 +2581,25 @@ window.printTest = function() {
         <style>
             @page { size: A4; margin: 15mm; }
             body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; padding: 0; margin: 0; color: #111; font-size: 11pt; }
-            h2 { text-align:center; margin-bottom: 30px; border-bottom: 2px solid #111; padding-bottom: 10px; font-size: 1.8rem; }
 
             /* 💡 평가원 모의고사 스타일 2단 편집(다단 흐름).
-               문항 2개를 페이지마다 grid로 강제 배치했더니, 문항 하나가 한 단보다 길 때
-               그 문항 전체가 다음 페이지로 밀려나며 앞 페이지가 비어버리는 문제가 있었습니다.
-               다시 자연스러운 다단 흐름(column-count)으로 되돌리되, column-fill: auto를
-               명시해 "전체 문서를 기준으로 균형을 맞추려다 첫 페이지를 비우는" 크롬의
-               알려진 버그를 피하고, 1페이지 왼쪽 단부터 순서대로 채워지도록 했습니다.
-               문항 대부분은 한 단에 통째로 들어가지만, 한 단보다 긴 문항은 불가피하게
-               다음 단/페이지로 이어집니다. */
+               제목(h2)을 다단 컨테이너 "밖" 형제 요소로 두면, 크롬이 인쇄 시 다단 내용을
+               통째로 다음 페이지로 밀어버려 1페이지가 비는 현상이 있었습니다(내용 길이와
+               무관하게 재현됨 — 콘텐츠가 한 페이지에 다 들어가는 경우에도 발생).
+               제목을 다단 컨테이너 "안"의 첫 자식으로 옮기고 column-span: all을 지정하는
+               것이 여러 단 레이아웃에서 제목을 넣는 CSS 표준 방식이며, 이 문제를 피합니다. */
             .test-paper {
                 column-count: 2;
                 column-gap: 12mm;
-                column-rule: 1px solid #ccc;
                 column-fill: auto;
+            }
+            .test-paper > h2 {
+                column-span: all;
+                text-align: center;
+                margin: 0 0 20px;
+                border-bottom: 2px solid #111;
+                padding-bottom: 10px;
+                font-size: 1.5rem;
             }
             .q-item {
                 margin-bottom: 20px;
@@ -2601,8 +2618,8 @@ window.printTest = function() {
         </style>
     </head>
     <body>
-        <h2>과학 탐구 평가 시험지</h2>
         <div class="test-paper">
+            <h2>과학 탐구 평가 시험지</h2>
     `;
 
     selectedItems.forEach((item, idx) => {
