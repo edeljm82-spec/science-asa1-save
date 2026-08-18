@@ -2519,50 +2519,39 @@ window.printTest = function() {
             body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; padding: 0; margin: 0; color: #111; font-size: 11pt; }
             h2 { text-align:center; margin-bottom: 30px; border-bottom: 2px solid #111; padding-bottom: 10px; font-size: 1.8rem; }
 
-            /* 💡 평가원 모의고사 스타일 2단 편집.
-               column-count(다단 흐름)로는 문항 하나가 좌/우 단에 걸쳐 찢어지거나 1페이지가
-               빈 채로 2페이지부터 내용이 시작되는 문제가 있어, 문항 두 개를 한 쌍으로 묶어
-               페이지마다 grid로 좌/우 배치하는 방식으로 변경했습니다. */
-            .exam-page {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
+            /* 💡 평가원 모의고사 스타일 2단 편집(다단 흐름).
+               문항 2개를 페이지마다 grid로 강제 배치했더니, 문항 하나가 한 단보다 길 때
+               그 문항 전체가 다음 페이지로 밀려나며 앞 페이지가 비어버리는 문제가 있었습니다.
+               다시 자연스러운 다단 흐름(column-count)으로 되돌리되, column-fill: auto를
+               명시해 "전체 문서를 기준으로 균형을 맞추려다 첫 페이지를 비우는" 크롬의
+               알려진 버그를 피하고, 1페이지 왼쪽 단부터 순서대로 채워지도록 했습니다.
+               문항 대부분은 한 단에 통째로 들어가지만, 한 단보다 긴 문항은 불가피하게
+               다음 단/페이지로 이어집니다. */
+            .test-paper {
+                column-count: 2;
                 column-gap: 12mm;
-            }
-            .exam-page.page-break {
-                page-break-after: always;
-                break-after: page;
-            }
-            .exam-col {
-                border-right: 1px solid #ccc;
-                padding-right: 12mm;
-                min-width: 0;
-            }
-            .exam-col:last-child {
-                border-right: none;
-                padding-right: 0;
+                column-rule: 1px solid #ccc;
+                column-fill: auto;
             }
             .q-item {
                 margin-bottom: 20px;
                 padding-bottom: 15px;
-                break-inside: avoid;      /* 문항이 단 사이에서 찢어지지 않도록 보호 */
-                page-break-inside: avoid; /* 인쇄 페이지 넘어갈 때 보호 */
+                break-inside: avoid;      /* 문항이 단 사이에서 찢어지지 않도록 보호(가능한 경우) */
+                page-break-inside: avoid;
             }
         </style>
     </head>
     <body>
         <h2>과학 탐구 평가 시험지</h2>
+        <div class="test-paper">
     `;
 
-    // 문항 두 개씩 묶어 한 페이지(좌/우 2단)에 배치합니다.
-    for (let i = 0; i < selectedItems.length; i += 2) {
-        const left = selectedItems[i];
-        const right = selectedItems[i + 1];
-        const isLastPage = (i + 2) >= selectedItems.length;
-        content += `<div class="exam-page${isLastPage ? '' : ' page-break'}">`;
-        content += `<div class="exam-col"><div class="q-item"><strong style="font-size: 1.1rem; margin-right: 8px;">${i + 1}번.</strong>${left.html}</div></div>`;
-        content += `<div class="exam-col">${right ? `<div class="q-item"><strong style="font-size: 1.1rem; margin-right: 8px;">${i + 2}번.</strong>${right.html}</div>` : ''}</div>`;
-        content += `</div>`;
-    }
+    selectedItems.forEach((item, idx) => {
+        content += `<div class="q-item"><strong style="font-size: 1.1rem; margin-right: 8px;">${idx + 1}번.</strong>${item.html}</div>`;
+    });
+
+    content += `
+        </div>`;
 
     content += `
         <script>
