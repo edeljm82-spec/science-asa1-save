@@ -137,7 +137,7 @@ window.extractDataToState = function(htmlString) {
         if (!recovered) {
             const regexRecovered = [];
             for (let i = 1; i <= 5; i++) {
-                const m = htmlString.match(new RegExp(`id=["']ai-opt-${i}["'][^>]*>([^<]*)<`));
+                const m = htmlString.match(new RegExp(`id=["']?ai-opt-${i}["']?[^>]*>([^<]*)<`));
                 regexRecovered.push(m ? m[1].trim() : '');
             }
             if (regexRecovered.every(t => t.length > 0)) recovered = regexRecovered;
