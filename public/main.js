@@ -143,6 +143,27 @@ window.extractDataToState = function(htmlString) {
             if (regexRecovered.every(t => t.length > 0)) recovered = regexRecovered;
         }
 
+        // 💡 [3차 안전장치] AI가 가끔 id="ai-opt-N" 속성 자체를 아예 안 붙이고
+        // <div>① ㄱ</div><div>② ㄴ</div>... 처럼 기호만 쓰는 경우가 있습니다(id가 없으니 위 두 방법 다 실패).
+        // 이번엔 doc 파싱 결과가 아니라 원본 문자열의 태그를 다 걷어낸 순수 텍스트에서
+        // 같은 방식(①~⑤ 위치 기반)으로 다시 시도합니다. DOM 파싱에 전혀 의존하지 않아
+        // 문서 다른 곳이 깨져 있어도 영향받지 않습니다.
+        if (!recovered) {
+            const plainText = htmlString.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+            const answerIdx2 = plainText.indexOf('정답');
+            const zone2 = answerIdx2 !== -1 ? plainText.slice(0, answerIdx2) : plainText;
+            const positions2 = markers.map(m => zone2.lastIndexOf(m));
+            const inOrder2 = positions2.every((p, i) => p !== -1 && (i === 0 || p > positions2[i - 1]));
+            if (inOrder2) {
+                const candidate2 = positions2.map((pos, i) => {
+                    const start = pos + 1;
+                    const end = i < 4 ? positions2[i + 1] : zone2.length;
+                    return zone2.slice(start, end).trim();
+                });
+                if (candidate2.every(t => t.length > 0)) recovered = candidate2;
+            }
+        }
+
         if (recovered) {
             window.currentAnalysisState.options = recovered;
         } else {

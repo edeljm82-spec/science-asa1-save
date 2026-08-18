@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>10통과1-02-05 A/B 문항 복구</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #0f172a; }
+  button { padding: 0.7rem 1.3rem; font-size: 1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; margin-right: 0.5rem; }
+  #btn-login { background: #2563eb; color: white; }
+  .item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+  .item pre { white-space: pre-wrap; font-size: 12px; background: white; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; max-height: 200px; overflow: auto; }
+  .btn-fix { background: #16a34a; color: white; }
+  .ok { color: #16a34a; }
+  .err { color: #dc2626; }
+  .warn { color: #ca8a04; }
+</style>
+</head>
+<body>
+  <h1>10통과1-02-05 A/B 문항 복구</h1>
+  <p>디버그 로그에서 원본 응답을 찾아 선지/SVG를 다시 추출하고, 미리보기를 확인한 뒤 해당 문항 문서에 반영합니다.</p>
+  <span id="login-status">로그인 필요</span><br><br>
+  <button id="btn-login">Google로 로그인</button>
+  <button id="btn-load" disabled>디버그 로그 불러오기</button>
+  <div id="results"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDV_er1ecvJ6ll_6nqiHe10W7nX6kvEyt4",
+  authDomain: "science-asa1-13844073-164bb.firebaseapp.com",
+  projectId: "science-asa1-13844073-164bb",
+  storageBucket: "science-asa1-13844073-164bb.firebasestorage.app",
+  messagingSenderId: "946177749957",
+  appId: "1:946177749957:web:c3a98314a79871d219d1ac"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 레벨별로 대상 문항 문서 ID가 이미 확정되어 있습니다.
+const TARGET_DOC_BY_LEVEL = {
+  "A": "tzl0Gy0Wps44bJRlVhId",
+  "B": "MYmy3tkiIoToB34T7ryW"
+};
+
+document.getElementById('btn-login').addEventListener('click', async () => {
+  await signInWithPopup(auth, new GoogleAuthProvider());
+});
+
+onAuthStateChanged(auth, (user) => {
+  const statusEl = document.getElementById('login-status');
+  const btnLoad = document.getElementById('btn-load');
+  if (!user) { statusEl.textContent = '로그인 필요'; btnLoad.disabled = true; return; }
+  statusEl.textContent = `로그인됨: ${user.email}`;
+  btnLoad.disabled = false;
+});
+
+function namespaceSvgIds(svgString) {
+  const suffix = '-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000);
+  const ids = new Set();
+  svgString.replace(/\bid="([^"]+)"/g, (m, id) => { ids.add(id); return m; });
+  let result = svgString;
+  ids.forEach(id => {
+    const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const newId = id + suffix;
+    result = result
+      .replace(new RegExp(`id="${escaped}"`, 'g'), `id="${newId}"`)
+      .replace(new RegExp(`url\\(#${escaped}\\)`, 'g'), `url(#${newId})`)
+      .replace(new RegExp(`href="#${escaped}"`, 'g'), `href="#${newId}"`);
+  });
+  return result;
+}
+
+function extractFromRaw(html) {
+  const svgMatch = html.match(/<svg[\s\S]*?<\/svg>/);
+  const svg = svgMatch ? namespaceSvgIds(svgMatch[0].trim()) : '';
+
+  let options = [];
+  for (let i = 1; i <= 5; i++) {
+    const m = html.match(new RegExp(`id=["']?ai-opt-${i}["']?[^>]*>([^<]*)<`));
+    options.push(m ? m[1].trim() : '');
+  }
+  // id 속성이 아예 없이 <div>① ㄱ</div> 식으로만 쓴 경우를 위한 마커 기반 복구
+  if (options.some(o => !o)) {
+    const plainText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    const markers = ['①', '②', '③', '④', '⑤'];
+    const answerIdx = plainText.indexOf('정답');
+    const zone = answerIdx !== -1 ? plainText.slice(0, answerIdx) : plainText;
+    const positions = markers.map(m => zone.lastIndexOf(m));
+    const inOrder = positions.every((p, i) => p !== -1 && (i === 0 || p > positions[i - 1]));
+    if (inOrder) {
+      const candidate = positions.map((pos, i) => {
+        const start = pos + 1;
+        const end = i < 4 ? positions[i + 1] : zone.length;
+        return zone.slice(start, end).trim();
+      });
+      if (candidate.every(t => t.length > 0)) options = candidate;
+    }
+  }
+
+  const levelMatch = html.match(/id=["']?ai-level["']?[^>]*>([^<]*)</);
+  const level = levelMatch ? levelMatch[1].trim() : '';
+
+  const answerMatch = html.match(/id=["']?ai-modified-answer["']?[^>]*>([^<]*)</);
+  const answerNum = answerMatch ? parseInt(answerMatch[1].replace(/[^0-9]/g, '')) : NaN;
+
+  const questionMatch = html.match(/id=["']?ai-modified-question["']?[^>]*>([\s\S]*?)<\/p>/);
+  const question = questionMatch ? questionMatch[1].trim() : '';
+
+  return { svg, options, level, answer: isNaN(answerNum) ? null : answerNum - 1, question };
+}
+
+document.getElementById('btn-load').addEventListener('click', async () => {
+  const container = document.getElementById('results');
+  container.innerHTML = '불러오는 중...';
+
+  const q = query(collection(db, "debug_extraction_failures"), orderBy("createdAt", "desc"), limit(30));
+  const snap = await getDocs(q);
+
+  const matches = [];
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    if ((data.html || '').includes('10통과1-02-05') || (data.html || '').includes('지각과 생명체를 구성하는 주요 물질의 기본 단위체')) {
+      matches.push({ id: docSnap.id, ...data });
+    }
+  });
+
+  if (matches.length === 0) {
+    container.innerHTML = '<p class="err">10통과1-02-05 관련 디버그 로그를 찾지 못했습니다.</p>';
+    return;
+  }
+
+  container.innerHTML = `<p>${matches.length}건 발견</p>`;
+
+  matches.forEach(m => {
+    const extracted = extractFromRaw(m.html);
+    const targetDocId = TARGET_DOC_BY_LEVEL[extracted.level];
+
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div><b>로그 ID:</b> ${m.id} / <b>추출된 레벨:</b> ${extracted.level || '(인식 실패)'} / <b>대상 문서:</b> ${targetDocId || '(매칭 안됨 - 수동 확인 필요)'}</div>
+      <div><b>발문:</b> ${extracted.question || '(추출 실패)'}</div>
+      <div><b>선지:</b> ${extracted.options.map((o,i)=>`${i+1}) ${o || '(실패)'}`).join(' / ')}</div>
+      <div><b>정답(0-idx):</b> ${extracted.answer}</div>
+      <div><b>SVG 추출됨:</b> ${extracted.svg ? '예 (' + extracted.svg.length + '자)' : '아니오'}</div>
+      ${extracted.svg ? `<div style="border:1px solid #e2e8f0; padding:0.5rem; margin-top:0.5rem;">${extracted.svg}</div>` : ''}
+      <details><summary>원본 전체 보기</summary><pre>${m.html.replace(/</g,'&lt;')}</pre></details>
+      <br>
+      <button class="btn-fix" data-logid="${m.id}" data-target="${targetDocId || ''}" ${(!targetDocId || extracted.options.some(o=>!o)) ? 'disabled title="선지 추출이 불완전하거나 대상 문서가 불명확합니다"' : ''}>이 내용으로 문항 문서 수정</button>
+      <span class="status" style="margin-left:0.5rem;"></span>
+    `;
+    div.querySelector('.btn-fix').addEventListener('click', async (e) => {
+      const btn = e.target;
+      const statusSpan = div.querySelector('.status');
+      btn.disabled = true;
+      try {
+        const update = { options: extracted.options };
+        if (extracted.answer !== null) update.answer = extracted.answer;
+        update.svgImage = extracted.svg || null;
+        await updateDoc(doc(db, "questions", targetDocId), update);
+        statusSpan.textContent = '✅ 수정 완료';
+        statusSpan.className = 'status ok';
+      } catch (err) {
+        statusSpan.textContent = '❌ 실패: ' + err.message;
+        statusSpan.className = 'status err';
+        btn.disabled = false;
+      }
+    });
+    container.appendChild(div);
+  });
+});
+</script>
+</body>
+</html>
