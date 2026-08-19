@@ -1156,7 +1156,7 @@ window.downloadInquiryActivity = async function(docId) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${data.title}_활동지.doc`;
+    a.download = `${data.title}_활동지.mht`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -2633,7 +2633,7 @@ window.downloadCreationTest = async function() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `과학_탐구_평가_시험지.doc`;
+    a.download = `과학_탐구_평가_시험지.mht`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
