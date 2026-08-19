@@ -90,7 +90,9 @@ window.extractDataToState = function(htmlString) {
     if (getText('ai-sub-stds')) window.currentAnalysisState.subStds = getText('ai-sub-stds');
     if (getText('ai-level')) window.currentAnalysisState.level = getText('ai-level');
     if (getText('ai-is-mcp')) window.currentAnalysisState.isMCP = getText('ai-is-mcp');
-    if (getText('ai-modified-question')) window.currentAnalysisState.question = getText('ai-modified-question');
+    // 💡 <sup>(위첨자)/<sub>(아래첨자)처럼 정상적인 서식 태그가 발문에 들어있을 수 있어,
+    // 태그를 없애버리는 getText 대신 마크업을 보존하는 getHtml로 추출합니다.
+    if (getHtml('ai-modified-question')) window.currentAnalysisState.question = getHtml('ai-modified-question');
     
     // 💡 ai-cond-1(제시문)에는 <table> 등 HTML 구조가 들어있을 수 있으므로,
     // 텍스트만 남기는 getText 대신 마크업을 보존하는 getHtml로 추출합니다.
