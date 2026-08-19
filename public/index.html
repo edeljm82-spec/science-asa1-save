@@ -85,6 +85,7 @@
         <button class="tab-button active" data-target="#standards"><span class="tab-label-full">성취기준 및 성취수준</span><span class="tab-label-mobile">성취기준<br>및 성취수준</span></button>
         <button class="tab-button" data-target="#analysis"><span class="tab-label-full">AI 문항분석</span><span class="tab-label-mobile">AI<br>문항분석</span></button>
         <button class="tab-button" data-target="#creation"><span class="tab-label-full">AI 문항제작</span><span class="tab-label-mobile">AI<br>문항제작</span></button>
+        <button class="tab-button" data-target="#bank"><span class="tab-label-full">문제은행 시험지제작</span><span class="tab-label-mobile">문제은행<br>시험지제작</span></button>
         <button class="tab-button" data-target="#inquiry"><span class="tab-label-full">필수탐구활동</span><span class="tab-label-mobile">필수<br>탐구활동</span></button>
       </div>
 
@@ -269,6 +270,75 @@
             </div>
         </div>
     </section>
+
+    </div>
+  </section>
+
+  <section id="bank" class="tab-content" style="background-color: #f9fafb; padding-bottom: 8rem;">
+    <div class="max-w-4xl mx-auto mt-8 px-4 sm:px-6 lg:px-8 space-y-10 font-sans text-gray-800">
+
+      <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
+        <h2 class="text-lg font-semibold mb-4">1. 문항 검색</h2>
+        <div class="flex flex-wrap gap-2 items-center">
+          <select id="bank-course-select" class="border p-2 rounded-md flex-1 min-w-[110px] text-sm bg-gray-50 font-medium" onchange="window.bankLoadUnits(this)"><option value="">과목 선택</option></select>
+          <select id="bank-unit-select" class="border p-2 rounded-md flex-1 min-w-[110px] text-sm bg-gray-50 font-medium" onchange="window.bankLoadStandards(this)"><option value="">단원 선택</option></select>
+          <select id="bank-standard-select" class="border p-2 rounded-md flex-[2] min-w-[200px] text-sm bg-gray-50 font-medium"><option value="">전체 성취기준</option></select>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
+          <span class="font-extrabold text-blue-800">🎯 성취 수준</span>
+          <div class="flex flex-wrap gap-4">
+            <label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="bank-level-filter form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" value="A"><span class="ml-1 font-medium">A</span></label>
+            <label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="bank-level-filter form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" value="B"><span class="ml-1 font-medium">B</span></label>
+            <label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="bank-level-filter form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" value="C"><span class="ml-1 font-medium">C</span></label>
+            <label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="bank-level-filter form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" value="D"><span class="ml-1 font-medium">D</span></label>
+            <label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="bank-level-filter form-checkbox text-blue-600 rounded w-5 h-5 border-gray-300" value="E"><span class="ml-1 font-medium">E</span></label>
+          </div>
+          <span class="text-xs text-gray-500">(체크 안 하면 전체 수준)</span>
+        </div>
+
+        <button class="mt-4 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-sm transition-colors" onclick="window.bankSearchQuestions()">🔍 문항 검색</button>
+      </section>
+
+      <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">2. 검색 결과 (체크해서 시험지에 추가)</h2>
+          <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full">선택됨 <span id="bank-selected-count">0</span></span>
+        </div>
+        <div id="bank-results-container" class="max-h-[480px] overflow-y-auto">
+          <p style="text-align:center; padding:2rem; color:#64748b;">과목과 단원을 선택하고 검색해주세요.</p>
+        </div>
+      </section>
+
+      <div class="text-center fade-in">
+        <button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-12 rounded-full shadow-lg text-xl transition-transform transform hover:scale-105" onclick="window.bankBuildTestPaper()">
+          📝 선택한 문항으로 시험지 구성하기
+        </button>
+        <button class="ml-3 bg-white border-2 border-gray-300 text-gray-600 font-bold py-3 px-6 rounded-full hover:bg-gray-50 transition-colors" onclick="window.bankClearSelection()">
+          선택 목록 비우기
+        </button>
+      </div>
+
+      <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in hidden w-full max-w-4xl mx-auto" id="bank-section-print">
+        <div class="flex flex-col gap-5">
+          <div class="flex justify-between items-center border-b pb-4 border-gray-200">
+            <h2 class="text-lg font-semibold flex items-center gap-2">
+              🖨️ 출력 대기열
+              <span id="bank-print-count" class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">0</span>
+            </h2>
+            <div class="space-x-3 flex flex-wrap gap-y-2">
+              <button class="bg-white border border-gray-300 text-gray-800 py-2 px-5 rounded-md text-sm font-bold hover:bg-gray-50 transition shadow-sm whitespace-nowrap" onclick="window.bankDownloadTest()">💾 저장하기</button>
+              <button class="bg-gray-800 hover:bg-gray-900 text-white py-2 px-5 rounded-md text-sm font-bold transition shadow-md whitespace-nowrap" onclick="window.bankPrintTest()">📄 선택한 문항만 시험지로 출력</button>
+              <button class="bg-white border-2 border-gray-800 text-gray-800 py-2 px-5 rounded-md text-sm font-bold hover:bg-gray-100 transition whitespace-nowrap" onclick="window.bankResetTestPaper()">🔄 대기열 초기화</button>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-sm font-bold text-gray-600 mb-2">✅ 시험지에 포함할 문항을 선택하세요.</p>
+            <div id="bank-print-selection-container" class="flex flex-wrap gap-3"></div>
+          </div>
+        </div>
+      </section>
 
     </div>
   </section>

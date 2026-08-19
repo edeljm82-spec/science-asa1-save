@@ -258,6 +258,9 @@ function initNavigation() {
             if (targetId.includes('inquiry')) {
                 renderInquiryActivities('전체');
             }
+            if (targetId.includes('bank')) {
+                window.initQuestionBank();
+            }
         });
     });
 }
@@ -2320,32 +2323,23 @@ window.generateQuestionAI = async function() {
     }
 };
 
-// 5. 창작 결과물 화면 출력
-window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
-    const container = document.getElementById('results-container');
-    const idSuffix = window.resultCounter;
-    
-    window.extractDataToState(htmlContent);
+// 💡 출력/저장 대기열에 들어갈 문항 하나의 HTML 조각을 만드는 공용 함수입니다.
+// 'AI 문항제작' 탭(방금 생성한 문항)과 '문제은행 시험지제작' 탭(DB에 저장된 문항)이
+// 이 함수를 함께 사용해 동일한 모양으로 출력/저장되도록 합니다.
+window.buildQuestionPrintHtml = function(qText, qSvg, qConditions, qOptions, qLevel) {
+    let printHtml = `<div style="margin-bottom: 8px;"><strong>[성취수준 ${qLevel}]</strong><br>${(qText || '').replace(/\n/g, '<br>')}</div>`;
 
-    // 💡 [핵심 수정] 문항이 생성되자마자 즉시 "프린트 출력 대기열"에 자동 추가합니다! (DB 저장 유무 무관)
-    const qText = window.currentAnalysisState.question || "문항 텍스트 없음";
-    const qSvg = window.currentAnalysisState.svg || "";
-    const qConditions = window.currentAnalysisState.conditions || [];
-    const qOptions = window.currentAnalysisState.options || [];
-    const qLevel = level.replace('+', ''); 
-    
-    let printHtml = `<div style="margin-bottom: 8px;"><strong>[성취수준 ${qLevel}]</strong><br>${qText.replace(/\n/g, '<br>')}</div>`;
-    
     if (qSvg) {
         printHtml += `<div style="display:flex; justify-content:center; margin: 15px 0;">${qSvg}</div>`;
     }
-    
-    if (qConditions.length > 0) {
+
+    if (qConditions && qConditions.length > 0) {
         const { presentation, bogi } = splitConditions(qConditions);
-        // 💡 표가 든 제시문 박스가 단 중간에서 잘리면, 잘린 뒷부분(표)이 다음 단으로 넘어가면서
-        // 이번 단에는 표가 있어야 할 자리가 빈 채로 남습니다. break-inside:avoid로 이 박스
-        // 전체를 하나로 묶어, 안 들어가면 통째로 다음 단으로 넘어가게 합니다.
-        printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff; break-inside: avoid; page-break-inside: avoid;">`;
+        // 💡 실측 결과, 이 박스에 border(테두리)가 있으면 크롬 인쇄 엔진이 남은 단 공간에
+        // 다 안 들어갈 때 박스 전체(표+보기)를 통째로 다음 단으로 밀어버려 큰 빈 여백이
+        // 생깁니다(border만 빼면 표까지 포함해 단 경계에서 자연스럽게 이어짐을 확인함).
+        // 테두리 대신 옅은 배경색으로 박스 느낌을 유지합니다.
+        printHtml += `<div style="padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem;">`;
         if (presentation.length > 0) {
             printHtml += `<div style="${bogi.length > 0 ? 'margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #999;' : ''}">`;
             presentation.forEach(p => { printHtml += `<div style="margin-bottom: 8px;">${p.replace(/\n/g, '<br>')}</div>`; });
@@ -2358,7 +2352,7 @@ window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
         printHtml += `</div>`;
     }
 
-    if (qOptions.length > 0) {
+    if (qOptions && qOptions.length > 0) {
         // 💡 ㄱ,ㄴ,ㄷ 합답형처럼 선지가 짧으면(평가원 스타일) 한 줄로 이어 붙여 공간을 절약하고,
         // 문장형 선지처럼 길면 기존처럼 한 줄에 하나씩 세로로 배치합니다.
         const isCompact = qOptions.every(opt => opt.replace(/\s/g, '').length <= 10);
@@ -2369,7 +2363,26 @@ window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
             ${qOptions.map((opt, i) => `<span style="${isCompact ? 'white-space:nowrap;' : ''}">${['①','②','③','④','⑤'][i]} ${opt}</span>`).join('')}
         </div>`;
     }
-    
+
+    return printHtml;
+};
+
+// 5. 창작 결과물 화면 출력
+window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
+    const container = document.getElementById('results-container');
+    const idSuffix = window.resultCounter;
+
+    window.extractDataToState(htmlContent);
+
+    // 💡 [핵심 수정] 문항이 생성되자마자 즉시 "프린트 출력 대기열"에 자동 추가합니다! (DB 저장 유무 무관)
+    const qText = window.currentAnalysisState.question || "문항 텍스트 없음";
+    const qSvg = window.currentAnalysisState.svg || "";
+    const qConditions = window.currentAnalysisState.conditions || [];
+    const qOptions = window.currentAnalysisState.options || [];
+    const qLevel = level.replace('+', '');
+
+    const printHtml = window.buildQuestionPrintHtml(qText, qSvg, qConditions, qOptions, qLevel);
+
     // 글로벌 프린트 배열에 객체 형태로 저장 (기본적으로 선택되도록 설정)
     window.printList.push({ id: idSuffix, html: printHtml, selected: true });
     
@@ -2579,8 +2592,8 @@ window.saveCreationToDB = function(idSuffix, rawLevel) {
 };
 
 // 9.5. 선택한 문항을 워드(.doc) 파일로 저장 (필수탐구활동 탭의 저장하기 기능과 동일한 방식)
-window.downloadCreationTest = async function() {
-    const selectedItems = window.printList.filter(item => item.selected);
+// 💡 'AI 문항제작'과 '문제은행 시험지제작' 탭이 각자의 대기열(printList)로 이 함수를 함께 씁니다.
+window.downloadTestFromList = async function(selectedItems) {
     if (selectedItems.length === 0) return alert("저장할 문항을 하나 이상 선택해주세요.");
 
     // Word는 인라인 SVG를 표시하지 못하므로 문항 안의 SVG를 PNG(base64 data URI)로 바꿔치기합니다.
@@ -2634,12 +2647,15 @@ window.downloadCreationTest = async function() {
     URL.revokeObjectURL(url);
 };
 
+window.downloadCreationTest = async function() {
+    await window.downloadTestFromList(window.printList.filter(item => item.selected));
+};
+
 // 10. 시험지 출력 (평가원 스타일 2단 편집)
-window.printTest = function() {
-    // 체크박스로 선택된 문항만 필터링합니다.
-    const selectedItems = window.printList.filter(item => item.selected);
+// 💡 'AI 문항제작'과 '문제은행 시험지제작' 탭이 각자의 대기열(printList)로 이 함수를 함께 씁니다.
+window.printTestFromList = function(selectedItems) {
     if (selectedItems.length === 0) return alert("출력할 문항을 하나 이상 선택해주세요.");
-    
+
     let printWindow = window.open('', '_blank');
     let content = `
     <html>
@@ -2675,15 +2691,18 @@ window.printTest = function() {
             .q-item {
                 margin-bottom: 20px;
                 padding-bottom: 15px;
-                break-inside: avoid;      /* 문항이 단 사이에서 찢어지지 않도록 보호(가능한 경우) */
-                page-break-inside: avoid;
+                /* 💡 문항 전체에 break-inside:avoid를 걸면, 그림+표처럼 안 끊기게 보호된
+                   요소가 문항 안에 또 있을 때 두 규칙이 충돌해 큰 빈 여백이 생기는 문제가
+                   있었습니다(문항 하나가 한 단 높이보다 길면 애초에 안 끊기게 만들 수 없는데도
+                   브라우저가 억지로 맞추려다 여백을 남김). 표/제시문 박스에만 보호를 남기고
+                   문항 전체 보호는 제거합니다. */
                 max-width: 100%;
                 overflow-wrap: break-word;
             }
             /* 💡 표나 긴 영어/염기서열 문자열이 단 너비보다 넓으면 단 경계를 넘어가면서
                왼쪽 단이 실제보다 좁아 보이는 것처럼 보이는 원인이 됩니다. 항상 단 너비 안에
                맞도록 강제합니다. */
-            .q-item table { width: 100% !important; table-layout: fixed; break-inside: avoid; page-break-inside: avoid; }
+            .q-item table { width: 100% !important; table-layout: fixed; }
             .q-item td, .q-item th { word-break: break-word; overflow-wrap: break-word; }
             /* 💡 AI가 만든 그림(svg)의 세로 비율이 큰데 실제 내용은 위쪽에 몰려 있으면,
                그림 아래에 불필요한 빈 여백이 크게 남아 다음 내용(표 등)이 한참 아래로 밀립니다.
@@ -2717,6 +2736,10 @@ window.printTest = function() {
     printWindow.document.close();
 };
 
+window.printTest = function() {
+    window.printTestFromList(window.printList.filter(item => item.selected));
+};
+
 // 11. 초기화
 window.resetCreationForm = function() {
     if (confirm("모든 작업 내역(출력 대기열 포함)이 초기화됩니다. 계속하시겠습니까?")) {
@@ -2736,7 +2759,208 @@ window.resetCreationForm = function() {
         `;
         document.getElementById('drop-zone-creation').classList.remove('bg-indigo-50', 'border-indigo-300');
         document.getElementById('image-options-creation').classList.add('hidden');
-        
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+};
+
+// ====================================================================
+// 12. 문제은행 시험지제작 (DB에 이미 저장된 문항들을 골라 시험지로 구성)
+// ====================================================================
+
+// 선택된 문항을 docId -> 문항데이터 로 기억합니다(탭을 오가거나 다시 검색해도 유지됨).
+window.bankSelectedQuestions = window.bankSelectedQuestions || new Map();
+window.bankSearchResults = window.bankSearchResults || [];
+window.bankPrintList = window.bankPrintList || [];
+
+window.initQuestionBank = function() {
+    window.populateBankCourseDropdown();
+    window.updateBankSelectedCount();
+};
+
+window.populateBankCourseDropdown = function() {
+    const sel = document.getElementById('bank-course-select');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">과목 선택</option>';
+    if (window.groupedDbStandards) {
+        Object.keys(window.groupedDbStandards).sort().forEach(course => {
+            sel.innerHTML += `<option value="${course}">${course}</option>`;
+        });
+    }
+};
+
+window.bankLoadUnits = function(selectElem) {
+    const course = selectElem.value;
+    const unitSelect = document.getElementById('bank-unit-select');
+    const stdSelect = document.getElementById('bank-standard-select');
+    unitSelect.innerHTML = '<option value="">단원 선택</option>';
+    stdSelect.innerHTML = '<option value="">전체 성취기준</option>';
+    if (course && window.groupedDbStandards[course]) {
+        Object.keys(window.groupedDbStandards[course]).sort().forEach(unit => {
+            unitSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+        });
+    }
+};
+
+window.bankLoadStandards = function(selectElem) {
+    const course = document.getElementById('bank-course-select').value;
+    const unit = selectElem.value;
+    const stdSelect = document.getElementById('bank-standard-select');
+    stdSelect.innerHTML = '<option value="">전체 성취기준</option>';
+    if (course && unit && window.groupedDbStandards[course][unit]) {
+        window.groupedDbStandards[course][unit]
+            .sort((a, b) => a.standardId.localeCompare(b.standardId))
+            .forEach(std => {
+                stdSelect.innerHTML += `<option value="${std.standardId}">[${std.standardId}] ${std.description}</option>`;
+            });
+    }
+};
+
+window.bankSearchQuestions = async function() {
+    const course = document.getElementById('bank-course-select').value;
+    const unit = document.getElementById('bank-unit-select').value;
+    const standardId = document.getElementById('bank-standard-select').value;
+    const listEl = document.getElementById('bank-results-container');
+
+    if (!course || !unit) {
+        alert('과목과 단원을 먼저 선택해주세요.');
+        return;
+    }
+
+    const levelChecks = Array.from(document.querySelectorAll('.bank-level-filter:checked')).map(c => c.value);
+
+    listEl.innerHTML = '<p style="text-align:center; padding:2rem; color:#64748b;">문항을 불러오는 중입니다... ⏳</p>';
+
+    const standardIds = standardId
+        ? [standardId]
+        : (window.groupedDbStandards[course][unit] || []).map(s => s.standardId);
+
+    if (standardIds.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center; padding:2rem; color:#ef4444;">해당 단원에 등록된 성취기준이 없습니다.</p>';
+        return;
+    }
+
+    try {
+        const qRef = collection(db, "questions");
+        const results = [];
+        // Firestore 'in' 쿼리는 한 번에 최대 30개까지 지원하므로 30개씩 끊어서 조회합니다.
+        for (let i = 0; i < standardIds.length; i += 30) {
+            const chunk = standardIds.slice(i, i + 30);
+            const snap = await getDocs(query(qRef, where("standardId", "in", chunk)));
+            snap.forEach(docSnap => results.push({ id: docSnap.id, ...docSnap.data() }));
+        }
+
+        const filtered = levelChecks.length > 0 ? results.filter(q => levelChecks.includes(q.level)) : results;
+        window.bankSearchResults = filtered;
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = '<p style="text-align:center; padding:2rem; color:#64748b;">조건에 맞는 문항이 없습니다.</p>';
+            return;
+        }
+
+        listEl.innerHTML = filtered.map(q => {
+            const checked = window.bankSelectedQuestions.has(q.id);
+            const preview = (q.question || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+            return `
+                <label style="display:flex; align-items:flex-start; gap:10px; padding:0.8rem 1rem; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:0.5rem; cursor:pointer; background:${checked ? '#eff6ff' : '#fff'};">
+                    <input type="checkbox" style="margin-top:0.25rem;" ${checked ? 'checked' : ''} onchange="window.bankToggleQuestion('${q.id}', this.checked)">
+                    <div style="flex:1;">
+                        <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
+                            <span style="font-weight:bold; color:#2563eb; background:#e0e7ff; padding:2px 8px; border-radius:4px; font-size:0.8rem;">${q.standardId}</span>
+                            <span style="font-weight:bold; color:white; background:#f59e0b; padding:2px 8px; border-radius:99px; font-size:0.75rem;">수준 ${q.level}</span>
+                            ${q.isMCP ? '<span style="font-weight:bold; color:white; background:#ef4444; padding:2px 8px; border-radius:99px; font-size:0.75rem;">MCP</span>' : ''}
+                        </div>
+                        <div style="font-size:0.9rem; color:#334155;">${preview}${preview.length >= 80 ? '…' : ''}</div>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('문제은행 조회 에러:', error);
+        listEl.innerHTML = '<p style="text-align:center; padding:2rem; color:#ef4444;">문항을 불러오지 못했습니다.</p>';
+    }
+};
+
+window.bankToggleQuestion = function(id, checked) {
+    if (checked) {
+        const q = window.bankSearchResults.find(x => x.id === id);
+        if (q) window.bankSelectedQuestions.set(id, q);
+    } else {
+        window.bankSelectedQuestions.delete(id);
+    }
+    window.updateBankSelectedCount();
+};
+
+window.updateBankSelectedCount = function() {
+    const el = document.getElementById('bank-selected-count');
+    if (el) el.innerText = window.bankSelectedQuestions.size;
+};
+
+window.bankClearSelection = function() {
+    if (window.bankSelectedQuestions.size === 0) return;
+    if (!confirm('선택한 문항 목록을 모두 비우시겠습니까?')) return;
+    window.bankSelectedQuestions.clear();
+    window.updateBankSelectedCount();
+    window.bankSearchQuestions();
+};
+
+// 선택한 DB 문항들을 '출력/저장 대기열' 형태로 변환합니다(AI 문항제작 탭과 동일한 엔진 재사용).
+window.bankBuildTestPaper = function() {
+    if (window.bankSelectedQuestions.size === 0) {
+        alert('시험지에 포함할 문항을 하나 이상 선택해주세요.');
+        return;
+    }
+
+    window.bankPrintList = [];
+    let idx = 0;
+    window.bankSelectedQuestions.forEach(q => {
+        idx++;
+        const rawImg = (q.svgImage || q.image || q.imageUrl || '').trim();
+        let svgOrImgHtml = '';
+        if (rawImg.startsWith('<svg')) {
+            svgOrImgHtml = rawImg;
+        } else if (/^(https?:|data:)/i.test(rawImg)) {
+            svgOrImgHtml = `<img src="${rawImg}" style="max-width:100%; max-height:260px;">`;
+        }
+        const html = window.buildQuestionPrintHtml(q.question || '', svgOrImgHtml, q.conditions || [], q.options || [], q.level || '');
+        window.bankPrintList.push({ id: idx, html, selected: true });
+    });
+
+    document.getElementById('bank-section-print').classList.remove('hidden');
+    window.updateBankPrintSelectionUI();
+    document.getElementById('bank-section-print').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.updateBankPrintSelectionUI = function() {
+    const container = document.getElementById('bank-print-selection-container');
+    if (!container) return;
+
+    container.innerHTML = window.bankPrintList.map((item, idx) => `
+        <label class="flex items-center gap-2 px-4 py-2 border rounded-full cursor-pointer transition-colors ${item.selected ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-white border-gray-200'}">
+            <input type="checkbox" class="form-checkbox text-blue-600 h-5 w-5" ${item.selected ? 'checked' : ''} onchange="window.bankTogglePrintSelection(${idx}, this.checked)">
+            <span class="font-bold ${item.selected ? 'text-blue-800' : 'text-gray-600'}">문항 ${idx + 1}</span>
+        </label>
+    `).join('');
+    document.getElementById('bank-print-count').innerText = window.bankPrintList.filter(i => i.selected).length;
+};
+
+window.bankTogglePrintSelection = function(idx, isChecked) {
+    window.bankPrintList[idx].selected = isChecked;
+    window.updateBankPrintSelectionUI();
+};
+
+window.bankPrintTest = function() {
+    window.printTestFromList(window.bankPrintList.filter(item => item.selected));
+};
+
+window.bankDownloadTest = async function() {
+    await window.downloadTestFromList(window.bankPrintList.filter(item => item.selected));
+};
+
+window.bankResetTestPaper = function() {
+    if (!confirm('구성한 시험지 대기열을 초기화하시겠습니까? (선택한 문항 목록은 유지됩니다)')) return;
+    window.bankPrintList = [];
+    document.getElementById('bank-section-print').classList.add('hidden');
+    window.updateBankPrintSelectionUI();
 };
