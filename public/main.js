@@ -1070,11 +1070,18 @@ function svgToPngDataUrl(svgString) {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             URL.revokeObjectURL(url);
-            resolve(canvas.toDataURL('image/png'));
+            resolve({ dataUrl: canvas.toDataURL('image/png'), width: w, height: h });
         };
         img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
         img.src = url;
     });
+}
+
+// 💡 워드는 HTML을 문서로 변환할 때 CSS max-width/max-height를 안정적으로 지키지 않는 경우가 있어,
+// <img width="N" height="N"> 처럼 실제 픽셀 크기를 직접 계산해 넣어줍니다(비율은 유지됨).
+function fitWithin(w, h, maxW, maxH) {
+    const scale = Math.min(maxW / w, maxH / h, 1);
+    return { width: Math.round(w * scale), height: Math.round(h * scale) };
 }
 
 // 교사가 인쇄 전 자유롭게 고칠 수 있도록, 워드(한글에서도 열림)에서 여는 진짜 .docx 파일로 저장합니다.
@@ -1089,8 +1096,9 @@ window.downloadInquiryActivity = async function(docId) {
     let imageHtml = '';
     if (data.svg) {
         try {
-            const pngDataUrl = await svgToPngDataUrl(data.svg);
-            imageHtml = `<p style="text-align:center;"><img src="${pngDataUrl}" style="max-width:500px;"></p>`;
+            const png = await svgToPngDataUrl(data.svg);
+            const size = fitWithin(png.width, png.height, 340, 220);
+            imageHtml = `<p style="text-align:center;"><img src="${png.dataUrl}" width="${size.width}" height="${size.height}" style="max-width:${size.width}px; max-height:${size.height}px;"></p>`;
         } catch (e) {
             console.error('SVG 변환 실패:', e);
         }
@@ -2334,7 +2342,10 @@ window.appendCreationResult = function(htmlContent, titleText, stdId, level) {
     
     if (qConditions.length > 0) {
         const { presentation, bogi } = splitConditions(qConditions);
-        printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff;">`;
+        // 💡 표가 든 제시문 박스가 단 중간에서 잘리면, 잘린 뒷부분(표)이 다음 단으로 넘어가면서
+        // 이번 단에는 표가 있어야 할 자리가 빈 채로 남습니다. break-inside:avoid로 이 박스
+        // 전체를 하나로 묶어, 안 들어가면 통째로 다음 단으로 넘어가게 합니다.
+        printHtml += `<div style="border: 1px solid #777; padding: 15px; margin: 15px 0; border-radius: 4px; line-height: 1.6; font-size: 0.95rem; background-color: #fff; break-inside: avoid; page-break-inside: avoid;">`;
         if (presentation.length > 0) {
             printHtml += `<div style="${bogi.length > 0 ? 'margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #999;' : ''}">`;
             presentation.forEach(p => { printHtml += `<div style="margin-bottom: 8px;">${p.replace(/\n/g, '<br>')}</div>`; });
@@ -2580,11 +2591,14 @@ window.downloadCreationTest = async function() {
         const svgs = wrapper.querySelectorAll('svg');
         for (const svg of svgs) {
             try {
-                const pngDataUrl = await svgToPngDataUrl(svg.outerHTML);
+                const png = await svgToPngDataUrl(svg.outerHTML);
+                const size = fitWithin(png.width, png.height, 340, 220);
                 const img = document.createElement('img');
-                img.src = pngDataUrl;
-                img.style.maxWidth = '500px';
-                img.style.maxHeight = '300px';
+                img.src = png.dataUrl;
+                img.width = size.width;
+                img.height = size.height;
+                img.style.maxWidth = size.width + 'px';
+                img.style.maxHeight = size.height + 'px';
                 svg.replaceWith(img);
             } catch (e) {
                 console.error('SVG 변환 실패:', e);
@@ -2669,7 +2683,7 @@ window.printTest = function() {
             /* 💡 표나 긴 영어/염기서열 문자열이 단 너비보다 넓으면 단 경계를 넘어가면서
                왼쪽 단이 실제보다 좁아 보이는 것처럼 보이는 원인이 됩니다. 항상 단 너비 안에
                맞도록 강제합니다. */
-            .q-item table { width: 100% !important; table-layout: fixed; }
+            .q-item table { width: 100% !important; table-layout: fixed; break-inside: avoid; page-break-inside: avoid; }
             .q-item td, .q-item th { word-break: break-word; overflow-wrap: break-word; }
             /* 💡 AI가 만든 그림(svg)의 세로 비율이 큰데 실제 내용은 위쪽에 몰려 있으면,
                그림 아래에 불필요한 빈 여백이 크게 남아 다음 내용(표 등)이 한참 아래로 밀립니다.
