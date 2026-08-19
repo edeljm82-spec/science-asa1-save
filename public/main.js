@@ -1075,6 +1075,24 @@ function svgToPngDataUrl(svgString) {
     });
 }
 
+// 💡 MS Word는 HTML을 .doc로 열 때 <img src="data:...">(base64 인라인 이미지)를 표시하지 못합니다.
+// (인라인 SVG는 애초에 표시 못 해서 PNG로 미리 바꿔주고 있었는데, data URI로 넣은 PNG조차 안 뜨는 것이
+// 이 문제입니다.) Word가 실제로 지원하는 방식은 MHTML(여러 이미지를 별도 파트로 담고 본문에서
+// 파일명으로 참조하는 형식)이므로, 이 함수로 HTML과 이미지들을 MHTML 하나로 묶어줍니다.
+function buildMhtmlBlob(htmlContent, images) {
+    const boundary = '----=_NextPart_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    let mhtml = `MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="${boundary}"\r\n\r\n`;
+    mhtml += `--${boundary}\r\nContent-Type: text/html; charset="utf-8"\r\nContent-Location: file:///document.html\r\n\r\n`;
+    mhtml += htmlContent + '\r\n\r\n';
+    images.forEach(img => {
+        const wrappedBase64 = (img.base64.match(/.{1,76}/g) || []).join('\r\n');
+        mhtml += `--${boundary}\r\nContent-Type: ${img.mime}\r\nContent-Transfer-Encoding: base64\r\nContent-Location: ${img.cid}\r\n\r\n`;
+        mhtml += wrappedBase64 + '\r\n\r\n';
+    });
+    mhtml += `--${boundary}--\r\n`;
+    return new Blob([mhtml], { type: 'application/msword' });
+}
+
 // 교사가 인쇄 전 자유롭게 고칠 수 있도록, 워드(한글에서도 열림)에서 여는 .doc 파일로 저장합니다.
 window.downloadInquiryActivity = async function(docId) {
     const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
@@ -1082,10 +1100,12 @@ window.downloadInquiryActivity = async function(docId) {
     const data = docSnap.data();
 
     let imageHtml = '';
+    const mhtmlImages = [];
     if (data.svg) {
         try {
             const pngDataUrl = await svgToPngDataUrl(data.svg);
-            imageHtml = `<p style="text-align:center;"><img src="${pngDataUrl}" style="max-width:500px;"></p>`;
+            mhtmlImages.push({ cid: 'image1.png', mime: 'image/png', base64: pngDataUrl.split(',')[1] });
+            imageHtml = `<p style="text-align:center;"><img src="image1.png" style="max-width:500px;"></p>`;
         } catch (e) {
             console.error('SVG 변환 실패:', e);
         }
@@ -1130,7 +1150,7 @@ window.downloadInquiryActivity = async function(docId) {
     </body>
     </html>`;
 
-    const blob = new Blob(["﻿", htmlContent], { type: 'application/msword' });
+    const blob = buildMhtmlBlob(htmlContent, mhtmlImages);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -2564,7 +2584,10 @@ window.downloadCreationTest = async function() {
     const selectedItems = window.printList.filter(item => item.selected);
     if (selectedItems.length === 0) return alert("저장할 문항을 하나 이상 선택해주세요.");
 
-    // Word는 인라인 SVG를 제대로 표시하지 못하므로, 문항 안의 SVG를 PNG 이미지로 바꿔치기합니다.
+    // Word는 인라인 SVG도, base64 data URI 이미지도 제대로 표시하지 못하므로, 문항 안의 SVG를
+    // PNG로 바꾼 뒤 MHTML의 별도 이미지 파트로 담아 파일명으로 참조하게 합니다.
+    const mhtmlImages = [];
+    let imgCounter = 0;
     const itemsHtml = await Promise.all(selectedItems.map(async (item, idx) => {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = item.html;
@@ -2572,8 +2595,10 @@ window.downloadCreationTest = async function() {
         for (const svg of svgs) {
             try {
                 const pngDataUrl = await svgToPngDataUrl(svg.outerHTML);
+                const cid = `image${++imgCounter}.png`;
+                mhtmlImages.push({ cid, mime: 'image/png', base64: pngDataUrl.split(',')[1] });
                 const img = document.createElement('img');
-                img.src = pngDataUrl;
+                img.src = cid;
                 img.style.maxWidth = '500px';
                 svg.replaceWith(img);
             } catch (e) {
@@ -2599,7 +2624,7 @@ window.downloadCreationTest = async function() {
     </body>
     </html>`;
 
-    const blob = new Blob(["﻿", htmlContent], { type: 'application/msword' });
+    const blob = buildMhtmlBlob(htmlContent, mhtmlImages);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
