@@ -1766,8 +1766,11 @@ window.exportBadQuestionsToJson = async function() {
 window.showStandardDetails = async function(clickedText) {
     if (!clickedText || clickedText === '미분류' || clickedText === '없음') return;
 
-    // 정규식으로 텍스트 안에서 성취기준 코드(예: 10통과1-01-01)만 쏙 뽑아냅니다.
-    const stdMatch = clickedText.match(/\d{2}[가-힣]+\d*-\d{2}-\d{2}/);
+    // 정규식으로 텍스트 안에서 성취기준 코드만 쏙 뽑아냅니다.
+    // 통합과학1/2은 "10통과1-01-01"처럼 하이픈이 2개인 3단 구조지만,
+    // 생명과학/세포와 물질대사/생물의 유전은 "12생과01-01"처럼 하이픈이 1개뿐인 2단 구조라서
+    // 하이픈 2개를 요구하던 기존 정규식으로는 아예 매칭이 안 되고 있었습니다(뒤쪽 -\d{2}를 선택적으로 변경).
+    const stdMatch = clickedText.match(/\d{2}[가-힣]+\d*-\d{2}(?:-\d{2})?/);
     if (!stdMatch) return;
     const stdId = stdMatch[0];
 
