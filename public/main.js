@@ -1077,37 +1077,20 @@ function svgToPngDataUrl(svgString) {
     });
 }
 
-// 💡 MS Word는 HTML을 .doc로 열 때 <img src="data:...">(base64 인라인 이미지)를 표시하지 못합니다.
-// (인라인 SVG는 애초에 표시 못 해서 PNG로 미리 바꿔주고 있었는데, data URI로 넣은 PNG조차 안 뜨는 것이
-// 이 문제입니다.) Word가 실제로 지원하는 방식은 MHTML(여러 이미지를 별도 파트로 담고 본문에서
-// 파일명으로 참조하는 형식)이므로, 이 함수로 HTML과 이미지들을 MHTML 하나로 묶어줍니다.
-function buildMhtmlBlob(htmlContent, images) {
-    const boundary = '----=_NextPart_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
-    let mhtml = `MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="${boundary}"\r\n\r\n`;
-    mhtml += `--${boundary}\r\nContent-Type: text/html; charset="utf-8"\r\nContent-Location: file:///document.html\r\n\r\n`;
-    mhtml += htmlContent + '\r\n\r\n';
-    images.forEach(img => {
-        const wrappedBase64 = (img.base64.match(/.{1,76}/g) || []).join('\r\n');
-        mhtml += `--${boundary}\r\nContent-Type: ${img.mime}\r\nContent-Transfer-Encoding: base64\r\nContent-Location: ${img.cid}\r\n\r\n`;
-        mhtml += wrappedBase64 + '\r\n\r\n';
-    });
-    mhtml += `--${boundary}--\r\n`;
-    return new Blob([mhtml], { type: 'application/msword' });
-}
-
-// 교사가 인쇄 전 자유롭게 고칠 수 있도록, 워드(한글에서도 열림)에서 여는 .doc 파일로 저장합니다.
+// 교사가 인쇄 전 자유롭게 고칠 수 있도록, 워드(한글에서도 열림)에서 여는 진짜 .docx 파일로 저장합니다.
+// 💡 MS Word는 HTML을 .doc/.mht로 열 때 이미지(인라인 SVG는 물론, base64 data URI PNG까지)를
+// 안정적으로 표시하지 못합니다(직접 확인된 워드 한계). html-docx-js 라이브러리로 진짜 OOXML(.docx)을
+// 만들면 이 문제가 없고, 이 라이브러리는 base64 데이터 URI 이미지를 그대로 지원합니다.
 window.downloadInquiryActivity = async function(docId) {
     const docSnap = await getDoc(doc(db, "inquiry_worksheets", docId));
     if (!docSnap.exists()) return;
     const data = docSnap.data();
 
     let imageHtml = '';
-    const mhtmlImages = [];
     if (data.svg) {
         try {
             const pngDataUrl = await svgToPngDataUrl(data.svg);
-            mhtmlImages.push({ cid: 'image1.png', mime: 'image/png', base64: pngDataUrl.split(',')[1] });
-            imageHtml = `<p style="text-align:center;"><img src="image1.png" style="max-width:500px;"></p>`;
+            imageHtml = `<p style="text-align:center;"><img src="${pngDataUrl}" style="max-width:500px;"></p>`;
         } catch (e) {
             console.error('SVG 변환 실패:', e);
         }
@@ -1152,11 +1135,11 @@ window.downloadInquiryActivity = async function(docId) {
     </body>
     </html>`;
 
-    const blob = buildMhtmlBlob(htmlContent, mhtmlImages);
+    const blob = htmlDocx.asBlob(htmlContent);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${data.title}_활동지.mht`;
+    a.download = `${data.title}_활동지.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -2589,10 +2572,8 @@ window.downloadCreationTest = async function() {
     const selectedItems = window.printList.filter(item => item.selected);
     if (selectedItems.length === 0) return alert("저장할 문항을 하나 이상 선택해주세요.");
 
-    // Word는 인라인 SVG도, base64 data URI 이미지도 제대로 표시하지 못하므로, 문항 안의 SVG를
-    // PNG로 바꾼 뒤 MHTML의 별도 이미지 파트로 담아 파일명으로 참조하게 합니다.
-    const mhtmlImages = [];
-    let imgCounter = 0;
+    // Word는 인라인 SVG를 표시하지 못하므로 문항 안의 SVG를 PNG(base64 data URI)로 바꿔치기합니다.
+    // html-docx-js가 data URI 이미지를 그대로 지원하므로 별도 파트로 분리할 필요가 없습니다.
     const itemsHtml = await Promise.all(selectedItems.map(async (item, idx) => {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = item.html;
@@ -2600,11 +2581,10 @@ window.downloadCreationTest = async function() {
         for (const svg of svgs) {
             try {
                 const pngDataUrl = await svgToPngDataUrl(svg.outerHTML);
-                const cid = `image${++imgCounter}.png`;
-                mhtmlImages.push({ cid, mime: 'image/png', base64: pngDataUrl.split(',')[1] });
                 const img = document.createElement('img');
-                img.src = cid;
+                img.src = pngDataUrl;
                 img.style.maxWidth = '500px';
+                img.style.maxHeight = '300px';
                 svg.replaceWith(img);
             } catch (e) {
                 console.error('SVG 변환 실패:', e);
@@ -2629,11 +2609,11 @@ window.downloadCreationTest = async function() {
     </body>
     </html>`;
 
-    const blob = buildMhtmlBlob(htmlContent, mhtmlImages);
+    const blob = htmlDocx.asBlob(htmlContent);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `과학_탐구_평가_시험지.mht`;
+    a.download = `과학_탐구_평가_시험지.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -2691,7 +2671,10 @@ window.printTest = function() {
                맞도록 강제합니다. */
             .q-item table { width: 100% !important; table-layout: fixed; }
             .q-item td, .q-item th { word-break: break-word; overflow-wrap: break-word; }
-            .q-item img, .q-item svg { max-width: 100%; height: auto; }
+            /* 💡 AI가 만든 그림(svg)의 세로 비율이 큰데 실제 내용은 위쪽에 몰려 있으면,
+               그림 아래에 불필요한 빈 여백이 크게 남아 다음 내용(표 등)이 한참 아래로 밀립니다.
+               높이를 적당히 눌러 여백을 줄입니다(가로세로 비율은 유지됨). */
+            .q-item img, .q-item svg { max-width: 100%; max-height: 260px; width: auto; height: auto; }
         </style>
     </head>
     <body>

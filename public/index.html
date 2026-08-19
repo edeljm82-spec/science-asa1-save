@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- 저장하기(.docx) 기능: base64 이미지를 포함한 HTML을 실제 워드(.docx) 파일로 변환합니다.
+       MHTML/.doc 방식은 워드가 인라인 이미지를 표시하지 못해 진짜 docx 생성 방식으로 교체했습니다. -->
+  <script src="https://unpkg.com/html-docx-js@0.3.1/dist/html-docx.js"></script>
   <script>
     window.MathJax = {
       tex: {
