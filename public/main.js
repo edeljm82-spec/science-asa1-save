@@ -212,14 +212,22 @@ window.extractDataToState = function(htmlString) {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    initNavigation();
-    
-    // 💡 [수정됨] HTML의 선택창(course-select)에 설정된 기본값을 직접 읽어와서 첫 화면을 그립니다.
+// 💡 로그인 게이트: 성취기준/문항 등 DB 데이터는 로그인 전엔 Firestore 규칙에서 막혀있으므로,
+// 로그인이 확인된 뒤에야 처음 데이터를 불러옵니다(로그인 전에 불러오면 권한 에러만 납니다).
+let initialDataLoaded = false;
+window.loadInitialDataAfterLogin = function() {
+    if (initialDataLoaded) return;
+    initialDataLoaded = true;
     const courseSelect = document.getElementById('course-select');
     const initialCourse = courseSelect ? courseSelect.value : "1. 통합과학1";
     renderAchievementDashboard(initialCourse);
+    window.initCreationDB();
+};
 
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
+
+    const courseSelect = document.getElementById('course-select');
     // 💡 [수정됨] 드롭다운 변경 이벤트도 이곳으로 깔끔하게 통합합니다.
     if (courseSelect) {
         courseSelect.addEventListener('change', (e) => {
@@ -229,14 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initAnalysis();
     //initQuestionCreation(); // ✅ 주석 처리하여 실행을 막습니다.
-    initInquiry();   
-    initModal();     
-    initFirebaseAuth(); 
+    initInquiry();
+    initModal();
+    initFirebaseAuth();
     if (window.lucide) lucide.createIcons();
     initChatbotResize();
-    
-    window.initCreationDB(); 
-    window.selectType('general'); 
+
+    window.selectType('general');
 });
 
 // 1. Navigation Logic
@@ -1353,7 +1360,10 @@ function initFirebaseAuth() {
     const btnApiSetup = document.getElementById('btn-api-setup');
     const userNameDisplay = document.getElementById('user-name-display');
     const apiModalOverlay = document.getElementById('api-modal-overlay');
-    
+    const loginGateOverlay = document.getElementById('login-gate-overlay');
+    const btnLoginGate = document.getElementById('btn-google-login-gate');
+    const loginGateError = document.getElementById('login-gate-error');
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
@@ -1361,22 +1371,48 @@ function initFirebaseAuth() {
             userNameDisplay.style.display = 'inline-block';
             userNameDisplay.textContent = `${user.displayName} 선생님`;
             btnLogout.style.display = 'inline-block';
-            
+            if (loginGateOverlay) loginGateOverlay.style.display = 'none';
+
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists() && docSnap.data().apiKey) {
                 userApiKey = docSnap.data().apiKey;
             }
+
+            // 회원 관리용 프로필 기록: 가입일(createdAt)은 최초 1회만, 최근 로그인일(lastLoginAt)은 매번 갱신합니다.
+            const profileUpdate = {
+                displayName: user.displayName || '',
+                email: user.email || '',
+                photoURL: user.photoURL || '',
+                lastLoginAt: new Date()
+            };
+            if (!docSnap.exists() || !docSnap.data().createdAt) {
+                profileUpdate.createdAt = new Date();
+            }
+            setDoc(docRef, profileUpdate, { merge: true }).catch(e => console.error('회원 프로필 기록 실패:', e));
+
+            window.loadInitialDataAfterLogin();
         } else {
             currentUser = null;
             userApiKey = "";
             btnLogin.style.display = 'inline-block';
             userNameDisplay.style.display = 'none';
             btnLogout.style.display = 'none';
+            if (loginGateOverlay) loginGateOverlay.style.display = 'flex';
         }
     });
 
     btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
+    if (btnLoginGate) {
+        btnLoginGate.addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch(e => {
+                if (loginGateError) {
+                    loginGateError.style.display = 'block';
+                    loginGateError.textContent = '로그인에 실패했습니다: ' + e.message;
+                }
+            });
+        });
+    }
     btnLogout.addEventListener('click', () => signOut(auth));
     
     btnApiSetup.addEventListener('click', () => {

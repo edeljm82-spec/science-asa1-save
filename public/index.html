@@ -49,7 +49,17 @@
   </style>
 </head>
 <body>
-  
+
+  <div id="login-gate-overlay" style="position:fixed; inset:0; z-index:2000; background:linear-gradient(135deg, oklch(60% 0.15 240 / 0.95), oklch(70% 0.2 45 / 0.95)); display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:white; width:100%; max-width:420px; border-radius:16px; padding:2.5rem 2rem; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);">
+      <div style="font-size:2.5rem; margin-bottom:0.5rem;">🔬</div>
+      <h2 style="margin:0 0 0.6rem; color:#1e3a8a; font-weight:800; font-size:1.4rem;">과학 탐구 아카이브</h2>
+      <p style="color:#64748b; font-size:0.95rem; line-height:1.6; margin-bottom:1.8rem;">선생님 전용 서비스입니다.<br>구글 계정으로 로그인하면 이용하실 수 있습니다.</p>
+      <button id="btn-google-login-gate" style="width:100%; padding:1rem; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.05rem; cursor:pointer;">구글 로그인</button>
+      <p id="login-gate-error" style="display:none; color:#dc2626; font-size:0.85rem; margin-top:1rem; margin-bottom:0;"></p>
+    </div>
+  </div>
+
   <div id="api-modal-overlay" class="modal-overlay">
     <div class="modal-content" style="max-width: 550px; padding: 2.5rem; border-radius: 12px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
       <button id="api-modal-close" class="modal-close-btn" style="top: 1rem; right: 1rem;">&times;</button>

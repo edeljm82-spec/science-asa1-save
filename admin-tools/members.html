@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회원 관리</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #0f172a; }
+  h1 { margin-bottom: 0.3rem; }
+  .sub { color: #64748b; margin-top: 0; margin-bottom: 1.5rem; }
+  button { padding: 0.65rem 1.2rem; font-size: 0.95rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
+  #btn-login { background: #2563eb; color: white; }
+  #btn-refresh { background: #16a34a; color: white; display: none; }
+  #login-status { font-size: 0.95rem; }
+  #status { white-space: pre-wrap; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; line-height: 1.6; display: none; }
+  .err { color: #dc2626; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; font-size: 0.9rem; display: none; }
+  th, td { text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+  th { background: #f1f5f9; font-weight: 700; color: #334155; }
+  tr:hover td { background: #f8fafc; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #e2e8f0; vertical-align: middle; }
+  .name-cell { display: flex; align-items: center; gap: 0.6rem; }
+  .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: bold; }
+  .badge-yes { background: #dcfce7; color: #15803d; }
+  .badge-no { background: #f1f5f9; color: #94a3b8; }
+  .count { margin-top: 1rem; font-weight: bold; color: #334155; display: none; }
+</style>
+</head>
+<body>
+  <h1>회원 관리</h1>
+  <p class="sub">구글 로그인으로 가입한 회원 목록입니다. (운영자 계정으로만 조회 가능)</p>
+
+  <div>
+    <span id="login-status">로그인 필요</span><br><br>
+    <button id="btn-login">Google로 로그인</button>
+    <button id="btn-refresh">새로고침</button>
+  </div>
+
+  <div id="status"></div>
+  <p class="count" id="count"></p>
+  <table id="member-table">
+    <thead>
+      <tr>
+        <th>이름</th>
+        <th>이메일</th>
+        <th>가입일</th>
+        <th>최근 로그인</th>
+        <th>API 키 설정</th>
+      </tr>
+    </thead>
+    <tbody id="member-tbody"></tbody>
+  </table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDV_er1ecvJ6ll_6nqiHe10W7nX6kvEyt4",
+  authDomain: "science-asa1-13844073-164bb.firebaseapp.com",
+  projectId: "science-asa1-13844073-164bb",
+  storageBucket: "science-asa1-13844073-164bb.firebasestorage.app",
+  messagingSenderId: "946177749957",
+  appId: "1:946177749957:web:c3a98314a79871d219d1ac"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginStatus = document.getElementById('login-status');
+const btnLogin = document.getElementById('btn-login');
+const btnRefresh = document.getElementById('btn-refresh');
+const statusEl = document.getElementById('status');
+const tableEl = document.getElementById('member-table');
+const tbodyEl = document.getElementById('member-tbody');
+const countEl = document.getElementById('count');
+
+function showStatus(msg, cls) {
+  statusEl.style.display = 'block';
+  statusEl.className = cls || '';
+  statusEl.textContent = msg;
+}
+
+function fmtDate(ts) {
+  if (!ts) return '-';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+async function loadMembers() {
+  statusEl.style.display = 'none';
+  tableEl.style.display = 'none';
+  countEl.style.display = 'none';
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    const members = [];
+    snap.forEach(docSnap => members.push({ id: docSnap.id, ...docSnap.data() }));
+
+    // 최근 로그인 -> 가입일 순으로 정렬 (둘 다 없는 예전 기록은 맨 아래로)
+    members.sort((a, b) => {
+      const ta = (a.lastLoginAt || a.createdAt);
+      const tb = (b.lastLoginAt || b.createdAt);
+      const da = ta ? (ta.toDate ? ta.toDate().getTime() : new Date(ta).getTime()) : 0;
+      const db_ = tb ? (tb.toDate ? tb.toDate().getTime() : new Date(tb).getTime()) : 0;
+      return db_ - da;
+    });
+
+    tbodyEl.innerHTML = members.map(m => `
+      <tr>
+        <td>
+          <div class="name-cell">
+            <img class="avatar" src="${m.photoURL || ''}" alt="" onerror="this.style.visibility='hidden'">
+            <span>${m.displayName || '(이름 없음)'}</span>
+          </div>
+        </td>
+        <td>${m.email || '-'}</td>
+        <td>${fmtDate(m.createdAt)}</td>
+        <td>${fmtDate(m.lastLoginAt)}</td>
+        <td><span class="badge ${m.apiKey ? 'badge-yes' : 'badge-no'}">${m.apiKey ? '설정됨' : '미설정'}</span></td>
+      </tr>
+    `).join('');
+
+    countEl.textContent = `총 ${members.length}명`;
+    countEl.style.display = 'block';
+    tableEl.style.display = members.length ? 'table' : 'none';
+    if (members.length === 0) showStatus('아직 기록된 회원이 없습니다.');
+  } catch (e) {
+    showStatus('회원 목록을 불러오지 못했습니다: ' + e.message, 'err');
+  }
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginStatus.textContent = `로그인됨: ${user.email}`;
+    btnLogin.style.display = 'none';
+    btnRefresh.style.display = 'inline-block';
+    loadMembers();
+  } else {
+    loginStatus.textContent = '로그인 필요';
+    btnLogin.style.display = 'inline-block';
+    btnRefresh.style.display = 'none';
+    tableEl.style.display = 'none';
+    countEl.style.display = 'none';
+    statusEl.style.display = 'none';
+  }
+});
+
+btnLogin.addEventListener('click', async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    showStatus('로그인 실패: ' + e.message, 'err');
+  }
+});
+
+btnRefresh.addEventListener('click', loadMembers);
+</script>
+</body>
+</html>

@@ -3,33 +3,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 성취기준: 누구나 볼 수 있어야 함(로그인 전 대시보드), 수정은 로그인한 사용자만
+    // 성취기준: 로그인한 사용자만 볼 수 있음(회원 전용 서비스로 전환), 수정도 로그인한 사용자만
     match /standards/{docId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // 문항: 누구나 풀어볼 수 있어야 함, 수정/삭제는 로그인한 사용자만
+    // 문항: 로그인한 사용자만 볼 수 있음, 수정/삭제도 로그인한 사용자만
     match /questions/{docId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
     // 필수탐구활동 (예전 데이터, 현재 프론트엔드에서는 사용하지 않지만 읽기는 유지)
     match /inquiry_activities/{docId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // 필수탐구활동 활동지 (AI 창작): 누구나 볼 수 있어야 함, 생성/수정은 로그인한 사용자만
+    // 필수탐구활동 활동지 (AI 창작): 로그인한 사용자만 볼 수 있음, 생성/수정도 로그인한 사용자만
     match /inquiry_worksheets/{docId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
     // 사용자 개인정보(API Key 등): 본인만 읽고 쓸 수 있음
+    // 회원 관리(가입자 목록 확인)를 위해 운영자 계정만 예외적으로 전체 조회 가능
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.token.email == 'edeljm82@gmail.com' && request.auth.token.email_verified == true;
     }
 
     // 디버그용: 선지/데이터 추출 실패 시 원본 응답을 남겨 원인 분석에 사용 (로그인한 사용자만 기록)
