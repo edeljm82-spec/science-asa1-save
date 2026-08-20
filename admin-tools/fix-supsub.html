@@ -18,8 +18,8 @@
 </style>
 </head>
 <body>
-  <h1>윗첨자/아래첨자 누락 문항 복구</h1>
-  <p>DB 전체를 스캔해 (1) 방사성 동위원소 표기(15N, 14N, 32P, 35S 등)에 &lt;sup&gt; 태그가 빠진 문항 5건, (2) "10^5"처럼 캐럿(^)만 쓰고 &lt;sup&gt;은 안 쓴 10의 거듭제곱 표기 문항 6건, 총 11건을 찾았습니다. ($...$ 로 감싼 수식은 MathJax가 알아서 위첨자로 그려주므로 그런 경우는 건드리지 않았습니다.) 아래에서 문서별로 변경 전/후를 확인하고 적용하세요.</p>
+  <h1>윗첨자/아래첨자 및 그림 손상 문항 복구</h1>
+  <p>DB 전체를 스캔해 (1) 방사성 동위원소 표기(15N, 14N, 32P, 35S 등)에 &lt;sup&gt;이 빠진 문항 5건, (2) "10^5"처럼 캐럿(^)만 쓴 거듭제곱 표기 문항 6건, (3) 화학식(H2, O2, Na2CO3, C12H22O11 등)에 &lt;sub&gt;가 빠진 문항 6건(문제은행 5건 + 필수탐구활동 1건), (4) 그림 속 밑줄(&lt;u&gt;) 태그 때문에 SVG가 깨져 텍스트가 뒤죽박죽 보이던 문항 3건, 총 20건을 찾았습니다. ($...$ 로 감싼 수식은 MathJax가 알아서 그려주므로 건드리지 않았습니다.) 아래에서 문서별로 변경 전/후를 확인하고 적용하세요.</p>
   <span id="login-status">로그인 필요</span><br><br>
   <button id="btn-login">Google로 로그인</button>
   <div id="results"></div>
@@ -42,8 +42,65 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 💡 각 문서별 정확한 수정 대상을 사전에 스캔·검증해 하드코딩했습니다(REST API로 전체 600건을 훑어
-// 방사성 동위원소 등 표기에 <sup>가 필요한데 순수 텍스트로만 저장된 경우만 골라낸 결과).
+// 💡 "수소 연료 전지 자동차" 그림의 완전히 복구된 버전입니다. 자세한 원인은 아래 FIXES의
+// 해당 항목 주석 참고. Playwright로 실제 렌더링까지 확인해 정상 동작을 검증했습니다.
+const FIXED_FUEL_CELL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 280" width="100%" style="max-width: 500px; background-color: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <!-- Background Grid (Optional) -->
+            <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" stroke-width="1"></path>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)"></rect>
+
+            <!-- Title/Label -->
+            <text x="250" y="25" font-family="Malgun Gothic, sans-serif" font-size="14" font-weight="bold" fill="#1e293b" text-anchor="middle">친환경 수소 연료 전지 자동차의 원리</text>
+
+            <!-- Car Outline (Simplified) -->
+            <path d="M 80 180 L 110 130 L 160 120 L 240 120 L 290 150 L 420 150 L 430 180 L 410 180 C 410 160, 370 160, 370 180 L 190 180 C 190 160, 150 160, 150 180 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"></path>
+            <!-- Wheels -->
+            <circle cx="170" cy="180" r="22" fill="#334155" stroke="#1e293b" stroke-width="2"></circle>
+            <circle cx="170" cy="180" r="8" fill="#94a3b8"></circle>
+            <circle cx="390" cy="180" r="22" fill="#334155" stroke="#1e293b" stroke-width="2"></circle>
+            <circle cx="390" cy="180" r="8" fill="#94a3b8"></circle>
+
+            <!-- Fuel Cell Box -->
+            <rect x="120" y="135" width="70" height="35" rx="4" fill="#bae6fd" stroke="#0284c7" stroke-width="1.5"></rect>
+            <text x="155" y="156" font-family="Malgun Gothic, sans-serif" font-size="10" font-weight="bold" fill="#0369a1" text-anchor="middle">연료 전지</text>
+
+            <!-- Motor Box -->
+            <rect x="220" y="135" width="60" height="35" rx="4" fill="#fef08a" stroke="#ca8a04" stroke-width="1.5"></rect>
+            <text x="250" y="156" font-family="Malgun Gothic, sans-serif" font-size="10" font-weight="bold" fill="#854d0e" text-anchor="middle">모터</text>
+
+            <!-- Steel Frame Label -->
+            <path d="M 340 150 L 360 105" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2"></path>
+            <circle cx="340" cy="150" r="3" fill="#ef4444"></circle>
+
+            <!-- Explanations -->
+            <!-- 1. Fuel Cell -->
+            <path d="M 155 135 L 155 80" fill="none" stroke="#0284c7" stroke-width="1" stroke-dasharray="2,2"></path>
+            <rect x="20" y="35" width="160" height="45" rx="4" fill="#f0f9ff" stroke="#0284c7" stroke-width="1"></rect>
+            <text x="25" y="48" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#0369a1">㉠ <tspan style="text-decoration:underline">연료 전지에서 수소와</tspan></text>
+            <text x="25" y="61" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#0369a1"><tspan style="text-decoration:underline">산소가 반응</tspan>하여 전기</text>
+            <text x="25" y="74" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#0369a1">에너지를 생성한다.</text>
+
+            <!-- 2. Motor -->
+            <path d="M 250 135 L 250 80" fill="none" stroke="#ca8a04" stroke-width="1" stroke-dasharray="2,2"></path>
+            <rect x="195" y="35" width="140" height="45" rx="4" fill="#fefce8" stroke="#ca8a04" stroke-width="1"></rect>
+            <text x="200" y="48" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#854d0e">㉡ <tspan style="text-decoration:underline">전기 에너지로 모터를</tspan></text>
+            <text x="200" y="61" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#854d0e"><tspan style="text-decoration:underline">회전시켜</tspan> 자동차가</text>
+            <text x="200" y="74" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#854d0e">움직이도록 한다.</text>
+
+            <!-- 3. Rust -->
+            <rect x="310" y="85" width="170" height="45" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1"></rect>
+            <text x="315" y="98" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#991b1b">차량의 철제 프레임은 산소,</text>
+            <text x="315" y="111" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#991b1b">수분과 반응하여 ㉢ <tspan style="text-decoration:underline">붉은색의</tspan></text>
+            <text x="315" y="124" font-family="Malgun Gothic, sans-serif" font-size="9" fill="#991b1b"><tspan style="text-decoration:underline">녹</tspan>이 슬 수 있다.</text>
+        </svg>`;
+
+// 💡 각 문서별 정확한 수정 대상을 사전에 스캔·검증해 하드코딩했습니다(REST API로 전체 600여건을 훑어
+// 방사성 동위원소/화학식 표기에 <sup>·<sub>가 필요한데 순수 텍스트로만 저장된 경우, 그리고
+// SVG 그림이 <u> 태그 때문에 깨진 경우만 골라낸 결과).
 const FIXES = [
   {
     id: "6NLbPN17l5WxuJwsFwEy",
@@ -131,6 +188,81 @@ const FIXES = [
     fields: [
       { field: "question", replace: [[/10\^(-?\d+)/g, "10<sup>$1</sup>"]] }
     ]
+  },
+  // 💡 아래부터는 화학식/분자식에 <sub>가 빠진 경우입니다 (예: H2 -> H<sub>2</sub>).
+  {
+    id: "EULNEtPWYw5G1CA95oei",
+    title: "묽은 염산 실험 문항 (10통과2-01-04, B)",
+    fields: [
+      { field: "conditions", index: 0, replace: [[/Na2CO3/g, "Na<sub>2</sub>CO<sub>3</sub>"]] },
+      { field: "conditions", index: 1, replace: [[/H2/g, "H<sub>2</sub>"]] },
+      { field: "aiReason", replace: [[/H2/g, "H<sub>2</sub>"], [/CO2/g, "CO<sub>2</sub>"]] }
+    ]
+  },
+  {
+    id: "Y4ggDxGQN2Zl5gtByVrv",
+    title: "묽은 염산 실험 문항 (10통과2-01-03, B)",
+    fields: [
+      { field: "conditions", index: 0, replace: [[/Na2CO3/g, "Na<sub>2</sub>CO<sub>3</sub>"]] },
+      { field: "conditions", index: 1, replace: [[/H2/g, "H<sub>2</sub>"]] },
+      { field: "aiReason", replace: [[/H2/g, "H<sub>2</sub>"], [/CO2/g, "CO<sub>2</sub>"]] }
+    ]
+  },
+  {
+    id: "bZt0YXqalIXn49awY7rr",
+    title: "광합성/호흡 인산화 비교 문항 (12세포03-07, B)",
+    fields: [
+      { field: "levelReason", replace: [[/O2/g, "O<sub>2</sub>"]] }
+    ]
+  },
+  {
+    id: "x8ArIPZ0UeyULsTR6v8g",
+    title: "화학 삼투 비교 문항 (12세포03-07, A)",
+    fields: [
+      { field: "levelReason", replace: [[/O2/g, "O<sub>2</sub>"]] }
+    ]
+  },
+  {
+    id: "yL6NcoR4T9O3mxU7kQDP",
+    title: "활성화 에너지 그래프 문항 (10통과1-03-05, A)",
+    fields: [
+      { field: "conditions", index: 1, replace: [[/Ea1/g, "Ea<sub>1</sub>"]] }
+    ]
+  },
+  {
+    id: "int1-2-4",
+    collection: "inquiry_worksheets",
+    title: "필수탐구활동: 이온 결합/공유 결합 화합물 비교 (통합과학1)",
+    fields: [
+      { field: "materials", replace: [[/C12H22O11/g, "C<sub>12</sub>H<sub>22</sub>O<sub>11</sub>"]] }
+    ]
+  },
+  // 💡 아래 3건은 위첨자/아래첨자 문제가 아니라 훨씬 심각한 SVG 그림 손상 버그입니다.
+  // 세 문항 모두 "수소 연료 전지 자동차" 그림을 재사용하는데, 그림 안에 밑줄(<u>) 태그가
+  // 들어있으면 브라우저가 이를 만나는 순간 <svg> 밖으로 튕겨나가버려(HTML5 표준 동작),
+  // 그 뒤의 모든 그림 요소가 화면에 뒤죽박죽 텍스트로 흩어져 보이는 문제였습니다.
+  // <u> 대신 SVG 표준 요소인 <tspan style="text-decoration:underline">로 바꾸고,
+  // 원본에 있던 (중간에 끊긴 </svg>, 안 닫힌 <rect>/<path> 등) 태그 깨짐도 함께 복구했습니다.
+  {
+    id: "U343havI1z9MPbjMi5AJ",
+    title: "[그림 손상 복구] 수소 연료 전지 자동차 문항 (10통과2-01-03, B)",
+    fields: [
+      { field: "svgImage", fullValue: FIXED_FUEL_CELL_SVG }
+    ]
+  },
+  {
+    id: "CK7PynAIDnchueEDOnzY",
+    title: "[그림 손상 복구] 수소 연료 전지 자동차 문항 (10통과1-03-05, B)",
+    fields: [
+      { field: "svgImage", fullValue: FIXED_FUEL_CELL_SVG }
+    ]
+  },
+  {
+    id: "TRvKwvWTQ6AxbyvEfo2c",
+    title: "[그림 손상 복구] 수소 연료 전지 자동차 문항 (10통과2-02-06, B)",
+    fields: [
+      { field: "svgImage", fullValue: FIXED_FUEL_CELL_SVG }
+    ]
   }
 ];
 
@@ -157,7 +289,7 @@ async function renderList() {
   container.innerHTML = '';
 
   for (const fix of FIXES) {
-    const ref = doc(db, "questions", fix.id);
+    const ref = doc(db, fix.collection || "questions", fix.id);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       const div = document.createElement('div');
@@ -170,12 +302,24 @@ async function renderList() {
 
     const div = document.createElement('div');
     div.className = 'item';
-    let html = `<div><b>${fix.title}</b> <span style="color:#94a3b8;">(${fix.id})</span></div>`;
+    let html = `<div><b>${fix.title}</b> <span style="color:#94a3b8;">(${fix.collection || 'questions'}/${fix.id})</span></div>`;
+
+    // 긴 SVG 전체 교체 같은 경우 화면에 다 늘어놓으면 너무 기니, 미리보기 길이는 제한합니다.
+    const truncate = (s, n = 300) => s.length > n ? s.slice(0, n) + `… (총 ${s.length}자)` : s;
 
     const updatePayload = {};
     fix.fields.forEach(f => {
       let before, after;
-      if (f.index !== undefined) {
+      if (f.fullValue !== undefined) {
+        before = f.index !== undefined ? ((data[f.field] || [])[f.index] || '') : (data[f.field] || '');
+        after = f.fullValue;
+        if (f.index !== undefined) {
+          if (!updatePayload[f.field]) updatePayload[f.field] = [...(data[f.field] || [])];
+          updatePayload[f.field][f.index] = after;
+        } else {
+          updatePayload[f.field] = after;
+        }
+      } else if (f.index !== undefined) {
         before = (data[f.field] || [])[f.index] || '';
         after = applyReplacements(before, f.replace);
         if (!updatePayload[f.field]) updatePayload[f.field] = [...(data[f.field] || [])];
@@ -188,8 +332,8 @@ async function renderList() {
       html += `
         <div class="field-diff">
           <div class="label">${f.field}${f.index !== undefined ? '[' + f.index + ']' : ''}</div>
-          <div class="before">${before.replace(/</g, '&lt;')}</div>
-          <div class="after">${after.replace(/</g, '&lt;')}</div>
+          <div class="before">${truncate(before).replace(/</g, '&lt;')}</div>
+          <div class="after">${truncate(after).replace(/</g, '&lt;')}</div>
         </div>
       `;
     });
