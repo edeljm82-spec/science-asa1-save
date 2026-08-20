@@ -1340,7 +1340,7 @@ function initAnalysis() {
             alert(`분석 실패: ${error.message}`);
         } finally {
             analyzeBtn.disabled = false;
-            analyzeBtn.style.backgroundColor = "var(--primary-color)";
+            analyzeBtn.style.backgroundColor = "#2563eb";
             analyzeBtn.textContent = 'AI 문항 분석 시작';
         }
     });
@@ -2851,6 +2851,13 @@ window.bankSearchQuestions = async function() {
         }
 
         const filtered = levelChecks.length > 0 ? results.filter(q => levelChecks.includes(q.level)) : results;
+        // 💡 저장된 순서(생성 순서)가 아니라 성취기준 코드순 → 같은 코드 안에서는 수준순으로 정렬합니다.
+        const LEVEL_ORDER = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4 };
+        filtered.sort((a, b) => {
+            const stdCompare = (a.standardId || '').localeCompare(b.standardId || '');
+            if (stdCompare !== 0) return stdCompare;
+            return (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99);
+        });
         window.bankSearchResults = filtered;
 
         if (filtered.length === 0) {

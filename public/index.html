@@ -144,7 +144,7 @@
            <input type="file" id="file-input" accept="image/*" style="display: none;">
            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
         </div>
-        <button id="analyze-btn" style="width: 100%; padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 1rem; transition: 0.3s;">AI 문항 분석 시작</button>
+        <button id="analyze-btn" style="display: block; margin: 1rem auto 0; padding: 1rem 3rem; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.25rem; transition: 0.3s;">AI 문항 분석 시작</button>
         <div id="analysis-result" style="display: none; margin-top: 2rem;"></div>
         
         <div id="reset-btn-container" style="display: none; margin-top: 2rem; text-align: center;">
@@ -251,7 +251,7 @@
       </section>
 
         <div class="text-center fade-in hidden" id="section-generate">
-          <button id="btn-generate-ai" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-lg text-xl transition-transform transform hover:scale-105" onclick="generateQuestionAI()">
+          <button id="btn-generate-ai" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-lg shadow-lg text-xl transition-transform transform hover:scale-105" onclick="generateQuestionAI()">
               ✨ 인공지능 문항 만들기
           </button>
           <p id="create-loading-msg" class="hidden text-blue-600 mt-3 animate-pulse font-bold text-lg">⏳ AI가 교육과정 루브릭을 바탕으로 문항을 창작하고 있습니다...</p>
@@ -321,7 +321,7 @@
       </section>
 
       <div class="text-center fade-in">
-        <button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-12 rounded-full shadow-lg text-xl transition-transform transform hover:scale-105" onclick="window.bankBuildTestPaper()">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-lg shadow-lg text-xl transition-transform transform hover:scale-105" onclick="window.bankBuildTestPaper()">
           📝 선택한 문항으로 시험지 구성하기
         </button>
         <button class="ml-3 bg-white border-2 border-gray-300 text-gray-600 font-bold py-3 px-6 rounded-full hover:bg-gray-50 transition-colors" onclick="window.bankClearSelection()">
