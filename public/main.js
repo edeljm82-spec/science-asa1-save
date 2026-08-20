@@ -1363,6 +1363,8 @@ function initFirebaseAuth() {
     const loginGateOverlay = document.getElementById('login-gate-overlay');
     const btnLoginGate = document.getElementById('btn-google-login-gate');
     const loginGateError = document.getElementById('login-gate-error');
+    const btnMemberAdmin = document.getElementById('btn-member-admin');
+    const ADMIN_EMAIL = 'edeljm82@gmail.com';
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -1372,6 +1374,7 @@ function initFirebaseAuth() {
             userNameDisplay.textContent = `${user.displayName} 선생님`;
             btnLogout.style.display = 'inline-block';
             if (loginGateOverlay) loginGateOverlay.style.display = 'none';
+            if (btnMemberAdmin) btnMemberAdmin.style.display = (user.email === ADMIN_EMAIL) ? 'inline-block' : 'none';
 
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
@@ -1399,6 +1402,7 @@ function initFirebaseAuth() {
             userNameDisplay.style.display = 'none';
             btnLogout.style.display = 'none';
             if (loginGateOverlay) loginGateOverlay.style.display = 'flex';
+            if (btnMemberAdmin) btnMemberAdmin.style.display = 'none';
         }
     });
 
