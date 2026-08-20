@@ -311,9 +311,13 @@
       </section>
 
       <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
           <h2 class="text-lg font-semibold">2. 검색 결과 (체크해서 시험지에 추가)</h2>
-          <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full">선택됨 <span id="bank-selected-count">0</span></span>
+          <div class="flex items-center gap-2">
+            <button class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-sm px-3 py-1.5 rounded-md border border-blue-200 transition-colors" onclick="window.bankSelectAll()">모두 선택</button>
+            <button class="bg-white hover:bg-gray-50 text-gray-600 font-bold text-sm px-3 py-1.5 rounded-md border border-gray-300 transition-colors" onclick="window.bankClearSelection()">선택 해제</button>
+            <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full">선택됨 <span id="bank-selected-count">0</span></span>
+          </div>
         </div>
         <div id="bank-results-container" class="max-h-[480px] overflow-y-auto">
           <p style="text-align:center; padding:2rem; color:#64748b;">과목과 단원을 선택하고 검색해주세요.</p>
@@ -323,9 +327,6 @@
       <div class="text-center fade-in">
         <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-lg shadow-lg text-xl transition-transform transform hover:scale-105" onclick="window.bankBuildTestPaper()">
           📝 선택한 문항으로 시험지 구성하기
-        </button>
-        <button class="ml-3 bg-white border-2 border-gray-300 text-gray-600 font-bold py-3 px-6 rounded-full hover:bg-gray-50 transition-colors" onclick="window.bankClearSelection()">
-          선택 목록 비우기
         </button>
       </div>
 

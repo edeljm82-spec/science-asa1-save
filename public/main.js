@@ -2904,6 +2904,13 @@ window.updateBankSelectedCount = function() {
     if (el) el.innerText = window.bankSelectedQuestions.size;
 };
 
+window.bankSelectAll = function() {
+    if (!window.bankSearchResults || window.bankSearchResults.length === 0) return;
+    window.bankSearchResults.forEach(q => window.bankSelectedQuestions.set(q.id, q));
+    window.updateBankSelectedCount();
+    window.bankSearchQuestions();
+};
+
 window.bankClearSelection = function() {
     if (window.bankSelectedQuestions.size === 0) return;
     if (!confirm('선택한 문항 목록을 모두 비우시겠습니까?')) return;
